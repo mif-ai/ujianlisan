@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aplikasi Ujian Wawancara Lisan AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --secondary: #06b6d4;
+      --success: #10b981;
+      --bg-color: #f1f5f9;
+      --card-bg: #ffffff;
+      --text-main: #1e293b;
+    }
+    * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+    body { background-color: var(--bg-color); padding: 15px; max-width: 720px; margin: auto; color: var(--text-main); }
+    .header-card { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; padding: 24px 20px; border-radius: 16px; text-align: center; margin-bottom: 20px; }
+    .card { background: var(--card-bg); padding: 20px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 20px; }
+    .form-group { margin-bottom: 15px; }
+    label { font-weight: 600; display: block; margin-bottom: 6px; font-size: 13px; }
+    select, input[type="text"] { width: 100%; padding: 12px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 14px; background-color: #f8fafc; }
+    button { padding: 14px 18px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 15px; width: 100%; transition: all 0.2s; }
+    .btn-record-start { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; margin: 12px 0; }
+    .btn-record-stop { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; margin: 12px 0; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+    .btn-submit { background: linear-gradient(135deg, #10b981, #059669); color: white; margin-top: 10px; }
+    .palette-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+    .q-num-btn { width: 48px; height: 48px; border-radius: 12px; border: 2px solid #cbd5e1; background: #fff; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .q-num-btn.active { border-color: var(--primary) !important; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3); }
+    .q-num-btn.yellow { background-color: #fef08a; color: #854d0e; }
+    .q-num-btn.green { background: #10b981; color: white; }
+    .question-box { background: #f0f9ff; padding: 16px; border-left: 5px solid var(--secondary); margin: 15px 0; border-radius: 10px; }
+  </style>
+</head>
+<body>
+
+<div class="header-card">
+  <h1>🎙️ Ujian Wawancara Lisan AI</h1>
+  <p style="margin:0; font-size:13px; opacity:0.9;">Platform Penilaian Lisan Otomatis</p>
+</div>
+
+<div class="card">
+  <div class="form-group">
+    <label>Pilih Kelas / Rombel:</label>
+    <select id="rombelSelect" onchange="onRombelChange()">
+      <option value="">-- Memuat Kelas... --</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label>Pilih Nama Siswa:</label>
+    <select id="studentSelect" onchange="onStudentChange()" disabled>
+      <option value="">-- Pilih Kelas Terlebih Dahulu --</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label>Jenis Kelamin:</label>
+    <input type="text" id="jkDisplay" readonly placeholder="Otomatis terisi...">
+  </div>
+
+  <div class="form-group">
+    <label>Pilih Bab / Topik Soal:</label>
+    <select id="babSelect" onchange="onBabChange()" disabled>
+      <option value="">-- Pilih Kelas Terlebih Dahulu --</option>
+    </select>
+  </div>
+
+  <div class="form-group" id="paletteSection" style="display:none;">
+    <label>Pilih Nomor Soal:</label>
+    <div id="questionPalette" class="palette-grid"></div>
+  </div>
+
+  <div id="questionContainer" style="display:none;">
+    <div class="question-box">
+      <b id="questionNumberLabel">Soal No. 1</b>
+      <p id="questionText" style="margin:8px 0 0 0; font-weight:600; font-size:16px;"></p>
+    </div>
+
+    <div id="timerDisplay" style="text-align:center; font-weight:bold; color:red; display:none;">🔴 00:00</div>
+    <button type="button" class="btn-record-start" id="btnRecordToggle" onclick="toggleDirectRecording()">🎤 Klik untuk Mulai Merekam Jawaban</button>
+    <div id="statusText" style="text-align:center; font-size:13px; font-weight:600; color:#4f46e5;">Status: Siap Merekam</div>
+
+    <div id="audioPreviewContainer" style="display:none; margin: 15px 0;">
+      <audio id="audioPlayback" controls style="width:100%;"></audio>
+    </div>
+
+    <button type="button" class="btn-submit" onclick="submitAnswerAudio()">✨ Kirim & Evaluasi Jawaban AI</button>
+  </div>
+
+  <div id="result" style="margin-top:20px;"></div>
+</div>
+
+<script>
+  // PASTE URL WEB APP APPS SCRIPT ANDA DI SINI (Berakhiran /exec)
+  const API_URL = "https://script.google.com/macros/s/AKfycbzBMx-BvZfCT_w6yG2HJur8KUm2kqK0tfcZhFiD6J7dxH3AOOxXQg72fS4pLzAjNFM_kA/exec";
+
+  let studentDataCache = {};
+  let currentQuestionsList = [];
+  let audioBlobsMap = {};
+  let activeQuestionIndex = -1;
+  let selectedQuestionObject = null;
+
+  let globalMediaStream = null;
+  let globalMediaRecorder = null;
+  let audioChunks = [];
+  let isRecording = false;
+
+  window.onload = function() {
+    fetchAPI({ action: "getStudentData" }, function(data) {
+      studentDataCache = data;
+      const rSelect = document.getElementById('rombelSelect');
+      rSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+      data.rombelList.forEach(r => {
+        let opt = document.createElement('option'); opt.value = r; opt.innerText = r;
+        rSelect.appendChild(opt);
+      });
+    });
+  };
+
+  function fetchAPI(payload, callback) {
+    fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => callback(data))
+    .catch(err => alert("Error API: " + err));
+  }
+
+  function onRombelChange() {
+    const rombel = document.getElementById('rombelSelect').value;
+    const sSelect = document.getElementById('studentSelect');
+    const bSelect = document.getElementById('babSelect');
+    
+    if (rombel && studentDataCache.studentsByRombel[rombel]) {
+      sSelect.innerHTML = '<option value="">-- Pilih Nama --</option>';
+      studentDataCache.studentsByRombel[rombel].forEach(s => {
+        let opt = document.createElement('option'); opt.value = s.nama; opt.innerText = s.nama;
+        sSelect.appendChild(opt);
+      });
+      sSelect.disabled = false;
+
+      fetchAPI({ action: "getBabList", rombel: rombel }, function(res) {
+        bSelect.innerHTML = '<option value="">-- Pilih Bab --</option>';
+        res.babList.forEach(bab => {
+          let opt = document.createElement('option'); opt.value = bab; opt.innerText = bab;
+          bSelect.appendChild(opt);
+        });
+        bSelect.disabled = false;
+      });
+    }
+  }
+
+  function onStudentChange() {
+    const rombel = document.getElementById('rombelSelect').value;
+    const studentName = document.getElementById('studentSelect').value;
+    if (rombel && studentName) {
+      const student = studentDataCache.studentsByRombel[rombel].find(s => s.nama === studentName);
+      if (student) document.getElementById('jkDisplay').value = student.jk;
+    }
+  }
+
+  function onBabChange() {
+    const rombel = document.getElementById('rombelSelect').value;
+    const bab = document.getElementById('babSelect').value;
+
+    fetchAPI({ action: "getQuestions", rombel: rombel, bab: bab }, function(res) {
+      currentQuestionsList = res.questions;
+      renderPalette();
+    });
+  }
+
+  function renderPalette() {
+    const container = document.getElementById('questionPalette');
+    container.innerHTML = "";
+    document.getElementById('paletteSection').style.display = 'block';
+
+    currentQuestionsList.forEach((q, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'q-num-btn';
+      btn.innerText = i + 1;
+      btn.onclick = () => selectQuestion(i);
+      container.appendChild(btn);
+    });
+    selectQuestion(0);
+  }
+
+  function selectQuestion(i) {
+    activeQuestionIndex = i;
+    selectedQuestionObject = currentQuestionsList[i];
+    document.getElementById('questionNumberLabel').innerText = `Soal No. ${i + 1}`;
+    document.getElementById('questionText').innerText = selectedQuestionObject.pertanyaan;
+    document.getElementById('questionContainer').style.display = 'block';
+  }
+
+  async function toggleDirectRecording() {
+    const btn = document.getElementById('btnRecordToggle');
+    if (!isRecording) {
+      try {
+        globalMediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        globalMediaRecorder = new MediaRecorder(globalMediaStream);
+        audioChunks = [];
+
+        globalMediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+        globalMediaRecorder.onstop = () => {
+          const blob = new Blob(audioChunks, { type: 'audio/mp4' });
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            audioBlobsMap[selectedQuestionObject.id] = { base64: reader.result, blob: blob };
+            document.getElementById('audioPlayback').src = URL.createObjectURL(blob);
+            document.getElementById('audioPreviewContainer').style.display = 'block';
+          };
+          reader.readAsDataURL(blob);
+          globalMediaStream.getTracks().forEach(t => t.stop());
+        };
+
+        globalMediaRecorder.start();
+        isRecording = true;
+        btn.innerText = "⏹️ Hentikan Perekaman";
+        btn.className = "btn-record-stop";
+      } catch (err) {
+        alert("Akses Mic Gagal: " + err.message);
+      }
+    } else {
+      globalMediaRecorder.stop();
+      isRecording = false;
+      btn.innerText = "🔄 Rekam Ulang";
+      btn.className = "btn-record-start";
+    }
+  }
+
+  function submitAnswerAudio() {
+    const qId = selectedQuestionObject.id;
+    const audioData = audioBlobsMap[qId];
+    if (!audioData) return alert("Rekam suara terlebih dahulu!");
+
+    document.getElementById('result').innerHTML = "⏳ Gemini AI sedang mendengarkan & menilai...";
+
+    fetchAPI({
+      action: "processAudio",
+      questionId: qId,
+      studentName: document.getElementById('studentSelect').value,
+      rombel: document.getElementById('rombelSelect').value,
+      jenisKelamin: document.getElementById('jkDisplay').value,
+      bab: document.getElementById('babSelect').value,
+      questionText: selectedQuestionObject.pertanyaan,
+      rubrikText: selectedQuestionObject.rubrik,
+      audioBase64: audioData.base64,
+      audioMimeType: "audio/mp4"
+    }, function(res) {
+      if (res.success) {
+        document.getElementById('result').innerHTML = `
+          <div style="background:#d1fae5; padding:15px; border-radius:10px;">
+            <b>Nilai: ${res.highestScore || res.currentScore} / 100</b>
+            <p>Transkrip: "${res.transcriptUsed}"</p>
+            <p>Evaluasi AI: ${res.feedback}</p>
+          </div>
+        `;
+      } else {
+        document.getElementById('result').innerHTML = "Gagal: " + res.error;
+      }
+    });
+  }
+</script>
+</body>
+</html>
