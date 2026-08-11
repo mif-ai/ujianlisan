@@ -183,7 +183,7 @@
   let studentDataCache = {}, currentQuestionsList = [], activeQuestionIndex = -1, selectedQuestionObject = null;
   let adminVerified = false, verifiedPass = "";
   let speechRecognition = null, liveTranscriptText = "", isRecording = false;
-  let questionStatusMap = {}; // Untuk simpan status warna: 'yellow' atau 'green'
+  let questionStatusMap = {}; // Penyimpanan data status, skor, transkrip & feedback per ID soal
 
   window.onload = function() {
     initApp();
@@ -202,7 +202,7 @@
       data.rombelList.forEach(r => rSelect.innerHTML += `<option value="${r}">${r}</option>`);
     });
 
-    // Inisialisasi Web Speech API (Gratis di Browser)
+    // Inisialisasi Web Speech API
     const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (Speech) {
       speechRecognition = new Speech();
@@ -274,15 +274,24 @@
     const container = document.getElementById('questionPalette');
     container.innerHTML = "";
     document.getElementById('paletteSection').style.display = 'block';
+    
+    questionStatusMap = {};
 
     currentQuestionsList.forEach((q, i) => {
       const btn = document.createElement('button');
-      let statusClass = '';
+      let colorClass = '';
+      
       if (progress[q.id] && progress[q.id].score !== undefined) {
-        statusClass = 'green';
+        colorClass = 'green';
         questionStatusMap[i] = 'green';
+        questionStatusMap[q.id] = {
+          score: progress[q.id].score,
+          transcript: progress[q.id].transcript,
+          feedback: progress[q.id].feedback
+        };
       }
-      btn.className = `q-num-btn ${statusClass}`;
+
+      btn.className = `q-num-btn ${colorClass}`;
       btn.id = `qBtn_${i}`;
       btn.innerText = i + 1;
       btn.onclick = () => selectQuestion(i);
@@ -301,16 +310,19 @@
   function selectQuestion(i) {
     activeQuestionIndex = i;
     selectedQuestionObject = currentQuestionsList[i];
+    
+    // 1. Update Kotak Nomor Soal
     document.querySelectorAll('.q-num-btn').forEach((b, idx) => {
       b.className = `q-num-btn ${questionStatusMap[idx] || ''}`;
     });
     const activeBtn = document.getElementById(`qBtn_${i}`);
     if (activeBtn) activeBtn.classList.add('active');
 
+    // 2. Update Teks Soal
     document.getElementById('questionNumberLabel').innerText = `Soal No. ${i + 1}`;
     document.getElementById('questionText').innerText = selectedQuestionObject.pertanyaan;
 
-    // Menampilkan Gambar Soal Jika Ada
+    // 3. Update Gambar Soal
     const imgBox = document.getElementById('gambarSoalBox');
     if (selectedQuestionObject.gambar) {
       document.getElementById('gambarSoalImg').src = selectedQuestionObject.gambar;
@@ -319,8 +331,31 @@
       imgBox.style.display = 'none';
     }
 
-    liveTranscriptText = "";
-    document.getElementById('transcriptBox').innerText = "(Tekan tombol rekam untuk mulai berbicara...)";
+    // 4. Update Teks Transkrip Lisan
+    const qId = selectedQuestionObject.id;
+    const existingData = questionStatusMap[qId] || {};
+    
+    liveTranscriptText = existingData.transcript || "";
+    if (liveTranscriptText) {
+      document.getElementById('transcriptBox').innerText = liveTranscriptText;
+    } else {
+      document.getElementById('transcriptBox').innerText = "(Tekan tombol rekam untuk mulai berbicara...)";
+    }
+
+    // 5. UPDATE TAMPILAN NILAI SESUAI SOAL YANG DIBUKA
+    const resultDiv = document.getElementById('result');
+    if (existingData.score !== undefined) {
+      resultDiv.innerHTML = `
+        <div style="background:#d1fae5; padding:15px; border-radius:10px; border:1px solid #a7f3d0;">
+          <b style="color:#065f46; font-size:16px;">Nilai Soal No. ${i + 1}: ${existingData.score} / 100</b>
+          <p style="margin:8px 0 0 0; color:#065f46; font-size:13px;"><b>Transkrip Jawaban:</b> "${existingData.transcript || liveTranscriptText}"</p>
+          <p style="margin:4px 0 0 0; color:#065f46; font-size:13px;"><b>Evaluasi AI:</b> ${existingData.feedback || '-'}</p>
+        </div>
+      `;
+    } else {
+      resultDiv.innerHTML = ""; // Kosongkan jika nomor ini belum dikoreksi
+    }
+
     document.getElementById('questionContainer').style.display = 'block';
     if (adminVerified) document.getElementById('adminActionBtns').style.display = 'block';
   }
@@ -361,15 +396,25 @@
       studentTranscriptText: liveTranscriptText
     }, res => {
       if (res && res.success) {
+        const qId = selectedQuestionObject.id;
+        const score = res.highestScore || res.currentScore;
+        const transcript = res.transcriptUsed || liveTranscriptText;
+        const feedback = res.feedback;
+
+        // Simpan data nilai khusus ID soal ini ke memori
+        questionStatusMap[qId] = { score: score, transcript: transcript, feedback: feedback };
         updatePaletteColor(activeQuestionIndex, 'green');
+
         document.getElementById('result').innerHTML = `
           <div style="background:#d1fae5; padding:15px; border-radius:10px; border:1px solid #a7f3d0;">
-            <b style="color:#065f46;">Nilai: ${res.highestScore || res.currentScore} / 100</b>
-            <p style="margin:8px 0; color:#065f46;"><b>Transkrip Jawaban:</b> "${res.transcriptUsed}"</p>
-            <p style="margin:0; color:#065f46;"><b>Evaluasi AI:</b> ${res.feedback}</p>
+            <b style="color:#065f46; font-size:16px;">Nilai Soal No. ${activeQuestionIndex + 1}: ${score} / 100</b>
+            <p style="margin:8px 0 0 0; color:#065f46; font-size:13px;"><b>Transkrip Jawaban:</b> "${transcript}"</p>
+            <p style="margin:4px 0 0 0; color:#065f46; font-size:13px;"><b>Evaluasi AI:</b> ${feedback}</p>
           </div>
         `;
-      } else alert("Gagal: " + (res ? res.error : "Error AI"));
+      } else {
+        document.getElementById('result').innerHTML = "<span style='color:red;'>Gagal: " + (res ? res.error : "Error AI") + "</span>";
+      }
     });
   }
 
