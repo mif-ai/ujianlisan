@@ -94,7 +94,6 @@
 </div>
 
 <script>
-  // PASTE URL WEB APP APPS SCRIPT ANDA DI SINI (Berakhiran /exec)
   const API_URL = "https://script.google.com/macros/s/AKfycbzBMx-BvZfCT_w6yG2HJur8KUm2kqK0tfcZhFiD6J7dxH3AOOxXQg72fS4pLzAjNFM_kA/exec";
 
   let studentDataCache = {};
@@ -107,9 +106,14 @@
   let globalMediaRecorder = null;
   let audioChunks = [];
   let isRecording = false;
+  let activeMimeType = "audio/webm"; // Default aman untuk Chrome Android
 
   window.onload = function() {
     fetchAPI({ action: "getStudentData" }, function(data) {
+      if (!data || !data.rombelList) {
+        alert("Gagal memuat data siswa. Pastikan Apps Script diset ke 'Anyone'.");
+        return;
+      }
       studentDataCache = data;
       const rSelect = document.getElementById('rombelSelect');
       rSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
@@ -127,7 +131,10 @@
     })
     .then(res => res.json())
     .then(data => callback(data))
-    .catch(err => alert("Error API: " + err));
+    .catch(err => {
+      console.error(err);
+      alert("Error API: " + err.message + "\n\n💡 Pastikan Web App Apps Script dideploy ulang dengan akses 'Anyone'.");
+    });
   }
 
   function onRombelChange() {
@@ -135,7 +142,10 @@
     const sSelect = document.getElementById('studentSelect');
     const bSelect = document.getElementById('babSelect');
     
-    if (rombel && studentDataCache.studentsByRombel[rombel]) {
+    document.getElementById('paletteSection').style.display = 'none';
+    document.getElementById('questionContainer').style.display = 'none';
+
+    if (rombel && studentDataCache.studentsByRombel && studentDataCache.studentsByRombel[rombel]) {
       sSelect.innerHTML = '<option value="">-- Pilih Nama --</option>';
       studentDataCache.studentsByRombel[rombel].forEach(s => {
         let opt = document.createElement('option'); opt.value = s.nama; opt.innerText = s.nama;
@@ -145,11 +155,13 @@
 
       fetchAPI({ action: "getBabList", rombel: rombel }, function(res) {
         bSelect.innerHTML = '<option value="">-- Pilih Bab --</option>';
-        res.babList.forEach(bab => {
-          let opt = document.createElement('option'); opt.value = bab; opt.innerText = bab;
-          bSelect.appendChild(opt);
-        });
-        bSelect.disabled = false;
+        if (res && res.babList) {
+          res.babList.forEach(bab => {
+            let opt = document.createElement('option'); opt.value = bab; opt.innerText = bab;
+            bSelect.appendChild(opt);
+          });
+          bSelect.disabled = false;
+        }
       });
     }
   }
@@ -157,7 +169,7 @@
   function onStudentChange() {
     const rombel = document.getElementById('rombelSelect').value;
     const studentName = document.getElementById('studentSelect').value;
-    if (rombel && studentName) {
+    if (rombel && studentName && studentDataCache.studentsByRombel[rombel]) {
       const student = studentDataCache.studentsByRombel[rombel].find(s => s.nama === studentName);
       if (student) document.getElementById('jkDisplay').value = student.jk;
     }
@@ -168,14 +180,24 @@
     const bab = document.getElementById('babSelect').value;
 
     fetchAPI({ action: "getQuestions", rombel: rombel, bab: bab }, function(res) {
-      currentQuestionsList = res.questions;
-      renderPalette();
+      if (res && res.questions) {
+        currentQuestionsList = res.questions;
+        renderPalette();
+      }
     });
   }
 
   function renderPalette() {
     const container = document.getElementById('questionPalette');
     container.innerHTML = "";
+
+    if (!currentQuestionsList || currentQuestionsList.length === 0) {
+      document.getElementById('paletteSection').style.display = 'none';
+      document.getElementById('questionContainer').style.display = 'none';
+      alert("Belum ada soal pada Bab ini.");
+      return;
+    }
+
     document.getElementById('paletteSection').style.display = 'block';
 
     currentQuestionsList.forEach((q, i) => {
@@ -185,35 +207,83 @@
       btn.onclick = () => selectQuestion(i);
       container.appendChild(btn);
     });
+
     selectQuestion(0);
   }
 
   function selectQuestion(i) {
+    if (!currentQuestionsList || currentQuestionsList.length === 0) return;
     activeQuestionIndex = i;
     selectedQuestionObject = currentQuestionsList[i];
     document.getElementById('questionNumberLabel').innerText = `Soal No. ${i + 1}`;
     document.getElementById('questionText').innerText = selectedQuestionObject.pertanyaan;
     document.getElementById('questionContainer').style.display = 'block';
+
+    // Cek apakah soal ini sudah direkam
+    const qId = selectedQuestionObject.id;
+    if (audioBlobsMap[qId]) {
+      document.getElementById('audioPlayback').src = URL.createObjectURL(audioBlobsMap[qId].blob);
+      document.getElementById('audioPreviewContainer').style.display = 'block';
+    } else {
+      document.getElementById('audioPlayback').src = "";
+      document.getElementById('audioPreviewContainer').style.display = 'none';
+    }
+  }
+
+  // DETEKSI FORMAT REKAMAN TERBAIK SESUAI HP PENGGUNA
+  function getSupportedMimeType() {
+    const types = [
+      'audio/webm;codecs=opus',
+      'audio/webm',
+      'audio/mp4',
+      'audio/aac',
+      'audio/ogg'
+    ];
+    for (let t of types) {
+      if (window.MediaRecorder && MediaRecorder.isTypeSupported(t)) {
+        return t;
+      }
+    }
+    return '';
   }
 
   async function toggleDirectRecording() {
     const btn = document.getElementById('btnRecordToggle');
+    const status = document.getElementById('statusText');
+
     if (!isRecording) {
       try {
         globalMediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        globalMediaRecorder = new MediaRecorder(globalMediaStream);
+        
+        activeMimeType = getSupportedMimeType();
+        const options = activeMimeType ? { mimeType: activeMimeType } : {};
+
+        globalMediaRecorder = new MediaRecorder(globalMediaStream, options);
         audioChunks = [];
 
-        globalMediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+        globalMediaRecorder.ondataavailable = e => {
+          if (e.data && e.data.size > 0) audioChunks.push(e.data);
+        };
+
         globalMediaRecorder.onstop = () => {
-          const blob = new Blob(audioChunks, { type: 'audio/mp4' });
+          const finalType = globalMediaRecorder.mimeType || activeMimeType || 'audio/webm';
+          const blob = new Blob(audioChunks, { type: finalType });
+          
           const reader = new FileReader();
           reader.onloadend = () => {
-            audioBlobsMap[selectedQuestionObject.id] = { base64: reader.result, blob: blob };
+            const qId = selectedQuestionObject.id;
+            audioBlobsMap[qId] = { 
+              base64: reader.result, 
+              blob: blob,
+              mimeType: finalType 
+            };
             document.getElementById('audioPlayback').src = URL.createObjectURL(blob);
             document.getElementById('audioPreviewContainer').style.display = 'block';
+            status.innerText = "Status: Rekaman Selesai!";
           };
           reader.readAsDataURL(blob);
+
+          // Hentikan hardware mic agar tidak mengunci HP
           globalMediaStream.getTracks().forEach(t => t.stop());
         };
 
@@ -221,23 +291,29 @@
         isRecording = true;
         btn.innerText = "⏹️ Hentikan Perekaman";
         btn.className = "btn-record-stop";
+        status.innerText = "Status: Sedang Merekam Suara Anda...";
+
       } catch (err) {
-        alert("Akses Mic Gagal: " + err.message);
+        alert("Akses Mic Gagal: " + err.message + "\n\nPastikan Anda memberikan izin mikrofon di browser.");
       }
     } else {
-      globalMediaRecorder.stop();
+      if (globalMediaRecorder && globalMediaRecorder.state !== 'inactive') {
+        globalMediaRecorder.stop();
+      }
       isRecording = false;
-      btn.innerText = "🔄 Rekam Ulang";
+      btn.innerText = "🔄 Rekam Suara Ulang";
       btn.className = "btn-record-start";
     }
   }
 
   function submitAnswerAudio() {
+    if (!selectedQuestionObject) return alert("Pilih soal terlebih dahulu!");
     const qId = selectedQuestionObject.id;
     const audioData = audioBlobsMap[qId];
-    if (!audioData) return alert("Rekam suara terlebih dahulu!");
+    
+    if (!audioData) return alert("Rekam suara Anda terlebih dahulu!");
 
-    document.getElementById('result').innerHTML = "⏳ Gemini AI sedang mendengarkan & menilai...";
+    document.getElementById('result').innerHTML = "⏳ Gemini AI sedang mendengarkan & menilai jawaban Anda...";
 
     fetchAPI({
       action: "processAudio",
@@ -249,18 +325,18 @@
       questionText: selectedQuestionObject.pertanyaan,
       rubrikText: selectedQuestionObject.rubrik,
       audioBase64: audioData.base64,
-      audioMimeType: "audio/mp4"
+      audioMimeType: audioData.mimeType || "audio/webm"
     }, function(res) {
-      if (res.success) {
+      if (res && res.success) {
         document.getElementById('result').innerHTML = `
-          <div style="background:#d1fae5; padding:15px; border-radius:10px;">
-            <b>Nilai: ${res.highestScore || res.currentScore} / 100</b>
-            <p>Transkrip: "${res.transcriptUsed}"</p>
-            <p>Evaluasi AI: ${res.feedback}</p>
+          <div style="background:#d1fae5; padding:15px; border-radius:10px; border:1px solid #a7f3d0;">
+            <b style="color:#065f46;">Nilai: ${res.highestScore || res.currentScore} / 100</b>
+            <p style="margin:8px 0; color:#065f46;"><b>Transkrip Jawaban:</b> "${res.transcriptUsed}"</p>
+            <p style="margin:0; color:#065f46;"><b>Evaluasi AI:</b> ${res.feedback}</p>
           </div>
         `;
       } else {
-        document.getElementById('result').innerHTML = "Gagal: " + res.error;
+        document.getElementById('result').innerHTML = "<span style='color:red;'>Gagal: " + (res ? res.error : "Respon tidak valid") + "</span>";
       }
     });
   }
