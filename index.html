@@ -10,18 +10,22 @@
       --primary: #4f46e5;
       --secondary: #06b6d4;
       --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
       --bg-color: #f1f5f9;
       --card-bg: #ffffff;
       --text-main: #1e293b;
     }
     * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
     body { background-color: var(--bg-color); padding: 15px; max-width: 720px; margin: auto; color: var(--text-main); }
-    .header-card { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; padding: 24px 20px; border-radius: 16px; text-align: center; margin-bottom: 20px; }
+    .header-card { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; padding: 20px; border-radius: 16px; text-align: center; margin-bottom: 20px; position: relative; }
+    .badge-mode { position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
     .card { background: var(--card-bg); padding: 20px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 20px; }
     .form-group { margin-bottom: 15px; }
     label { font-weight: 600; display: block; margin-bottom: 6px; font-size: 13px; }
-    select, input[type="text"] { width: 100%; padding: 12px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 14px; background-color: #f8fafc; }
-    button { padding: 14px 18px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 15px; width: 100%; transition: all 0.2s; }
+    select, input[type="text"], input[type="password"], textarea { width: 100%; padding: 12px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 14px; background-color: #f8fafc; }
+    button { padding: 12px 18px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; width: 100%; transition: all 0.2s; }
+    .btn-guru { background: #334155; color: white; margin-bottom: 15px; }
     .btn-record-start { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; margin: 12px 0; }
     .btn-record-stop { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; margin: 12px 0; animation: pulse 1.5s infinite; }
     @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
@@ -29,17 +33,25 @@
     .palette-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
     .q-num-btn { width: 48px; height: 48px; border-radius: 12px; border: 2px solid #cbd5e1; background: #fff; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .q-num-btn.active { border-color: var(--primary) !important; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3); }
-    .q-num-btn.yellow { background-color: #fef08a; color: #854d0e; }
-    .q-num-btn.green { background: #10b981; color: white; }
+    .q-num-btn.yellow { background-color: #fef08a; color: #854d0e; border-color: #eab308; }
+    .q-num-btn.green { background: #10b981; color: white; border-color: #059669; }
     .question-box { background: #f0f9ff; padding: 16px; border-left: 5px solid var(--secondary); margin: 15px 0; border-radius: 10px; }
+    .img-soal { max-width: 100%; max-height: 250px; border-radius: 10px; margin-top: 10px; border: 1px solid #cbd5e1; }
+    
+    /* MODAL POPUP */
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+    .modal-content { background: white; padding: 24px; border-radius: 16px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
   </style>
 </head>
 <body>
 
 <div class="header-card">
+  <span id="badgeModeDisplay" class="badge-mode">Mode: Loading...</span>
   <h1>🎙️ Ujian Wawancara Berbasis AI</h1>
   <p style="margin:0; font-size:13px; opacity:0.9;">Pendidikan Agama Islam & Budi Pekerti | MGMP PAI SMAN 1 Karangbinangun</p>
 </div>
+
+<button type="button" class="btn-guru" onclick="openGuruModal()">⚙️ Kendali Guru / Admin</button>
 
 <div class="card">
   <div class="form-group">
@@ -71,21 +83,38 @@
   <div class="form-group" id="paletteSection" style="display:none;">
     <label>Pilih Nomor Soal:</label>
     <div id="questionPalette" class="palette-grid"></div>
+    <div style="margin-top:8px; font-size:11px; color:#64748b;">
+      ⚪ Putih: Belum dijawab | 🟡 Kuning: Terekam (Belum diuji) | 🟢 Hijau: Selesai AI
+    </div>
   </div>
 
   <div id="questionContainer" style="display:none;">
     <div class="question-box">
-      <b id="questionNumberLabel">Soal No. 1</b>
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <b id="questionNumberLabel">Soal No. 1</b>
+        <div id="adminActionBtns" style="display:none;">
+          <button style="width:auto; padding:4px 8px; font-size:12px; background:#f59e0b; color:white;" onclick="openEditForm()">Edit</button>
+          <button style="width:auto; padding:4px 8px; font-size:12px; background:#ef4444; color:white;" onclick="deleteCurrentSoal()">Hapus</button>
+        </div>
+      </div>
       <p id="questionText" style="margin:8px 0 0 0; font-weight:600; font-size:16px;"></p>
+      
+      <!-- GAMBAR SOAL -->
+      <div id="gambarSoalBox" style="display:none; text-align:center;">
+        <img id="gambarSoalImg" src="" class="img-soal" alt="Gambar Soal">
+      </div>
     </div>
 
-    <div id="timerDisplay" style="text-align:center; font-weight:bold; color:red; display:none;">🔴 00:00</div>
+    <!-- SPEECH TO TEXT TRANSKRIP BROWSER -->
+    <div class="form-group">
+      <label>Jawaban Lisan Siswa (Transkrip Otomatis):</label>
+      <div id="transcriptBox" style="min-height:60px; padding:10px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; font-size:13px; color:#334155;">
+        (Tekan tombol rekam untuk mulai berbicara...)
+      </div>
+    </div>
+
     <button type="button" class="btn-record-start" id="btnRecordToggle" onclick="toggleDirectRecording()">🎤 Klik untuk Mulai Merekam Jawaban</button>
     <div id="statusText" style="text-align:center; font-size:13px; font-weight:600; color:#4f46e5;">Status: Siap Merekam</div>
-
-    <div id="audioPreviewContainer" style="display:none; margin: 15px 0;">
-      <audio id="audioPlayback" controls style="width:100%;"></audio>
-    </div>
 
     <button type="button" class="btn-submit" onclick="submitAnswerAudio()">✨ Kirim & Evaluasi Jawaban AI</button>
   </div>
@@ -93,48 +122,109 @@
   <div id="result" style="margin-top:20px;"></div>
 </div>
 
+<!-- MODAL KENDALI GURU -->
+<div id="guruModal" class="modal-overlay">
+  <div class="modal-content">
+    <h3 style="margin-top:0;">⚙️ Kendali Guru</h3>
+    <div id="passForm">
+      <label>Masukkan Password Admin:</label>
+      <input type="password" id="inputAdminPass" placeholder="Password...">
+      <button style="margin-top:10px; background:var(--primary); color:white;" onclick="verifyAdminPass()">Verifikasi Password</button>
+    </div>
+
+    <div id="adminPanel" style="display:none;">
+      <h4>1. Mode Penggunaan</h4>
+      <div style="display:flex; gap:10px;">
+        <button style="background:var(--success); color:white;" onclick="setMode('PRACTICE')">Mode Latihan</button>
+        <button style="background:var(--danger); color:white;" onclick="setMode('SUBMISSION')">Mode Ujian</button>
+      </div>
+      <hr>
+      <h4>2. Kelola Bank Soal</h4>
+      <button style="background:var(--primary); color:white;" onclick="openTambahSoalForm()">+ Tambah Soal Baru</button>
+    </div>
+    
+    <button style="margin-top:15px; background:#94a3b8; color:white;" onclick="closeGuruModal()">Tutup</button>
+  </div>
+</div>
+
+<!-- MODAL FORM INPUT/EDIT SOAL -->
+<div id="formSoalModal" class="modal-overlay">
+  <div class="modal-content">
+    <h3 id="formSoalTitle" style="margin-top:0;">Form Soal</h3>
+    <input type="hidden" id="soalIdInput">
+    <div class="form-group">
+      <label>Target Kelas / Rombel (misal: KELAS X, XII IPA 1):</label>
+      <input type="text" id="soalKelasInput">
+    </div>
+    <div class="form-group">
+      <label>Nama Bab / Topik:</label>
+      <input type="text" id="soalBabInput">
+    </div>
+    <div class="form-group">
+      <label>Teks Pertanyaan Soal:</label>
+      <textarea id="soalPertanyaanInput" rows="3"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Rubrik Kunci Jawaban:</label>
+      <textarea id="soalRubrikInput" rows="3"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Upload Gambar Soal (Opsional):</label>
+      <input type="file" id="soalGambarInput" accept="image/*">
+    </div>
+    <button style="background:var(--success); color:white; margin-top:10px;" onclick="saveSoalData()">Simpan Soal</button>
+    <button style="background:#94a3b8; color:white; margin-top:5px;" onclick="closeFormSoalModal()">Batal</button>
+  </div>
+</div>
+
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbzBMx-BvZfCT_w6yG2HJur8KUm2kqK0tfcZhFiD6J7dxH3AOOxXQg72fS4pLzAjNFM_kA/exec";
 
-  let studentDataCache = {};
-  let currentQuestionsList = [];
-  let audioBlobsMap = {};
-  let activeQuestionIndex = -1;
-  let selectedQuestionObject = null;
-
-  let globalMediaStream = null;
-  let globalMediaRecorder = null;
-  let audioChunks = [];
-  let isRecording = false;
-  let activeMimeType = "audio/webm"; // Default aman untuk Chrome Android
+  let studentDataCache = {}, currentQuestionsList = [], activeQuestionIndex = -1, selectedQuestionObject = null;
+  let adminVerified = false, verifiedPass = "";
+  let speechRecognition = null, liveTranscriptText = "", isRecording = false;
+  let questionStatusMap = {}; // Untuk simpan status warna: 'yellow' atau 'green'
 
   window.onload = function() {
-    fetchAPI({ action: "getStudentData" }, function(data) {
-      if (!data || !data.rombelList) {
-        alert("Gagal memuat data siswa. Pastikan Apps Script diset ke 'Anyone'.");
-        return;
-      }
+    initApp();
+  };
+
+  function initApp() {
+    fetchAPI({ action: "getAppMode" }, res => {
+      document.getElementById('badgeModeDisplay').innerText = "Mode: " + (res ? res.mode : "SUBMISSION");
+    });
+
+    fetchAPI({ action: "getStudentData" }, data => {
+      if (!data || !data.rombelList) return;
       studentDataCache = data;
       const rSelect = document.getElementById('rombelSelect');
       rSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
-      data.rombelList.forEach(r => {
-        let opt = document.createElement('option'); opt.value = r; opt.innerText = r;
-        rSelect.appendChild(opt);
-      });
+      data.rombelList.forEach(r => rSelect.innerHTML += `<option value="${r}">${r}</option>`);
     });
-  };
+
+    // Inisialisasi Web Speech API (Gratis di Browser)
+    const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (Speech) {
+      speechRecognition = new Speech();
+      speechRecognition.lang = 'id-ID';
+      speechRecognition.continuous = true;
+      speechRecognition.interimResults = true;
+
+      speechRecognition.onresult = e => {
+        let text = '';
+        for (let i = e.resultIndex; i < e.results.length; i++) text += e.results[i][0].transcript;
+        liveTranscriptText = text;
+        document.getElementById('transcriptBox').innerText = liveTranscriptText;
+        updatePaletteColor(activeQuestionIndex, 'yellow');
+      };
+    }
+  }
 
   function fetchAPI(payload, callback) {
-    fetch(API_URL, {
-      method: "POST",
-      body: JSON.stringify(payload)
-    })
+    fetch(API_URL, { method: "POST", body: JSON.stringify(payload) })
     .then(res => res.json())
     .then(data => callback(data))
-    .catch(err => {
-      console.error(err);
-      alert("Error API: " + err.message + "\n\n💡 Pastikan Web App Apps Script dideploy ulang dengan akses 'Anyone'.");
-    });
+    .catch(err => alert("Error API: " + err.message));
   }
 
   function onRombelChange() {
@@ -142,26 +232,15 @@
     const sSelect = document.getElementById('studentSelect');
     const bSelect = document.getElementById('babSelect');
     
-    document.getElementById('paletteSection').style.display = 'none';
-    document.getElementById('questionContainer').style.display = 'none';
-
     if (rombel && studentDataCache.studentsByRombel && studentDataCache.studentsByRombel[rombel]) {
       sSelect.innerHTML = '<option value="">-- Pilih Nama --</option>';
-      studentDataCache.studentsByRombel[rombel].forEach(s => {
-        let opt = document.createElement('option'); opt.value = s.nama; opt.innerText = s.nama;
-        sSelect.appendChild(opt);
-      });
+      studentDataCache.studentsByRombel[rombel].forEach(s => sSelect.innerHTML += `<option value="${s.nama}">${s.nama}</option>`);
       sSelect.disabled = false;
 
-      fetchAPI({ action: "getBabList", rombel: rombel }, function(res) {
+      fetchAPI({ action: "getBabList", rombel: rombel }, res => {
         bSelect.innerHTML = '<option value="">-- Pilih Bab --</option>';
-        if (res && res.babList) {
-          res.babList.forEach(bab => {
-            let opt = document.createElement('option'); opt.value = bab; opt.innerText = bab;
-            bSelect.appendChild(opt);
-          });
-          bSelect.disabled = false;
-        }
+        if (res && res.babList) res.babList.forEach(bab => bSelect.innerHTML += `<option value="${bab}">${bab}</option>`);
+        bSelect.disabled = false;
       });
     }
   }
@@ -178,31 +257,33 @@
   function onBabChange() {
     const rombel = document.getElementById('rombelSelect').value;
     const bab = document.getElementById('babSelect').value;
+    const studentName = document.getElementById('studentSelect').value;
 
-    fetchAPI({ action: "getQuestions", rombel: rombel, bab: bab }, function(res) {
+    fetchAPI({ action: "getQuestions", rombel: rombel, bab: bab }, res => {
       if (res && res.questions) {
         currentQuestionsList = res.questions;
-        renderPalette();
+        fetchAPI({ action: "getStudentProgress", studentName: studentName, rombel: rombel, bab: bab }, progRes => {
+          const progress = progRes ? progRes.progress : {};
+          renderPalette(progress);
+        });
       }
     });
   }
 
-  function renderPalette() {
+  function renderPalette(progress) {
     const container = document.getElementById('questionPalette');
     container.innerHTML = "";
-
-    if (!currentQuestionsList || currentQuestionsList.length === 0) {
-      document.getElementById('paletteSection').style.display = 'none';
-      document.getElementById('questionContainer').style.display = 'none';
-      alert("Belum ada soal pada Bab ini.");
-      return;
-    }
-
     document.getElementById('paletteSection').style.display = 'block';
 
     currentQuestionsList.forEach((q, i) => {
       const btn = document.createElement('button');
-      btn.className = 'q-num-btn';
+      let statusClass = '';
+      if (progress[q.id] && progress[q.id].score !== undefined) {
+        statusClass = 'green';
+        questionStatusMap[i] = 'green';
+      }
+      btn.className = `q-num-btn ${statusClass}`;
+      btn.id = `qBtn_${i}`;
       btn.innerText = i + 1;
       btn.onclick = () => selectQuestion(i);
       container.appendChild(btn);
@@ -211,123 +292,76 @@
     selectQuestion(0);
   }
 
+  function updatePaletteColor(idx, color) {
+    questionStatusMap[idx] = color;
+    const btn = document.getElementById(`qBtn_${idx}`);
+    if (btn) btn.className = `q-num-btn ${color} active`;
+  }
+
   function selectQuestion(i) {
-    if (!currentQuestionsList || currentQuestionsList.length === 0) return;
     activeQuestionIndex = i;
     selectedQuestionObject = currentQuestionsList[i];
+    document.querySelectorAll('.q-num-btn').forEach((b, idx) => {
+      b.className = `q-num-btn ${questionStatusMap[idx] || ''}`;
+    });
+    const activeBtn = document.getElementById(`qBtn_${i}`);
+    if (activeBtn) activeBtn.classList.add('active');
+
     document.getElementById('questionNumberLabel').innerText = `Soal No. ${i + 1}`;
     document.getElementById('questionText').innerText = selectedQuestionObject.pertanyaan;
-    document.getElementById('questionContainer').style.display = 'block';
 
-    // Cek apakah soal ini sudah direkam
-    const qId = selectedQuestionObject.id;
-    if (audioBlobsMap[qId]) {
-      document.getElementById('audioPlayback').src = URL.createObjectURL(audioBlobsMap[qId].blob);
-      document.getElementById('audioPreviewContainer').style.display = 'block';
+    // Menampilkan Gambar Soal Jika Ada
+    const imgBox = document.getElementById('gambarSoalBox');
+    if (selectedQuestionObject.gambar) {
+      document.getElementById('gambarSoalImg').src = selectedQuestionObject.gambar;
+      imgBox.style.display = 'block';
     } else {
-      document.getElementById('audioPlayback').src = "";
-      document.getElementById('audioPreviewContainer').style.display = 'none';
+      imgBox.style.display = 'none';
     }
+
+    liveTranscriptText = "";
+    document.getElementById('transcriptBox').innerText = "(Tekan tombol rekam untuk mulai berbicara...)";
+    document.getElementById('questionContainer').style.display = 'block';
+    if (adminVerified) document.getElementById('adminActionBtns').style.display = 'block';
   }
 
-  // DETEKSI FORMAT REKAMAN TERBAIK SESUAI HP PENGGUNA
-  function getSupportedMimeType() {
-    const types = [
-      'audio/webm;codecs=opus',
-      'audio/webm',
-      'audio/mp4',
-      'audio/aac',
-      'audio/ogg'
-    ];
-    for (let t of types) {
-      if (window.MediaRecorder && MediaRecorder.isTypeSupported(t)) {
-        return t;
-      }
-    }
-    return '';
-  }
-
-  async function toggleDirectRecording() {
+  function toggleDirectRecording() {
     const btn = document.getElementById('btnRecordToggle');
     const status = document.getElementById('statusText');
 
     if (!isRecording) {
-      try {
-        globalMediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        
-        activeMimeType = getSupportedMimeType();
-        const options = activeMimeType ? { mimeType: activeMimeType } : {};
-
-        globalMediaRecorder = new MediaRecorder(globalMediaStream, options);
-        audioChunks = [];
-
-        globalMediaRecorder.ondataavailable = e => {
-          if (e.data && e.data.size > 0) audioChunks.push(e.data);
-        };
-
-        globalMediaRecorder.onstop = () => {
-          const finalType = globalMediaRecorder.mimeType || activeMimeType || 'audio/webm';
-          const blob = new Blob(audioChunks, { type: finalType });
-          
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            const qId = selectedQuestionObject.id;
-            audioBlobsMap[qId] = { 
-              base64: reader.result, 
-              blob: blob,
-              mimeType: finalType 
-            };
-            document.getElementById('audioPlayback').src = URL.createObjectURL(blob);
-            document.getElementById('audioPreviewContainer').style.display = 'block';
-            status.innerText = "Status: Rekaman Selesai!";
-          };
-          reader.readAsDataURL(blob);
-
-          // Hentikan hardware mic agar tidak mengunci HP
-          globalMediaStream.getTracks().forEach(t => t.stop());
-        };
-
-        globalMediaRecorder.start();
-        isRecording = true;
-        btn.innerText = "⏹️ Hentikan Perekaman";
-        btn.className = "btn-record-stop";
-        status.innerText = "Status: Sedang Merekam Suara Anda...";
-
-      } catch (err) {
-        alert("Akses Mic Gagal: " + err.message + "\n\nPastikan Anda memberikan izin mikrofon di browser.");
-      }
+      if (speechRecognition) speechRecognition.start();
+      isRecording = true;
+      btn.innerText = "⏹️ Hentikan Perekaman";
+      btn.className = "btn-record-stop";
+      status.innerText = "Status: Sedang Merekam Suara Anda...";
     } else {
-      if (globalMediaRecorder && globalMediaRecorder.state !== 'inactive') {
-        globalMediaRecorder.stop();
-      }
+      if (speechRecognition) speechRecognition.stop();
       isRecording = false;
       btn.innerText = "🔄 Rekam Suara Ulang";
       btn.className = "btn-record-start";
+      status.innerText = "Status: Rekaman Selesai!";
     }
   }
 
   function submitAnswerAudio() {
     if (!selectedQuestionObject) return alert("Pilih soal terlebih dahulu!");
-    const qId = selectedQuestionObject.id;
-    const audioData = audioBlobsMap[qId];
-    
-    if (!audioData) return alert("Rekam suara Anda terlebih dahulu!");
 
-    document.getElementById('result').innerHTML = "⏳ Gemini AI sedang mendengarkan & menilai jawaban Anda...";
+    document.getElementById('result').innerHTML = "⏳ Gemini AI sedang menilai jawaban Anda...";
 
     fetchAPI({
-      action: "processAudio",
-      questionId: qId,
+      action: "processAnswer",
+      questionId: selectedQuestionObject.id,
       studentName: document.getElementById('studentSelect').value,
       rombel: document.getElementById('rombelSelect').value,
       jenisKelamin: document.getElementById('jkDisplay').value,
       bab: document.getElementById('babSelect').value,
       questionText: selectedQuestionObject.pertanyaan,
       rubrikText: selectedQuestionObject.rubrik,
-      audioBase64: audioData.base64,
-      audioMimeType: audioData.mimeType || "audio/webm"
-    }, function(res) {
+      studentTranscriptText: liveTranscriptText
+    }, res => {
       if (res && res.success) {
+        updatePaletteColor(activeQuestionIndex, 'green');
         document.getElementById('result').innerHTML = `
           <div style="background:#d1fae5; padding:15px; border-radius:10px; border:1px solid #a7f3d0;">
             <b style="color:#065f46;">Nilai: ${res.highestScore || res.currentScore} / 100</b>
@@ -335,9 +369,93 @@
             <p style="margin:0; color:#065f46;"><b>Evaluasi AI:</b> ${res.feedback}</p>
           </div>
         `;
-      } else {
-        document.getElementById('result').innerHTML = "<span style='color:red;'>Gagal: " + (res ? res.error : "Respon tidak valid") + "</span>";
-      }
+      } else alert("Gagal: " + (res ? res.error : "Error AI"));
+    });
+  }
+
+  // KENDALI GURU & MODAL LOGIC
+  function openGuruModal() { document.getElementById('guruModal').style.display = 'flex'; }
+  function closeGuruModal() { document.getElementById('guruModal').style.display = 'none'; }
+  
+  function verifyAdminPass() {
+    const pass = document.getElementById('inputAdminPass').value;
+    fetchAPI({ action: "verifyPassword", password: pass }, res => {
+      if (res && res.success) {
+        adminVerified = true;
+        verifiedPass = pass;
+        document.getElementById('passForm').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'block';
+        if (selectedQuestionObject) document.getElementById('adminActionBtns').style.display = 'block';
+      } else alert("Password Admin Salah!");
+    });
+  }
+
+  function setMode(mode) {
+    fetchAPI({ action: "switchAppMode", password: verifiedPass, newMode: mode }, res => {
+      if (res && res.success) {
+        alert(res.message);
+        document.getElementById('badgeModeDisplay').innerText = "Mode: " + mode;
+      } else alert("Gagal: " + res.error);
+    });
+  }
+
+  function openTambahSoalForm() {
+    document.getElementById('soalIdInput').value = "";
+    document.getElementById('soalKelasInput').value = document.getElementById('rombelSelect').value || "";
+    document.getElementById('soalBabInput').value = document.getElementById('babSelect').value || "";
+    document.getElementById('soalPertanyaanInput').value = "";
+    document.getElementById('soalRubrikInput').value = "";
+    document.getElementById('formSoalModal').style.display = 'flex';
+  }
+
+  function openEditForm() {
+    document.getElementById('soalIdInput').value = selectedQuestionObject.id;
+    document.getElementById('soalKelasInput').value = selectedQuestionObject.kelas || document.getElementById('rombelSelect').value;
+    document.getElementById('soalBabInput').value = selectedQuestionObject.bab || document.getElementById('babSelect').value;
+    document.getElementById('soalPertanyaanInput').value = selectedQuestionObject.pertanyaan;
+    document.getElementById('soalRubrikInput').value = selectedQuestionObject.rubrik;
+    document.getElementById('formSoalModal').style.display = 'flex';
+  }
+
+  function closeFormSoalModal() { document.getElementById('formSoalModal').style.display = 'none'; }
+
+  function saveSoalData() {
+    const fileInput = document.getElementById('soalGambarInput');
+    const file = fileInput.files[0];
+
+    const doSave = (base64, name, mime) => {
+      fetchAPI({
+        action: "saveQuestion",
+        password: verifiedPass,
+        questionId: document.getElementById('soalIdInput').value,
+        kelas: document.getElementById('soalKelasInput').value,
+        bab: document.getElementById('soalBabInput').value,
+        pertanyaan: document.getElementById('soalPertanyaanInput').value,
+        rubrik: document.getElementById('soalRubrikInput').value,
+        imageBase64: base64, imageFileName: name, imageMimeType: mime
+      }, res => {
+        if (res && res.success) {
+          alert(res.message);
+          closeFormSoalModal();
+          onBabChange();
+        } else alert("Error: " + res.error);
+      });
+    };
+
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = e => doSave(e.target.result, file.name, file.type);
+      reader.readAsDataURL(file);
+    } else doSave("", "", "");
+  }
+
+  function deleteCurrentSoal() {
+    if (!confirm("Yakin ingin menghapus soal ini?")) return;
+    fetchAPI({ action: "deleteQuestion", password: verifiedPass, questionId: selectedQuestionObject.id }, res => {
+      if (res && res.success) {
+        alert(res.message);
+        onBabChange();
+      } else alert("Error: " + res.error);
     });
   }
 </script>
