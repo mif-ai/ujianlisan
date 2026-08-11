@@ -30,6 +30,7 @@
     .btn-record-stop { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; margin: 12px 0; animation: pulse 1.5s infinite; }
     @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
     .btn-submit { background: linear-gradient(135deg, #10b981, #059669); color: white; margin-top: 10px; }
+    .btn-submit:disabled { background: #94a3b8 !important; cursor: not-allowed; opacity: 0.7; }
     .palette-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
     .q-num-btn { width: 48px; height: 48px; border-radius: 12px; border: 2px solid #cbd5e1; background: #fff; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .q-num-btn.active { border-color: var(--primary) !important; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3); }
@@ -252,6 +253,14 @@
     }
   }
 
+  function resetSubmitButtonUI() {
+    const btn = document.getElementById('btnSubmitAnswer');
+    if (btn) {
+      btn.disabled = false;
+      btn.innerText = "✨ Kirim & Evaluasi Jawaban AI";
+    }
+  }
+
   function initApp() {
     fetchAPI({ action: "getAppMode" }, res => {
       const mode = res ? res.mode : "SUBMISSION";
@@ -288,15 +297,20 @@
         }
 
         updatePaletteColor(activeQuestionIndex, 'yellow');
+        resetSubmitButtonUI();
       };
     }
   }
 
+  // 💡 PERBAIKAN: API CATCH SELALU MEMANGGIL CALLBACK
   function fetchAPI(payload, callback) {
     fetch(API_URL, { method: "POST", body: JSON.stringify(payload) })
     .then(res => res.json())
     .then(data => callback(data))
-    .catch(err => alert("Error API: " + err.message));
+    .catch(err => {
+      console.error("Fetch API Catch:", err);
+      callback({ success: false, error: "Koneksi/API Error: " + err.message });
+    });
   }
 
   function onRombelChange() {
@@ -342,7 +356,6 @@
     });
   }
 
-  // HITUNG OTOMATIS RATA-RATA / AKUMULASI NILAI 1 BAB (MAX 100)
   function calculateAccumulatedScore() {
     if (!currentQuestionsList || currentQuestionsList.length === 0) return 0;
     let sum = 0;
@@ -402,6 +415,7 @@
   function selectQuestion(i) {
     activeQuestionIndex = i;
     selectedQuestionObject = currentQuestionsList[i];
+    resetSubmitButtonUI();
     
     // 1. Update Kotak Nomor Soal
     document.querySelectorAll('.q-num-btn').forEach((b, idx) => {
@@ -441,6 +455,7 @@
   function toggleDirectRecording() {
     const btn = document.getElementById('btnRecordToggle');
     const status = document.getElementById('statusText');
+    resetSubmitButtonUI();
 
     if (!isRecording) {
       if (speechRecognition) speechRecognition.start();
@@ -475,8 +490,8 @@
       rubrikText: selectedQuestionObject.rubrik,
       studentTranscriptText: liveTranscriptText
     }, res => {
-      submitBtn.disabled = false;
-      submitBtn.innerText = "✨ Kirim & Evaluasi Jawaban AI";
+      // 💡 RE-ENABLE SELALU DIJALANKAN DENGAN AMAN
+      resetSubmitButtonUI();
 
       if (res && res.success) {
         const qId = selectedQuestionObject.id;
@@ -503,12 +518,11 @@
         document.getElementById('resultModal').style.display = 'flex';
 
       } else {
-        alert("Gagal: " + (res ? res.error : "Error AI"));
+        alert("Gagal: " + (res ? res.error : "Terjadi kesalahan pada AI / Server. Silakan coba klik Kirim lagi."));
       }
     });
   }
 
-  // LOGIKA KONTROL POP-UP RESULT MODAL
   function closeResultModal() {
     document.getElementById('resultModal').style.display = 'none';
   }
