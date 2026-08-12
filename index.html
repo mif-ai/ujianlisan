@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ujian Wawancara Berbasis AI Hybrid</title>
+  <title>Ujian Wawancara Berbasis AI</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -212,7 +212,7 @@
     </div>
 
     <div class="card">
-      <h3>3. Kelola Bank Soal (Tambah, Edit, Hapus)</h3>
+      <h3>3. Kelola Bank Soal & Status Publikasi Bab</h3>
       <div class="form-group">
         <label>Filter Kelas / Rombel Bank Soal:</label>
         <select id="adminBankRombelSelect" onchange="onAdminBankRombelChange()">
@@ -221,9 +221,20 @@
       </div>
       <div class="form-group">
         <label>Filter Bab / Topik Bank Soal:</label>
-        <select id="adminBankBabSelect" onchange="fetchAdminQuestionsList()">
+        <select id="adminBankBabSelect" onchange="onAdminBankBabSelectChange()">
           <option value="">-- Pilih Kelas Terlebih Dahulu --</option>
         </select>
+      </div>
+
+      <!-- KARTU KONTROL PUBLIKASI BAB KHUSUS GURU -->
+      <div id="adminBabPublishControlCard" style="display:none; background:#f8fafc; border:1.5px solid #cbd5e1; padding:15px; border-radius:12px; margin-bottom:15px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <span style="font-size:12px; color:#64748b; font-weight:700;">STATUS PUBLIKASI BAB INI UNTUK SISWA:</span>
+            <div id="adminBabStatusTextDisplay" style="font-size:16px; font-weight:800; color:#ef4444; margin-top:2px;">🔴 SEMBUNYI (DRAFT)</div>
+          </div>
+          <button id="btnToggleBabStatusAdmin" style="width:auto; padding:8px 16px; background:#10b981; color:white; font-weight:700; font-size:12px;" onclick="toggleBabPublishStatusAdmin()">📢 Tampilkan ke Siswa</button>
+        </div>
       </div>
 
       <button style="background:var(--primary); color:white; margin-bottom:15px;" onclick="openTambahSoalForm()">+ Tambah Soal Baru</button>
@@ -349,12 +360,12 @@
   let adminCurrentQuestions = [];
   let clientQuestionsCache = {};
   let editingQuestionGambarUrl = "";
+  let currentAdminBabStatus = "SEMBUNYI";
 
   window.onload = function() {
     initApp();
   };
 
-  // FUNGSI PENGACAKAN TERSTRUKTUR (SEEDED SHUFFLE KHUSUS MINGGU/SISWA)
   function seededShuffle(array, seedString) {
     let m = array.length, t, i;
     let seed = 0;
@@ -553,9 +564,14 @@
       studentDataCache.studentsByRombel[rombel].forEach(s => sSelect.innerHTML += `<option value="${s.nama}">${s.nama}</option>`);
       sSelect.disabled = false;
 
-      fetchAPI({ action: "getBabList", rombel: rombel }, res => {
+      // PEMANGGILAN KHUSUS SISWA (isAdmin: false) -> HANYA BAB YANG STATUSNYA TAMPIL
+      fetchAPI({ action: "getBabList", rombel: rombel, isAdmin: false }, res => {
         bSelect.innerHTML = '<option value="">-- Pilih Bab --</option>';
-        if (res && res.babList) res.babList.forEach(bab => bSelect.innerHTML += `<option value="${bab}">${bab}</option>`);
+        if (res && res.babList && res.babList.length > 0) {
+          res.babList.forEach(bab => bSelect.innerHTML += `<option value="${bab}">${bab}</option>`);
+        } else {
+          bSelect.innerHTML = '<option value="">-- Belum Ada Bab Dipublikasikan --</option>';
+        }
         bSelect.disabled = false;
       });
     } else {
@@ -606,7 +622,6 @@
     const clientKey = rombel + "_" + bab;
 
     const renderWithQuestions = (questions) => {
-      // ACAK TERSTRUKTUR BERDASARKAN NAMA SISWA + BAB
       const seedKey = studentName.trim().toLowerCase() + "_" + bab;
       currentQuestionsList = seededShuffle(questions, seedKey);
 
@@ -967,7 +982,7 @@
     const babSelect = document.getElementById('adminRekapBabSelect');
     
     if (rombel) {
-      fetchAPI({ action: "getBabList", rombel: rombel }, res => {
+      fetchAPI({ action: "getBabList", rombel: rombel, isAdmin: true }, res => {
         babSelect.innerHTML = '<option value="">-- Pilih Bab --</option>';
         if (res && res.babList) res.babList.forEach(bab => babSelect.innerHTML += `<option value="${bab}">${bab}</option>`);
       });
@@ -1039,12 +1054,81 @@
     const rombel = document.getElementById('adminBankRombelSelect').value;
     const babSelect = document.getElementById('adminBankBabSelect');
     
+    document.getElementById('adminBabPublishControlCard').style.display = 'none';
+
     if (rombel) {
-      fetchAPI({ action: "getBabList", rombel: rombel }, res => {
+      // PEMANGGILAN GURU (isAdmin: true) -> TAMPILKAN SELURUH BAB (TAMPIL MAUPUN SEMBUNYI)
+      fetchAPI({ action: "getBabList", rombel: rombel, isAdmin: true }, res => {
         babSelect.innerHTML = '<option value="">-- Pilih Bab --</option>';
         if (res && res.babList) res.babList.forEach(bab => babSelect.innerHTML += `<option value="${bab}">${bab}</option>`);
       });
     }
+  }
+
+  function onAdminBankBabSelectChange() {
+    const rombel = document.getElementById('adminBankRombelSelect').value;
+    const bab = document.getElementById('adminBankBabSelect').value;
+
+    if (!rombel || !bab) {
+      document.getElementById('adminBabPublishControlCard').style.display = 'none';
+      return;
+    }
+
+    // AMBIL STATUS PUBLIKASI BAB
+    fetchAPI({ action: "getBabStatus", rombel: rombel, bab: bab }, res => {
+      currentAdminBabStatus = (res && res.status) ? res.status : "SEMBUNYI";
+      renderBabPublishStatusUI();
+    });
+
+    fetchAdminQuestionsList();
+  }
+
+  function renderBabPublishStatusUI() {
+    const card = document.getElementById('adminBabPublishControlCard');
+    const textDisp = document.getElementById('adminBabStatusTextDisplay');
+    const btn = document.getElementById('btnToggleBabStatusAdmin');
+
+    card.style.display = 'block';
+
+    if (currentAdminBabStatus === "TAMPIL") {
+      textDisp.innerText = "🟢 TAMPIL (DIPUBLIKASIKAN KE SISWA)";
+      textDisp.style.color = "#10b981";
+      btn.innerText = "🔒 Sembunyikan dari Siswa";
+      btn.style.background = "#ef4444";
+    } else {
+      textDisp.innerText = "🔴 SEMBUNYI (DRAFT / BELUM TAMPIL)";
+      textDisp.style.color = "#ef4444";
+      btn.innerText = "📢 Publikasikan ke Siswa";
+      btn.style.background = "#10b981";
+    }
+  }
+
+  function toggleBabPublishStatusAdmin() {
+    const rombel = document.getElementById('adminBankRombelSelect').value;
+    const bab = document.getElementById('adminBankBabSelect').value;
+
+    if (!rombel || !bab) return;
+
+    const targetStatus = (currentAdminBabStatus === "TAMPIL") ? "SEMBUNYI" : "TAMPIL";
+
+    const passConfirm = prompt(`🔒 Konfirmasi Password Admin untuk Mengubah Status Publikasi Bab:\nUbah Ke: ${targetStatus}`, verifiedPass);
+    if (!passConfirm) return;
+
+    fetchAPI({
+      action: "toggleBabStatus",
+      password: passConfirm,
+      rombel: rombel,
+      bab: bab,
+      status: targetStatus
+    }, res => {
+      if (res && res.success) {
+        currentAdminBabStatus = res.status;
+        renderBabPublishStatusUI();
+        alert("🎉 BERHASIL: " + res.message);
+      } else {
+        alert("❌ GAGAL: " + (res ? res.error : "Terjadi kesalahan"));
+      }
+    });
   }
 
   function fetchAdminQuestionsList() {
