@@ -142,7 +142,6 @@
 
     <button type="button" class="btn-submit" id="btnSubmitAnswer" onclick="submitAnswerAudio()">✨ Kirim & Evaluasi Jawaban AI</button>
     
-    <!-- KETERANGAN BATAS KESEMPATAN KIRIM UNTUK SISWA -->
     <div id="submitLimitNotice" style="text-align:center; font-size:12px; font-weight:700; color:#dc2626; margin-top:8px; display:none;">
       ⚠️ Mode Ujian: Kesempatan kirim maks. 2x per soal. (Sisa: <span id="attemptsLeftDisplay">2</span>x)
     </div>
@@ -228,11 +227,11 @@
       <div style="display:flex; flex-direction:column; gap:10px;">
         <button style="background:var(--success); color:white; padding:12px; text-align:center;" onclick="setMode('PRACTICE')">
           🟢 <b>Mode Latihan</b><br>
-          <small style="font-weight:400; font-size:12px;">(Tunjukkan Kunci Jawaban, Tanpa Token & 0% Kuota AI)</small>
+          <small style="font-weight:400; font-size:12px;">(Penilaian kurang akurat karena menggunakan AI terbatas. Kunci jawaban ditampilkan)</small>
         </button>
         <button style="background:var(--danger); color:white; padding:12px; text-align:center;" onclick="setMode('SUBMISSION')">
           🔴 <b>Mode Ujian</b><br>
-          <small style="font-weight:400; font-size:12px;">(Rahasiakan Kunci Jawaban, Wajib Token & Diuji AI Gemini)</small>
+          <small style="font-weight:400; font-size:12px;">(Penilaian menggunakan AI Full Version. Kunci jawaban dirahasiakan)</small>
         </button>
       </div>
       <hr style="margin:20px 0;">
@@ -311,11 +310,11 @@
     const tokenSection = document.getElementById('tokenEntrySection');
 
     if (mode === "PRACTICE") {
-      badge.innerHTML = "🟢 LATIHAN (Tampil Kunci & Tanpa Token)";
+      badge.innerHTML = "🟢 LATIHAN (AI Terbatas - Kurang Akurat)";
       badge.style.background = "#10b981";
       tokenSection.style.display = "none";
     } else {
-      badge.innerHTML = "🔴 UJIAN (Rahasia Kunci & Wajib Token)";
+      badge.innerHTML = "🔴 UJIAN (AI Full Version - Akurat)";
       badge.style.background = "#ef4444";
       if (!activeStudentTokenSession) {
         tokenSection.style.display = "block";
@@ -498,7 +497,7 @@
           score: progress[q.id].score,
           transcript: progress[q.id].transcript,
           feedback: progress[q.id].feedback,
-          attempts: 1 // Jika dari database, anggap sudah 1x kirim
+          attempts: 1
         };
       }
 
@@ -550,7 +549,6 @@
       document.getElementById('transcriptBox').innerText = "(Tekan tombol rekam untuk mulai berbicara...)";
     }
 
-    // UPDATE TAMPILAN BATAS KESEMPATAN KIRIM
     const attempts = existingData.attempts || (existingData.score !== undefined ? 1 : 0);
     if (currentAppMode === "SUBMISSION") {
       document.getElementById('submitLimitNotice').style.display = 'block';
@@ -631,7 +629,6 @@
     const existingData = questionStatusMap[qId] || {};
     let attempts = existingData.attempts || (existingData.score !== undefined ? 1 : 0);
 
-    // CEK BATAS KIRIM 2X DI MODE UJIAN
     if (currentAppMode === "SUBMISSION" && attempts >= 2) {
       return alert("Kesempatan mengirim jawaban untuk soal ini sudah habis (Maksimal 2x per soal).");
     }
@@ -653,7 +650,7 @@
       studentToken: activeStudentTokenSession
     }, res => {
       if (res && res.success) {
-        attempts += 1; // Tambah jumlah pengiriman
+        attempts += 1;
         
         const score = res.highestScore || res.currentScore;
         const transcript = res.transcriptUsed || liveTranscriptText;
@@ -663,7 +660,6 @@
         updatePaletteColor(activeQuestionIndex, 'green');
         updateAccumulatedScoreUI();
 
-        // Update UI sisa kesempatan kirim
         if (currentAppMode === "SUBMISSION") {
           const left = Math.max(0, 2 - attempts);
           document.getElementById('attemptsLeftDisplay').innerText = left;
@@ -677,8 +673,8 @@
         document.getElementById('modalFeedbackDisplay').innerText = feedback;
 
         const modeNote = res.mode === "PRACTICE" 
-          ? `<span style="color:#d97706; font-weight:600;">🟢 Mode Latihan:</span> Kunci Jawaban Ditampilkan & Nilai Tidak Tersimpan.`
-          : `<span style="color:#059669; font-weight:600;">🔴 Mode Ujian:</span> Kunci Jawaban Dirahasiakan & Nilai Terekam di database (Terkirim: ${attempts}/2x).`;
+          ? `<span style="color:#d97706; font-weight:600;">🟢 Mode Latihan:</span> Penilaian kurang akurat karena menggunakan AI terbatas.`
+          : `<span style="color:#059669; font-weight:600;">🔴 Mode Ujian:</span> Penilaian menggunakan AI Full Version (Terkirim: ${attempts}/2x).`;
         document.getElementById('modalModeNote').innerHTML = modeNote;
 
         document.getElementById('resultModal').style.display = 'flex';
