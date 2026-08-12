@@ -245,7 +245,6 @@
       </div>
     </div>
 
-    <!-- POIN 3: TOMBOL MANUAL RESET CACHE SERVER UNTUK GURU -->
     <div class="card" style="background:#f8fafc; border:1px solid #cbd5e1;">
       <h3 style="margin-top:0; color:#334155;">4. Pemeliharaan Performa Server</h3>
       <p style="font-size:12px; color:#64748b; margin-bottom:12px;">Gunakan tombol ini jika Anda baru saja mengedit data secara langsung di file Google Sheets untuk memperbarui cache server secara instan.</p>
@@ -356,7 +355,6 @@
 
   let adminCurrentQuestions = [];
 
-  // POIN 1: CLIENT-SIDE CACHE MEMORY (PRELOADING)
   let clientQuestionsCache = {};
 
   window.onload = function() {
@@ -506,11 +504,21 @@
     });
   }
 
+  // EVENT LENGKAP SAAT KELAS DIUBAH
   function onRombelChange() {
     const rombel = document.getElementById('rombelSelect').value;
     const sSelect = document.getElementById('studentSelect');
     const bSelect = document.getElementById('babSelect');
+
+    // Sembunyikan palet dan soal sebelumnya secara instan
+    document.getElementById('paletteSection').style.display = 'none';
+    document.getElementById('questionContainer').style.display = 'none';
+    document.getElementById('jkDisplay').value = "";
     
+    currentQuestionsList = [];
+    selectedQuestionObject = null;
+    activeQuestionIndex = -1;
+
     if (rombel && studentDataCache.studentsByRombel && studentDataCache.studentsByRombel[rombel]) {
       sSelect.innerHTML = '<option value="">-- Pilih Nama --</option>';
       studentDataCache.studentsByRombel[rombel].forEach(s => sSelect.innerHTML += `<option value="${s.nama}">${s.nama}</option>`);
@@ -521,23 +529,47 @@
         if (res && res.babList) res.babList.forEach(bab => bSelect.innerHTML += `<option value="${bab}">${bab}</option>`);
         bSelect.disabled = false;
       });
+    } else {
+      sSelect.innerHTML = '<option value="">-- Pilih Kelas Terlebih Dahulu --</option>';
+      sSelect.disabled = true;
+      bSelect.innerHTML = '<option value="">-- Pilih Kelas Terlebih Dahulu --</option>';
+      bSelect.disabled = true;
     }
   }
 
+  // EVENT LENGKAP SAAT NAMA SISWA DIUBAH (OTOMATIS BERPINDAH SOAL/PROGRESS)
   function onStudentChange() {
     const rombel = document.getElementById('rombelSelect').value;
     const studentName = document.getElementById('studentSelect').value;
+    const bab = document.getElementById('babSelect').value;
+
     if (rombel && studentName && studentDataCache.studentsByRombel[rombel]) {
       const student = studentDataCache.studentsByRombel[rombel].find(s => s.nama === studentName);
       if (student) document.getElementById('jkDisplay').value = student.jk;
+    } else {
+      document.getElementById('jkDisplay').value = "";
+    }
+
+    // Jika bab sudah terpilih sebelumnya, panggil ulang progress untuk siswa baru ini
+    if (rombel && studentName && bab) {
+      onBabChange();
+    } else {
+      document.getElementById('paletteSection').style.display = 'none';
+      document.getElementById('questionContainer').style.display = 'none';
     }
   }
 
-  // POIN 1: NAVIGASI BAB & SOAL MEMAKAI PRELOADING/CACHE CLIENT
+  // EVENT LENGKAP SAAT BAB UJIAN DIUBAH
   function onBabChange() {
     const rombel = document.getElementById('rombelSelect').value;
     const bab = document.getElementById('babSelect').value;
     const studentName = document.getElementById('studentSelect').value;
+
+    if (!rombel || !studentName || !bab) {
+      document.getElementById('paletteSection').style.display = 'none';
+      document.getElementById('questionContainer').style.display = 'none';
+      return;
+    }
 
     if (currentAppMode === "SUBMISSION" && !isStudentTokenVerified) {
       document.getElementById('paletteSection').style.display = 'none';
@@ -555,13 +587,12 @@
       });
     };
 
-    // CEK REUSABILITY DI CLIENT MEMORY (0 DETIK LOADING)
     if (clientQuestionsCache[clientKey]) {
       renderWithQuestions(clientQuestionsCache[clientKey]);
     } else {
       fetchAPI({ action: "getQuestions", rombel: rombel, bab: bab }, res => {
         if (res && res.questions) {
-          clientQuestionsCache[clientKey] = res.questions; // Simpan ke cache browser
+          clientQuestionsCache[clientKey] = res.questions;
           renderWithQuestions(res.questions);
         }
       });
@@ -626,6 +657,8 @@
   }
 
   function selectQuestion(i) {
+    if (!currentQuestionsList || currentQuestionsList.length === 0) return;
+    
     activeQuestionIndex = i;
     selectedQuestionObject = currentQuestionsList[i];
     
@@ -1035,7 +1068,7 @@
       }, res => {
         if (res && res.success) {
           alert("🎉 BERHASIL: " + res.message);
-          clientQuestionsCache = {}; // Purge Client Cache lokal
+          clientQuestionsCache = {};
           closeFormSoalModal();
           fetchAdminQuestionsList();
         } else alert("❌ GAGAL: " + res.error);
@@ -1059,13 +1092,12 @@
     fetchAPI({ action: "deleteQuestion", password: passConfirm, questionId: q.id }, res => {
       if (res && res.success) {
         alert("🎉 BERHASIL: " + res.message);
-        clientQuestionsCache = {}; // Purge Client Cache lokal
+        clientQuestionsCache = {};
         fetchAdminQuestionsList();
       } else alert("❌ GAGAL: " + res.error);
     });
   }
 
-  // POIN 3: TOMBOL RESET CACHE SERVER DARI PANEL ADMIN
   function clearServerCacheManual() {
     const passConfirm = prompt("🔒 Membersihkan Cache Server Memerlukan Password Admin:\nMasukkan Password:");
     if (!passConfirm) return;
