@@ -354,6 +354,28 @@
     initApp();
   };
 
+  // FUNGSI PENGACAKAN TERSTRUKTUR (SEEDED SHUFFLE KHUSUS MINGGU/SISWA)
+  function seededShuffle(array, seedString) {
+    let m = array.length, t, i;
+    let seed = 0;
+    for (let s = 0; s < seedString.length; s++) {
+      seed = (seed << 5) - seed + seedString.charCodeAt(s);
+      seed |= 0;
+    }
+    function random() {
+      let x = Math.sin(seed++) * 10000;
+      return x - Math.floor(x);
+    }
+    let shuffled = [...array];
+    while (m) {
+      i = Math.floor(random() * m--);
+      t = shuffled[m];
+      shuffled[m] = shuffled[i];
+      shuffled[i] = t;
+    }
+    return shuffled;
+  }
+
   function switchToAdminView() {
     const pass = prompt("🔒 Masukkan Password Admin untuk Mengakses Halaman Kendali:");
     if (!pass) return;
@@ -405,7 +427,6 @@
       if (desc) desc.innerText = "Penilaian presisi (Gemini AI Full Version). Kunci jawaban dirahasiakan.";
     }
 
-    // Refresh tampilan jika siswa sedang memilih bab
     if (document.getElementById('rombelSelect').value && document.getElementById('babSelect').value) {
       onBabChange();
     }
@@ -585,7 +606,10 @@
     const clientKey = rombel + "_" + bab;
 
     const renderWithQuestions = (questions) => {
-      currentQuestionsList = questions;
+      // ACAK TERSTRUKTUR BERDASARKAN NAMA SISWA + BAB
+      const seedKey = studentName.trim().toLowerCase() + "_" + bab;
+      currentQuestionsList = seededShuffle(questions, seedKey);
+
       fetchAPI({ action: "getStudentProgress", studentName: studentName, rombel: rombel, bab: bab }, progRes => {
         const progress = progRes ? progRes.progress : {};
         renderPalette(progress);
