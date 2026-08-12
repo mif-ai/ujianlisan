@@ -158,7 +158,7 @@
 <div id="adminPage" style="display:none;">
   <div class="header-card" style="background: linear-gradient(135deg, #1e293b, #334155);">
     <h1>⚙️ Halaman Kendali Guru / Admin</h1>
-    <p style="margin:0; font-size:13px; opacity:0.9;">Pengaturan Token, Mode Penggunaan, Rekap Nilai & Bank Soal</p>
+    <p style="margin:0; font-size:13px; opacity:0.9;">Pengaturan Token, Mode Penggunaan, Data Siswa, Rekap & Bank Soal</p>
   </div>
 
   <button type="button" style="background:#64748b; color:white; margin-bottom:15px;" onclick="switchToStudentView()">⬅️ Kembali ke Halaman Siswa</button>
@@ -185,8 +185,30 @@
       </div>
     </div>
 
+    <!-- FITUR BARU: MANAJEMEN DATA SISWA (CRUD) -->
     <div class="card">
-      <h3>2. Tampilkan Rekap Nilai Kelas & Reset Ujian</h3>
+      <h3>2. Kelola Data Siswa (CRUD)</h3>
+      <div class="form-group">
+        <label>Filter Kelas / Rombel Siswa:</label>
+        <select id="adminStudentRombelSelect" onchange="fetchAdminStudentList()">
+          <option value="">-- Memuat Kelas... --</option>
+        </select>
+      </div>
+
+      <button style="background:var(--success); color:white; margin-bottom:15px;" onclick="openTambahSiswaForm()">+ Tambah Siswa Baru</button>
+
+      <div id="adminStudentTableBox" style="display:none; max-height:300px; overflow-y:auto;">
+        <table id="adminStudentTable">
+          <thead>
+            <tr><th>No</th><th>Nama Siswa</th><th>L/P</th><th>Aksi</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>3. Tampilkan Rekap Nilai Kelas & Reset Ujian</h3>
       <div class="form-group">
         <label>Pilih Kelas / Rombel Rekap:</label>
         <select id="adminRekapRombelSelect" onchange="onAdminRekapRombelChange()">
@@ -212,7 +234,7 @@
     </div>
 
     <div class="card">
-      <h3>3. Kelola Bank Soal & Status Publikasi Bab</h3>
+      <h3>4. Kelola Bank Soal & Status Publikasi Bab</h3>
       <div class="form-group">
         <label>Filter Kelas / Rombel Bank Soal:</label>
         <select id="adminBankRombelSelect" onchange="onAdminBankRombelChange()">
@@ -226,7 +248,6 @@
         </select>
       </div>
 
-      <!-- KARTU KONTROL PUBLIKASI BAB KHUSUS GURU -->
       <div id="adminBabPublishControlCard" style="display:none; background:#f8fafc; border:1.5px solid #cbd5e1; padding:15px; border-radius:12px; margin-bottom:15px;">
         <div style="display:flex; justify-content:space-between; align-items:center;">
           <div>
@@ -250,7 +271,7 @@
     </div>
 
     <div class="card" style="background:#f8fafc; border:1px solid #cbd5e1;">
-      <h3 style="margin-top:0; color:#334155;">4. Pemeliharaan Performa Server</h3>
+      <h3 style="margin-top:0; color:#334155;">5. Pemeliharaan Performa Server</h3>
       <p style="font-size:12px; color:#64748b; margin-bottom:12px;">Gunakan tombol ini jika Anda baru saja mengedit data secara langsung di file Google Sheets untuk memperbarui cache server secara instan.</p>
       <button style="background:#475569; color:white;" onclick="clearServerCacheManual()">🧹 Reset Cache Server</button>
     </div>
@@ -312,6 +333,32 @@
   </div>
 </div>
 
+<!-- MODAL FORM INPUT SISWA (CREATE / EDIT) -->
+<div id="formSiswaModal" class="modal-overlay">
+  <div class="modal-content">
+    <h3 id="formSiswaTitle" style="margin-top:0;">Form Data Siswa</h3>
+    <input type="hidden" id="siswaOldNamaInput">
+    <input type="hidden" id="siswaOldRombelInput">
+    <div class="form-group">
+      <label>Nama Lengkap Siswa:</label>
+      <input type="text" id="siswaNamaInput" placeholder="Contoh: Ahmad Subagyo">
+    </div>
+    <div class="form-group">
+      <label>Kelas / Rombel:</label>
+      <input type="text" id="siswaRombelInput" placeholder="Contoh: XII IPA 1">
+    </div>
+    <div class="form-group">
+      <label>Jenis Kelamin:</label>
+      <select id="siswaJkInput">
+        <option value="L">Laki-laki (L)</option>
+        <option value="P">Perempuan (P)</option>
+      </select>
+    </div>
+    <button style="background:var(--success); color:white; margin-top:10px;" onclick="saveSiswaData()">Simpan Data Siswa</button>
+    <button style="background:#94a3b8; color:white; margin-top:5px;" onclick="closeFormSiswaModal()">Batal</button>
+  </div>
+</div>
+
 <!-- MODAL FORM INPUT SOAL -->
 <div id="formSoalModal" class="modal-overlay">
   <div class="modal-content">
@@ -361,6 +408,7 @@
   let clientQuestionsCache = {};
   let editingQuestionGambarUrl = "";
   let currentAdminBabStatus = "SEMBUNYI";
+  let adminCurrentStudentList = [];
 
   window.onload = function() {
     initApp();
@@ -463,6 +511,30 @@
     btn.innerText = "✨ Kirim & Evaluasi Jawaban AI";
   }
 
+  function loadStudentDropdowns(data) {
+    studentDataCache = data;
+    
+    const rSelect = document.getElementById('rombelSelect');
+    rSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+    
+    const adminStudentRSelect = document.getElementById('adminStudentRombelSelect');
+    const adminRekapRSelect = document.getElementById('adminRekapRombelSelect');
+    const adminBankRSelect = document.getElementById('adminBankRombelSelect');
+
+    adminStudentRSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+    adminRekapRSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+    adminBankRSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+
+    if (data && data.rombelList) {
+      data.rombelList.forEach(r => {
+        rSelect.innerHTML += `<option value="${r}">${r}</option>`;
+        adminStudentRSelect.innerHTML += `<option value="${r}">${r}</option>`;
+        adminRekapRSelect.innerHTML += `<option value="${r}">${r}</option>`;
+        adminBankRSelect.innerHTML += `<option value="${r}">${r}</option>`;
+      });
+    }
+  }
+
   function initApp() {
     fetchAPI({ action: "getAppMode" }, res => {
       const mode = res ? res.mode : "SUBMISSION";
@@ -471,21 +543,7 @@
 
     fetchAPI({ action: "getStudentData" }, data => {
       if (!data || !data.rombelList) return;
-      studentDataCache = data;
-      
-      const rSelect = document.getElementById('rombelSelect');
-      rSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
-      
-      const adminRekapRSelect = document.getElementById('adminRekapRombelSelect');
-      const adminBankRSelect = document.getElementById('adminBankRombelSelect');
-      adminRekapRSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
-      adminBankRSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
-
-      data.rombelList.forEach(r => {
-        rSelect.innerHTML += `<option value="${r}">${r}</option>`;
-        adminRekapRSelect.innerHTML += `<option value="${r}">${r}</option>`;
-        adminBankRSelect.innerHTML += `<option value="${r}">${r}</option>`;
-      });
+      loadStudentDropdowns(data);
     });
 
     const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -520,6 +578,15 @@
     .catch(err => {
       console.error("Fetch API Catch:", err);
       callback({ success: false, error: "Koneksi/API Error: " + err.message });
+    });
+  }
+
+  function refreshAllStudentData(callback) {
+    fetchAPI({ action: "getStudentData" }, data => {
+      if (data && data.rombelList) {
+        loadStudentDropdowns(data);
+      }
+      if (callback) callback();
     });
   }
 
@@ -564,7 +631,6 @@
       studentDataCache.studentsByRombel[rombel].forEach(s => sSelect.innerHTML += `<option value="${s.nama}">${s.nama}</option>`);
       sSelect.disabled = false;
 
-      // PEMANGGILAN KHUSUS SISWA (isAdmin: false) -> HANYA BAB YANG STATUSNYA TAMPIL
       fetchAPI({ action: "getBabList", rombel: rombel, isAdmin: false }, res => {
         bSelect.innerHTML = '<option value="">-- Pilih Bab --</option>';
         if (res && res.babList && res.babList.length > 0) {
@@ -977,6 +1043,120 @@
     });
   }
 
+  // LOGIKA ADMIN CRUD SISWA
+  function fetchAdminStudentList() {
+    const rombel = document.getElementById('adminStudentRombelSelect').value;
+    const tbody = document.querySelector('#adminStudentTable tbody');
+    tbody.innerHTML = "";
+
+    if (!rombel || !studentDataCache.studentsByRombel || !studentDataCache.studentsByRombel[rombel]) {
+      document.getElementById('adminStudentTableBox').style.display = 'none';
+      return;
+    }
+
+    adminCurrentStudentList = studentDataCache.studentsByRombel[rombel];
+    
+    if (adminCurrentStudentList.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Belum ada siswa di kelas ini.</td></tr>`;
+    } else {
+      adminCurrentStudentList.forEach((s, idx) => {
+        tbody.innerHTML += `<tr>
+          <td style="text-align:center;">${idx + 1}</td>
+          <td><b>${s.nama}</b></td>
+          <td style="text-align:center;">${s.jk}</td>
+          <td style="text-align:center; white-space:nowrap;">
+            <button style="width:auto; padding:4px 8px; font-size:11px; background:#f59e0b; color:white;" onclick="openEditSiswaForm(${idx})">Edit</button>
+            <button style="width:auto; padding:4px 8px; font-size:11px; background:#ef4444; color:white;" onclick="deleteSiswaAdmin(${idx})">Hapus</button>
+          </td>
+        </tr>`;
+      });
+    }
+    document.getElementById('adminStudentTableBox').style.display = 'block';
+  }
+
+  function openTambahSiswaForm() {
+    document.getElementById('siswaOldNamaInput').value = "";
+    document.getElementById('siswaOldRombelInput').value = "";
+    document.getElementById('siswaNamaInput').value = "";
+    document.getElementById('siswaRombelInput').value = document.getElementById('adminStudentRombelSelect').value || "";
+    document.getElementById('siswaJkInput').value = "L";
+    document.getElementById('formSiswaTitle').innerText = "Tambah Siswa Baru";
+    document.getElementById('formSiswaModal').style.display = 'flex';
+  }
+
+  function openEditSiswaForm(idx) {
+    const s = adminCurrentStudentList[idx];
+    const rombel = document.getElementById('adminStudentRombelSelect').value;
+    document.getElementById('siswaOldNamaInput').value = s.nama;
+    document.getElementById('siswaOldRombelInput').value = rombel;
+    document.getElementById('siswaNamaInput').value = s.nama;
+    document.getElementById('siswaRombelInput').value = rombel;
+    document.getElementById('siswaJkInput').value = s.jk || "L";
+    document.getElementById('formSiswaTitle').innerText = "Edit Data Siswa";
+    document.getElementById('formSiswaModal').style.display = 'flex';
+  }
+
+  function closeFormSiswaModal() {
+    document.getElementById('formSiswaModal').style.display = 'none';
+  }
+
+  function saveSiswaData() {
+    const nama = document.getElementById('siswaNamaInput').value.trim();
+    const rombel = document.getElementById('siswaRombelInput').value.trim();
+    const jk = document.getElementById('siswaJkInput').value;
+    const oldName = document.getElementById('siswaOldNamaInput').value;
+    const oldRombel = document.getElementById('siswaOldRombelInput').value;
+
+    if (!nama || !rombel) return alert("Nama dan Rombel tidak boleh kosong!");
+
+    const passConfirm = prompt("🔒 Menyimpan Data Siswa Memerlukan Password Admin:\nMasukkan Password:", verifiedPass);
+    if (!passConfirm) return;
+
+    fetchAPI({
+      action: "saveStudent",
+      password: passConfirm,
+      oldName: oldName,
+      oldRombel: oldRombel,
+      nama: nama,
+      rombel: rombel,
+      jk: jk
+    }, res => {
+      if (res && res.success) {
+        alert("🎉 BERHASIL: " + res.message);
+        closeFormSiswaModal();
+        refreshAllStudentData(() => {
+          document.getElementById('adminStudentRombelSelect').value = rombel;
+          fetchAdminStudentList();
+        });
+      } else alert("❌ GAGAL: " + (res ? res.error : "Error"));
+    });
+  }
+
+  function deleteSiswaAdmin(idx) {
+    const s = adminCurrentStudentList[idx];
+    const rombel = document.getElementById('adminStudentRombelSelect').value;
+
+    if (!confirm(`Yakin ingin menghapus data siswa: ${s.nama} (${rombel})?`)) return;
+
+    const passConfirm = prompt("🔒 Menghapus Data Siswa Memerlukan Password Admin:\nMasukkan Password:", verifiedPass);
+    if (!passConfirm) return;
+
+    fetchAPI({
+      action: "deleteStudent",
+      password: passConfirm,
+      studentName: s.nama,
+      rombel: rombel
+    }, res => {
+      if (res && res.success) {
+        alert("🎉 BERHASIL: " + res.message);
+        refreshAllStudentData(() => {
+          document.getElementById('adminStudentRombelSelect').value = rombel;
+          fetchAdminStudentList();
+        });
+      } else alert("❌ GAGAL: " + (res ? res.error : "Error"));
+    });
+  }
+
   function onAdminRekapRombelChange() {
     const rombel = document.getElementById('adminRekapRombelSelect').value;
     const babSelect = document.getElementById('adminRekapBabSelect');
@@ -1057,7 +1237,6 @@
     document.getElementById('adminBabPublishControlCard').style.display = 'none';
 
     if (rombel) {
-      // PEMANGGILAN GURU (isAdmin: true) -> TAMPILKAN SELURUH BAB (TAMPIL MAUPUN SEMBUNYI)
       fetchAPI({ action: "getBabList", rombel: rombel, isAdmin: true }, res => {
         babSelect.innerHTML = '<option value="">-- Pilih Bab --</option>';
         if (res && res.babList) res.babList.forEach(bab => babSelect.innerHTML += `<option value="${bab}">${bab}</option>`);
@@ -1074,7 +1253,6 @@
       return;
     }
 
-    // AMBIL STATUS PUBLIKASI BAB
     fetchAPI({ action: "getBabStatus", rombel: rombel, bab: bab }, res => {
       currentAdminBabStatus = (res && res.status) ? res.status : "SEMBUNYI";
       renderBabPublishStatusUI();
