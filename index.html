@@ -17,7 +17,7 @@
       --text-main: #1e293b;
     }
     * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-    body { background-color: var(--bg-color); padding: 15px; max-width: 720px; margin: auto; color: var(--text-main); }
+    body { background-color: var(--bg-color); padding: 15px; max-width: 760px; margin: auto; color: var(--text-main); }
     .header-card { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; padding: 20px; border-radius: 16px; text-align: center; margin-bottom: 20px; position: relative; }
     .badge-mode { position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.3); padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; border: 1px solid rgba(255,255,255,0.4); }
     .card { background: var(--card-bg); padding: 20px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 20px; }
@@ -39,9 +39,19 @@
     .question-box { background: #f0f9ff; padding: 16px; border-left: 5px solid var(--secondary); margin: 15px 0; border-radius: 10px; }
     .img-soal { max-width: 100%; max-height: 250px; border-radius: 10px; margin-top: 10px; border: 1px solid #cbd5e1; }
     
+    /* MODAL POPUP */
     .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 15px; }
     .modal-content { background: white; padding: 24px; border-radius: 16px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
     
+    /* STYLING TOGGLE SWITCH */
+    .switch-container { display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 12px 16px; border-radius: 12px; border: 1.5px solid #cbd5e1; }
+    .switch { position: relative; display: inline-block; width: 52px; height: 28px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #10b981; transition: .3s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .3s; border-radius: 50%; }
+    input:checked + .slider { background-color: #ef4444; }
+    input:checked + .slider:before { transform: translateX(24px); }
+
     table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
     th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: left; }
     th { background: #f1f5f9; font-weight: 700; }
@@ -49,109 +59,210 @@
 </head>
 <body>
 
-<div class="header-card">
-  <span id="badgeModeDisplay" class="badge-mode">Mode: Loading...</span>
-  <h1>🎙️ Ujian Wawancara Berbasis AI</h1>
-  <p style="margin:0; font-size:13px; opacity:0.9;">Pendidikan Agama Islam & Budi Pekerti | MGMP PAI SMAN 1 Karangbinangun</p>
-</div>
-
-<button type="button" class="btn-guru" onclick="openGuruModal()">⚙️ Kendali Guru / Admin</button>
-
-<div class="card">
-  <div class="form-group">
-    <label>Pilih Kelas / Rombel:</label>
-    <select id="rombelSelect" onchange="onRombelChange()">
-      <option value="">-- Memuat Kelas... --</option>
-    </select>
+<!-- ========================================================================= -->
+<!-- 1. HALAMAN SISWA (STUDENT VIEW) -->
+<!-- ========================================================================= -->
+<div id="studentPage">
+  <div class="header-card">
+    <span id="badgeModeDisplay" class="badge-mode">Mode: Loading...</span>
+    <h1>🎙️ Ujian Wawancara Berbasis AI</h1>
+    <p style="margin:0; font-size:13px; opacity:0.9;">Pendidikan Agama Islam & Budi Pekerti | MGMP PAI SMAN 1 Karangbinangun</p>
   </div>
 
-  <div class="form-group">
-    <label>Pilih Nama Siswa:</label>
-    <select id="studentSelect" onchange="onStudentChange()" disabled>
-      <option value="">-- Pilih Kelas Terlebih Dahulu --</option>
-    </select>
-  </div>
+  <button type="button" class="btn-guru" onclick="switchToAdminView()">⚙️ Masuk Halaman Kendali Guru / Admin</button>
 
-  <div class="form-group">
-    <label>Jenis Kelamin:</label>
-    <input type="text" id="jkDisplay" readonly placeholder="Otomatis terisi...">
-  </div>
-
-  <div class="form-group">
-    <label>Pilih Bab / Topik Soal:</label>
-    <select id="babSelect" onchange="onBabChange()" disabled>
-      <option value="">-- Pilih Kelas Terlebih Dahulu --</option>
-    </select>
-  </div>
-
-  <!-- INPUT TOKEN UNTUK MODE SUBMISSION/UJIAN -->
-  <div id="tokenEntrySection" class="form-group" style="display:none; background:#fef2f2; padding:15px; border-radius:12px; border:1px solid #fca5a5;">
-    <label style="color:#991b1b; font-weight:700;">🔑 Masukkan Token Ujian (Dari Guru):</label>
-    <div style="display:flex; gap:8px;">
-      <input type="text" id="inputStudentToken" placeholder="Contoh: A8K9X" maxlength="5" style="text-transform:uppercase; font-weight:800; letter-spacing:3px; text-align:center; font-size:18px;">
-      <button style="background:#dc2626; color:white; width:auto; padding:0 20px;" onclick="verifyTokenAndStartExam()">Masuk Ujian</button>
-    </div>
-    <small id="tokenSessionStatus" style="color:#991b1b; display:block; margin-top:5px; font-size:11px;">Minta token 5 karakter terbaru kepada Guru pengawas.</small>
-  </div>
-
-  <div class="form-group" id="paletteSection" style="display:none;">
-    <div id="babTotalCard" style="background:#e0e7ff; border:1px solid #c7d2fe; padding:12px 16px; border-radius:12px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
-      <div>
-        <span style="font-size:13px; font-weight:700; color:#3730a3; display:block;">📊 Akumulasi Nilai Bab Ini:</span>
-        <small style="font-size:11px; color:#4f46e5;">(Rata-rata seluruh soal)</small>
-      </div>
-      <span id="accumulatedBabScoreDisplay" style="font-size:24px; font-weight:800; color:#4338ca;">0 / 100</span>
-    </div>
-
-    <label>Pilih Nomor Soal:</label>
-    <div id="questionPalette" class="palette-grid"></div>
-    <div style="margin-top:8px; font-size:11px; color:#64748b;">
-      ⚪ Putih: Belum dijawab | 🟡 Kuning: Terekam (Belum diuji) | 🟢 Hijau: Selesai AI
-    </div>
-  </div>
-
-  <div id="questionContainer" style="display:none;">
-    <div class="question-box">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <b id="questionNumberLabel">Soal No. 1</b>
-        <div id="adminActionBtns" style="display:none;">
-          <button style="width:auto; padding:4px 8px; font-size:12px; background:#f59e0b; color:white;" onclick="openEditForm()">Edit</button>
-          <button style="width:auto; padding:4px 8px; font-size:12px; background:#ef4444; color:white;" onclick="deleteCurrentSoal()">Hapus</button>
-        </div>
-      </div>
-      <p id="questionText" style="margin:8px 0 0 0; font-weight:600; font-size:16px;"></p>
-      
-      <div id="gambarSoalBox" style="display:none; text-align:center;">
-        <img id="gambarSoalImg" src="" class="img-soal" alt="Gambar Soal">
-      </div>
+  <div class="card">
+    <div class="form-group">
+      <label>Pilih Kelas / Rombel:</label>
+      <select id="rombelSelect" onchange="onRombelChange()">
+        <option value="">-- Memuat Kelas... --</option>
+      </select>
     </div>
 
     <div class="form-group">
-      <label>Jawaban Lisan Siswa (Transkrip Otomatis):</label>
-      <div id="transcriptBox" style="min-height:60px; padding:10px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; font-size:13px; color:#334155;">
-        (Tekan tombol rekam untuk mulai berbicara...)
+      <label>Pilih Nama Siswa:</label>
+      <select id="studentSelect" onchange="onStudentChange()" disabled>
+        <option value="">-- Pilih Kelas Terlebih Dahulu --</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Jenis Kelamin:</label>
+      <input type="text" id="jkDisplay" readonly placeholder="Otomatis terisi...">
+    </div>
+
+    <div class="form-group">
+      <label>Pilih Bab / Topik Soal:</label>
+      <select id="babSelect" onchange="onBabChange()" disabled>
+        <option value="">-- Pilih Kelas Terlebih Dahulu --</option>
+      </select>
+    </div>
+
+    <!-- VERIFIKASI TOKEN (HANYA SEKALI DI AWAL SESI UJIAN) -->
+    <div id="tokenEntrySection" class="form-group" style="display:none; background:#fef2f2; padding:15px; border-radius:12px; border:1px solid #fca5a5;">
+      <label style="color:#991b1b; font-weight:700;">🔑 Masukkan Token Ujian (Dari Guru):</label>
+      <div style="display:flex; gap:8px;">
+        <input type="text" id="inputStudentToken" placeholder="Contoh: A8K9X" maxlength="5" style="text-transform:uppercase; font-weight:800; letter-spacing:3px; text-align:center; font-size:18px;">
+        <button style="background:#dc2626; color:white; width:auto; padding:0 20px;" onclick="verifyTokenAndStartExam()">Masuk Ujian</button>
+      </div>
+      <small id="tokenSessionStatus" style="color:#991b1b; display:block; margin-top:5px; font-size:11px;">Minta token 5 karakter terbaru kepada Guru pengawas.</small>
+    </div>
+
+    <div class="form-group" id="paletteSection" style="display:none;">
+      <div id="babTotalCard" style="background:#e0e7ff; border:1px solid #c7d2fe; padding:12px 16px; border-radius:12px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <span style="font-size:13px; font-weight:700; color:#3730a3; display:block;">📊 Akumulasi Nilai Bab Ini:</span>
+          <small style="font-size:11px; color:#4f46e5;">(Rata-rata seluruh soal)</small>
+        </div>
+        <span id="accumulatedBabScoreDisplay" style="font-size:24px; font-weight:800; color:#4338ca;">0 / 100</span>
+      </div>
+
+      <label>Pilih Nomor Soal:</label>
+      <div id="questionPalette" class="palette-grid"></div>
+      <div style="margin-top:8px; font-size:11px; color:#64748b;">
+        ⚪ Putih: Belum dijawab | 🟡 Kuning: Terekam (Belum diuji) | 🟢 Hijau: Selesai AI
       </div>
     </div>
 
-    <button type="button" class="btn-record-start" id="btnRecordToggle" onclick="toggleDirectRecording()">🎤 Klik untuk Mulai Merekam Jawaban</button>
-    
-    <div id="statusText" style="text-align:center; font-size:13px; font-weight:600; color:#4f46e5;">Status: Siap Merekam</div>
-    <div id="recordingTimerDisplay" style="display:none; text-align:center; font-size:12px; font-weight:700; color:#dc2626; margin-top:4px;">
-      ⏱️ Sisa waktu rekam: <span id="recTimerSec">60</span> detik
-    </div>
+    <div id="questionContainer" style="display:none;">
+      <div class="question-box">
+        <b id="questionNumberLabel">Soal No. 1</b>
+        <p id="questionText" style="margin:8px 0 0 0; font-weight:600; font-size:16px;"></p>
+        <div id="gambarSoalBox" style="display:none; text-align:center;">
+          <img id="gambarSoalImg" src="" class="img-soal" alt="Gambar Soal">
+        </div>
+      </div>
 
-    <button type="button" class="btn-submit" id="btnSubmitAnswer" onclick="submitAnswerAudio()">✨ Kirim & Evaluasi Jawaban AI</button>
-    
-    <div id="submitLimitNotice" style="text-align:center; font-size:12px; font-weight:700; color:#dc2626; margin-top:8px; display:none;">
-      ⚠️ Mode Ujian: Kesempatan kirim maks. 2x per soal. (Sisa: <span id="attemptsLeftDisplay">2</span>x)
-    </div>
-    <div id="recordingTipNotice" style="text-align:center; font-size:11px; color:#64748b; margin-top:4px;">
-      💡 <i>Tips: Merekam ulang suara tidak memakan kuota. Pastikan transkrip tulisan sudah benar sebelum menekan Kirim!</i>
+      <div class="form-group">
+        <label>Jawaban Lisan Siswa (Transkrip Otomatis):</label>
+        <div id="transcriptBox" style="min-height:60px; padding:10px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; font-size:13px; color:#334155;">
+          (Tekan tombol rekam untuk mulai berbicara...)
+        </div>
+      </div>
+
+      <button type="button" class="btn-record-start" id="btnRecordToggle" onclick="toggleDirectRecording()">🎤 Klik untuk Mulai Merekam Jawaban</button>
+      
+      <div id="statusText" style="text-align:center; font-size:13px; font-weight:600; color:#4f46e5;">Status: Siap Merekam</div>
+      <div id="recordingTimerDisplay" style="display:none; text-align:center; font-size:12px; font-weight:700; color:#dc2626; margin-top:4px;">
+        ⏱️ Sisa waktu rekam: <span id="recTimerSec">60</span> detik
+      </div>
+
+      <button type="button" class="btn-submit" id="btnSubmitAnswer" onclick="submitAnswerAudio()">✨ Kirim & Evaluasi Jawaban AI</button>
+      
+      <div id="submitLimitNotice" style="text-align:center; font-size:12px; font-weight:700; color:#dc2626; margin-top:8px; display:none;">
+        ⚠️ Mode Ujian: Kesempatan kirim maks. 2x per soal. (Sisa: <span id="attemptsLeftDisplay">2</span>x)
+      </div>
+      <div id="recordingTipNotice" style="text-align:center; font-size:11px; color:#64748b; margin-top:4px;">
+        💡 <i>Tips: Merekam ulang suara tidak memakan kuota. Pastikan transkrip tulisan sudah benar sebelum menekan Kirim!</i>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- MODAL POP-UP HASIL EVALUASI -->
+<!-- ========================================================================= -->
+<!-- 2. HALAMAN TERSENDIRI KENDALI GURU / ADMIN (ADMIN PAGE VIEW) -->
+<!-- ========================================================================= -->
+<div id="adminPage" style="display:none;">
+  <div class="header-card" style="background: linear-gradient(135deg, #1e293b, #334155);">
+    <h1>⚙️ Halaman Kendali Guru / Admin</h1>
+    <p style="margin:0; font-size:13px; opacity:0.9;">Pengaturan Token, Mode Penggunaan, Rekap Nilai & Bank Soal</p>
+  </div>
+
+  <button type="button" style="background:#64748b; color:white; margin-bottom:15px;" onclick="switchToStudentView()">⬅️ Kembali ke Halaman Siswa</button>
+
+  <!-- FORM LOGIN ADMIN PERTAMA -->
+  <div id="adminLoginForm" class="card">
+    <h3>🔒 Otentikasi Password Admin</h3>
+    <label>Masukkan Password Admin:</label>
+    <input type="password" id="inputAdminPass" placeholder="Password Admin...">
+    <button style="margin-top:10px; background:var(--primary); color:white;" onclick="verifyAdminPass()">Masuk Panel Guru</button>
+  </div>
+
+  <!-- PANEL UTAMA GURU SETELAH LOGIN -->
+  <div id="adminMainPanel" style="display:none;">
+    
+    <!-- CARD 1: MONITOR & REFRESH TOKEN UJIAN -->
+    <div class="card" style="background:#fef2f2; border:2px dashed #ef4444; text-align:center;">
+      <span style="font-size:12px; color:#991b1b; font-weight:700; display:block;">🔑 TOKEN UJIAN AKTIF SAAT INI (BERUBAH SETIAP 5 MENIT):</span>
+      <div id="adminTokenDisplay" style="font-size:38px; font-weight:900; color:#dc2626; letter-spacing:6px; margin:5px 0;">-----</div>
+      <small id="adminTokenTimer" style="color:#7f1d1d; font-weight:600; display:block; margin-bottom:10px;">Sisa Waktu Validasi: 05:00</small>
+      <button style="background:#dc2626; color:white; padding:8px 16px; font-size:13px; width:auto;" onclick="refreshAdminToken()">🔄 Refresh Token Baru Saja</button>
+    </div>
+
+    <!-- CARD 2: MODE PENGGUNAAN (SWITCH TOGGLE) -->
+    <div class="card">
+      <h3>1. Mode Penggunaan Aplikasi</h3>
+      <div class="switch-container">
+        <div>
+          <b id="switchModeLabel" style="font-size:15px; color:#10b981;">🟢 Mode Latihan (PRACTICE)</b>
+          <div id="switchModeDesc" style="font-size:11px; color:#64748b; margin-top:2px;">Penilaian kurang akurat (AI Terbatas). Kunci jawaban ditampilkan.</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="appModeSwitchToggle" onchange="onAppModeToggleChanged()">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- CARD 3: REKAPITULASI NILAI DENGAN FILTER INDEPENDEN -->
+    <div class="card">
+      <h3>2. Tampilkan Rekap Nilai Kelas</h3>
+      <div class="form-group">
+        <label>Pilih Kelas / Rombel Rekap:</label>
+        <select id="adminRekapRombelSelect" onchange="onAdminRekapRombelChange()">
+          <option value="">-- Memuat Kelas... --</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Pilih Bab / Topik Rekap:</label>
+        <select id="adminRekapBabSelect">
+          <option value="">-- Pilih Kelas Terlebih Dahulu --</option>
+        </select>
+      </div>
+      <button style="background:#0284c7; color:white;" onclick="fetchAdminGradeSummary()">📊 Tampilkan Rekap Nilai</button>
+
+      <div id="adminGradeTableBox" style="display:none; max-height:250px; overflow-y:auto; margin-top:15px;">
+        <table id="adminSummaryTable">
+          <thead>
+            <tr><th>Nama Siswa</th><th>Soal Dijawab</th><th>Rata-Rata</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CARD 4: KELOLA BANK SOAL (CRUD) DENGAN FILTER INDEPENDEN -->
+    <div class="card">
+      <h3>3. Kelola Bank Soal (Tambah, Edit, Hapus)</h3>
+      <div class="form-group">
+        <label>Filter Kelas / Rombel Bank Soal:</label>
+        <select id="adminBankRombelSelect" onchange="onAdminBankRombelChange()">
+          <option value="">-- Memuat Kelas... --</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Filter Bab / Topik Bank Soal:</label>
+        <select id="adminBankBabSelect" onchange="fetchAdminQuestionsList()">
+          <option value="">-- Pilih Kelas Terlebih Dahulu --</option>
+        </select>
+      </div>
+
+      <button style="background:var(--primary); color:white; margin-bottom:15px;" onclick="openTambahSoalForm()">+ Tambah Soal Baru</button>
+
+      <div id="adminQuestionTableBox" style="display:none; max-height:300px; overflow-y:auto;">
+        <table id="adminQuestionsTable">
+          <thead>
+            <tr><th>No</th><th>Pertanyaan Soal</th><th>Aksi</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL POP-UP HASIL EVALUASI SISWA -->
 <div id="resultModal" class="modal-overlay">
   <div class="modal-content" style="text-align:center;">
     <h3 style="margin-top:0; color:var(--primary); font-size:20px;">✨ Hasil Evaluasi Jawaban</h3>
@@ -205,57 +316,6 @@
   </div>
 </div>
 
-<!-- MODAL KENDALI GURU & MONITOR TOKEN ADMIN -->
-<div id="guruModal" class="modal-overlay">
-  <div class="modal-content">
-    <h3 style="margin-top:0;">⚙️ Kendali Guru / Admin</h3>
-    <div id="passForm">
-      <label>Masukkan Password Admin:</label>
-      <input type="password" id="inputAdminPass" placeholder="Password...">
-      <button style="margin-top:10px; background:var(--primary); color:white;" onclick="verifyAdminPass()">Verifikasi Password</button>
-    </div>
-
-    <div id="adminPanel" style="display:none;">
-      <div style="background:#fef2f2; border:2px dashed #ef4444; padding:15px; border-radius:12px; text-align:center; margin-bottom:15px;">
-        <span style="font-size:12px; color:#991b1b; font-weight:700; display:block;">🔑 TOKEN UJIAN AKTIF SAAT INI (5 MENIT):</span>
-        <div id="adminTokenDisplay" style="font-size:36px; font-weight:900; color:#dc2626; letter-spacing:6px; margin:5px 0;">-----</div>
-        <small id="adminTokenTimer" style="color:#7f1d1d; font-weight:600; display:block; margin-bottom:8px;">Sisa Waktu: 05:00</small>
-        <button style="background:#dc2626; color:white; padding:6px 12px; font-size:12px; width:auto;" onclick="refreshAdminToken()">🔄 Refresh Token Baru</button>
-      </div>
-
-      <h4>1. Mode Penggunaan</h4>
-      <div style="display:flex; flex-direction:column; gap:10px;">
-        <button style="background:var(--success); color:white; padding:12px; text-align:center;" onclick="setMode('PRACTICE')">
-          🟢 <b>Mode Latihan</b><br>
-          <small style="font-weight:400; font-size:12px;">(Penilaian kurang akurat karena menggunakan AI terbatas. Kunci jawaban ditampilkan)</small>
-        </button>
-        <button style="background:var(--danger); color:white; padding:12px; text-align:center;" onclick="setMode('SUBMISSION')">
-          🔴 <b>Mode Ujian</b><br>
-          <small style="font-weight:400; font-size:12px;">(Penilaian menggunakan AI Full Version. Kunci jawaban dirahasiakan)</small>
-        </button>
-      </div>
-      <hr style="margin:20px 0;">
-
-      <h4>2. Ringkasan Nilai Kelas & Bab</h4>
-      <button style="background:#0284c7; color:white; margin-bottom:10px;" onclick="fetchAdminGradeSummary()">📊 Tampilkan Rekap Nilai Kelas Ini</button>
-      <div id="adminGradeTableBox" style="display:none; max-height:200px; overflow-y:auto; margin-bottom:15px;">
-        <table id="adminSummaryTable">
-          <thead>
-            <tr><th>Nama Siswa</th><th>Soal Dijawab</th><th>Rata-Rata</th></tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-
-      <hr style="margin:20px 0;">
-      <h4>3. Kelola Bank Soal</h4>
-      <button style="background:var(--primary); color:white;" onclick="openTambahSoalForm()">+ Tambah Soal Baru</button>
-    </div>
-    
-    <button style="margin-top:15px; background:#94a3b8; color:white;" onclick="closeGuruModal()">Tutup</button>
-  </div>
-</div>
-
 <!-- MODAL FORM INPUT/EDIT SOAL -->
 <div id="formSoalModal" class="modal-overlay">
   <div class="modal-content">
@@ -294,31 +354,59 @@
   let speechRecognition = null, liveTranscriptText = "", isRecording = false;
   let questionStatusMap = {};
   
+  // SESSION TOKEN SISWA (1X MASUK BERLAKU SELAMA SISWA MENGERJAKAN)
   let activeStudentTokenSession = "";
-  let tokenTimerInterval = null;
+  let isStudentTokenVerified = false;
 
+  let tokenTimerInterval = null;
   let recCountdownInterval = null;
   let recSecondsLeft = 60;
+
+  // CACHE SOAL ADMIN UNTUK BANK SOAL
+  let adminCurrentQuestions = [];
 
   window.onload = function() {
     initApp();
   };
+
+  // NAVIGASI HALAMAN TERPISAH
+  function switchToAdminView() {
+    document.getElementById('studentPage').style.display = 'none';
+    document.getElementById('adminPage').style.display = 'block';
+  }
+
+  function switchToStudentView() {
+    document.getElementById('adminPage').style.display = 'none';
+    document.getElementById('studentPage').style.display = 'block';
+  }
 
   function updateModeBadgeUI(mode) {
     currentAppMode = mode;
     const badge = document.getElementById('badgeModeDisplay');
     const tokenSection = document.getElementById('tokenEntrySection');
 
+    const toggle = document.getElementById('appModeSwitchToggle');
+    const label = document.getElementById('switchModeLabel');
+    const desc = document.getElementById('switchModeDesc');
+
     if (mode === "PRACTICE") {
       badge.innerHTML = "🟢 LATIHAN (AI Terbatas - Kurang Akurat)";
       badge.style.background = "#10b981";
       tokenSection.style.display = "none";
+
+      if (toggle) toggle.checked = false;
+      if (label) { label.innerText = "🟢 Mode Latihan (PRACTICE)"; label.style.color = "#10b981"; }
+      if (desc) desc.innerText = "Penilaian kurang akurat (AI Terbatas). Kunci jawaban ditampilkan.";
     } else {
       badge.innerHTML = "🔴 UJIAN (AI Full Version - Akurat)";
       badge.style.background = "#ef4444";
-      if (!activeStudentTokenSession) {
+      if (!isStudentTokenVerified) {
         tokenSection.style.display = "block";
       }
+
+      if (toggle) toggle.checked = true;
+      if (label) { label.innerText = "🔴 Mode Ujian (SUBMISSION)"; label.style.color = "#ef4444"; }
+      if (desc) desc.innerText = "Penilaian presisi (Gemini AI Full Version). Kunci jawaban dirahasiakan.";
     }
   }
 
@@ -351,9 +439,22 @@
     fetchAPI({ action: "getStudentData" }, data => {
       if (!data || !data.rombelList) return;
       studentDataCache = data;
+      
+      // Populate Dropdown Siswa
       const rSelect = document.getElementById('rombelSelect');
       rSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
-      data.rombelList.forEach(r => rSelect.innerHTML += `<option value="${r}">${r}</option>`);
+      
+      // Populate Dropdown Admin Rekap & Admin Bank Soal
+      const adminRekapRSelect = document.getElementById('adminRekapRombelSelect');
+      const adminBankRSelect = document.getElementById('adminBankRombelSelect');
+      adminRekapRSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+      adminBankRSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+
+      data.rombelList.forEach(r => {
+        rSelect.innerHTML += `<option value="${r}">${r}</option>`;
+        adminRekapRSelect.innerHTML += `<option value="${r}">${r}</option>`;
+        adminBankRSelect.innerHTML += `<option value="${r}">${r}</option>`;
+      });
     });
 
     const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -391,6 +492,7 @@
     });
   }
 
+  // VERIFIKASI TOKEN (1X BERLAKU SELAMA SISWA UJIAN)
   function verifyTokenAndStartExam() {
     const tokenInput = document.getElementById('inputStudentToken').value.trim().toUpperCase();
     if (!tokenInput || tokenInput.length !== 5) {
@@ -400,11 +502,13 @@
     fetchAPI({ action: "validateStudentToken", token: tokenInput }, res => {
       if (res && res.success) {
         activeStudentTokenSession = tokenInput;
+        isStudentTokenVerified = true;
+
         document.getElementById('tokenEntrySection').style.background = "#f0fdf4";
         document.getElementById('tokenEntrySection').style.borderColor = "#86efac";
         document.getElementById('tokenSessionStatus').style.color = "#166534";
-        document.getElementById('tokenSessionStatus').innerHTML = `✅ <b>Token Terverifikasi (${tokenInput})!</b> Silakan kerjakan soal hingga selesai.`;
-        alert("Token Valid! Anda siap mengerjakan ujian.");
+        document.getElementById('tokenSessionStatus').innerHTML = `✅ <b>Token Terverifikasi (${tokenInput})!</b> Silakan kerjakan seluruh soal hingga selesai.`;
+        alert("Token Valid! Anda berhasil masuk sesi ujian.");
         onBabChange();
       } else {
         alert("Gagal: " + (res ? res.error : "Token Salah"));
@@ -444,7 +548,7 @@
     const bab = document.getElementById('babSelect').value;
     const studentName = document.getElementById('studentSelect').value;
 
-    if (currentAppMode === "SUBMISSION" && !activeStudentTokenSession) {
+    if (currentAppMode === "SUBMISSION" && !isStudentTokenVerified) {
       document.getElementById('paletteSection').style.display = 'none';
       document.getElementById('questionContainer').style.display = 'none';
       return;
@@ -559,9 +663,7 @@
     }
 
     resetSubmitButtonUI();
-
     document.getElementById('questionContainer').style.display = 'block';
-    if (adminVerified) document.getElementById('adminActionBtns').style.display = 'block';
   }
 
   function toggleDirectRecording() {
@@ -621,7 +723,7 @@
   function submitAnswerAudio() {
     if (!selectedQuestionObject) return alert("Pilih soal terlebih dahulu!");
 
-    if (currentAppMode === "SUBMISSION" && !activeStudentTokenSession) {
+    if (currentAppMode === "SUBMISSION" && !isStudentTokenVerified) {
       return alert("Masukkan Token Ujian terlebih dahulu!");
     }
 
@@ -647,7 +749,8 @@
       questionText: selectedQuestionObject.pertanyaan,
       rubrikText: selectedQuestionObject.rubrik,
       studentTranscriptText: liveTranscriptText,
-      studentToken: activeStudentTokenSession
+      studentToken: activeStudentTokenSession,
+      tokenVerified: isStudentTokenVerified // Kirim status token terverifikasi
     }, res => {
       if (res && res.success) {
         attempts += 1;
@@ -732,53 +835,23 @@
     document.getElementById('celebrationModal').style.display = 'none';
   }
 
-  function openGuruModal() { document.getElementById('guruModal').style.display = 'flex'; }
-  function closeGuruModal() { document.getElementById('guruModal').style.display = 'none'; }
-  
+  // =========================================================================
+  // LOGIKA KENDALI GURU (ADMIN PANEL)
+  // =========================================================================
   function verifyAdminPass() {
     const pass = document.getElementById('inputAdminPass').value;
     fetchAPI({ action: "verifyPassword", password: pass }, res => {
       if (res && res.success) {
         adminVerified = true;
         verifiedPass = pass;
-        document.getElementById('passForm').style.display = 'none';
-        document.getElementById('adminPanel').style.display = 'block';
-        if (selectedQuestionObject) document.getElementById('adminActionBtns').style.display = 'block';
-        
+        document.getElementById('adminLoginForm').style.display = 'none';
+        document.getElementById('adminMainPanel').style.display = 'block';
         fetchAdminToken();
       } else alert("Password Admin Salah!");
     });
   }
 
-  function fetchAdminGradeSummary() {
-    const rombel = document.getElementById('rombelSelect').value;
-    const bab = document.getElementById('babSelect').value;
-
-    if (!rombel || !bab) return alert("Pilih Kelas dan Bab di halaman utama terlebih dahulu!");
-
-    fetchAPI({ action: "getAdminGradeSummary", password: verifiedPass, rombel: rombel, bab: bab }, res => {
-      if (res && res.success) {
-        const tbody = document.querySelector('#adminSummaryTable tbody');
-        tbody.innerHTML = "";
-        
-        if (res.summary.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">Belum ada data nilai untuk kelas & bab ini.</td></tr>`;
-        } else {
-          res.summary.forEach(item => {
-            tbody.innerHTML += `<tr>
-              <td><b>${item.name}</b></td>
-              <td style="text-align:center;">${item.answeredCount} Soal</td>
-              <td style="text-align:center; font-weight:800; color:#166534;">${item.avgScore}</td>
-            </tr>`;
-          });
-        }
-        document.getElementById('adminGradeTableBox').style.display = 'block';
-      } else {
-        alert("Gagal memuat rekap: " + (res ? res.error : "Error"));
-      }
-    });
-  }
-
+  // 1. REFRESH TOKEN (TANPA PASSWORD TAMBAHAN & TANPA NOTIFIKASI BERLEBIHAN)
   function fetchAdminToken() {
     fetchAPI({ action: "getTokenAdmin", password: verifiedPass }, res => {
       if (res && res.success) {
@@ -793,7 +866,6 @@
       if (res && res.success) {
         document.getElementById('adminTokenDisplay').innerText = res.token;
         startTokenTimer(res.remainingSeconds);
-        alert(res.message);
       }
     });
   }
@@ -812,47 +884,151 @@
       secLeft--;
       const m = String(Math.floor(secLeft / 60)).padStart(2, '0');
       const s = String(secLeft % 60).padStart(2, '0');
-      timerElem.innerText = `Sisa Waktu: ${m}:${s}`;
+      timerElem.innerText = `Sisa Waktu Validasi: ${m}:${s}`;
     }, 1000);
   }
 
-  function setMode(mode) {
-    fetchAPI({ action: "switchAppMode", password: verifiedPass, newMode: mode }, res => {
+  // 2. SWITCH TOGGLE MODE PENGGUNAAN (MINTA PASSWORD & BERI NOTIFIKASI BERHASIL)
+  function onAppModeToggleChanged() {
+    const toggle = document.getElementById('appModeSwitchToggle');
+    const targetMode = toggle.checked ? "SUBMISSION" : "PRACTICE";
+
+    const passConfirm = prompt("🔒 Pengubahan Mode Penggunaan Memerlukan Konfirmasi Password Admin:\nMasukkan Password:");
+    if (!passConfirm) {
+      toggle.checked = !toggle.checked; // Revert switch if cancelled
+      return;
+    }
+
+    fetchAPI({ action: "switchAppMode", password: passConfirm, newMode: targetMode }, res => {
       if (res && res.success) {
-        alert(res.message);
-        updateModeBadgeUI(mode);
-      } else alert("Gagal: " + res.error);
+        alert("🎉 BERHASIL: " + res.message);
+        updateModeBadgeUI(targetMode);
+      } else {
+        alert("❌ GAGAL: " + (res ? res.error : "Password Salah / Error"));
+        toggle.checked = !toggle.checked;
+      }
+    });
+  }
+
+  // 3. REKAP NILAI DENGAN FILTER INDEPENDEN GURU
+  function onAdminRekapRombelChange() {
+    const rombel = document.getElementById('adminRekapRombelSelect').value;
+    const babSelect = document.getElementById('adminRekapBabSelect');
+    
+    if (rombel) {
+      fetchAPI({ action: "getBabList", rombel: rombel }, res => {
+        babSelect.innerHTML = '<option value="">-- Pilih Bab --</option>';
+        if (res && res.babList) res.babList.forEach(bab => babSelect.innerHTML += `<option value="${bab}">${bab}</option>`);
+      });
+    }
+  }
+
+  function fetchAdminGradeSummary() {
+    const rombel = document.getElementById('adminRekapRombelSelect').value;
+    const bab = document.getElementById('adminRekapBabSelect').value;
+
+    if (!rombel || !bab) return alert("Pilih Kelas dan Bab pada filter rekap terlebih dahulu!");
+
+    fetchAPI({ action: "getAdminGradeSummary", password: verifiedPass, rombel: rombel, bab: bab }, res => {
+      if (res && res.success) {
+        const tbody = document.querySelector('#adminSummaryTable tbody');
+        tbody.innerHTML = "";
+        
+        if (res.summary.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">Belum ada data nilai untuk kelas & bab ini.</td></tr>`;
+        } else {
+          res.summary.forEach(item => {
+            tbody.innerHTML += `<tr>
+              <td><b>${item.name}</b></td>
+              <td style="text-align:center;">${item.answeredCount} Soal</td>
+              <td style="text-align:center; font-weight:800; color:#166534;">${item.avgScore}</td>
+            </tr>`;
+          });
+        }
+        document.getElementById('adminGradeTableBox').style.display = 'block';
+        alert("🎉 Rekap Nilai Berhasil Dimuat!");
+      } else {
+        alert("Gagal memuat rekap: " + (res ? res.error : "Error"));
+      }
+    });
+  }
+
+  // 4. KELOLA BANK SOAL DENGAN FILTER INDEPENDEN GURU
+  function onAdminBankRombelChange() {
+    const rombel = document.getElementById('adminBankRombelSelect').value;
+    const babSelect = document.getElementById('adminBankBabSelect');
+    
+    if (rombel) {
+      fetchAPI({ action: "getBabList", rombel: rombel }, res => {
+        babSelect.innerHTML = '<option value="">-- Pilih Bab --</option>';
+        if (res && res.babList) res.babList.forEach(bab => babSelect.innerHTML += `<option value="${bab}">${bab}</option>`);
+      });
+    }
+  }
+
+  function fetchAdminQuestionsList() {
+    const rombel = document.getElementById('adminBankRombelSelect').value;
+    const bab = document.getElementById('adminBankBabSelect').value;
+
+    if (!rombel || !bab) return;
+
+    fetchAPI({ action: "getQuestions", rombel: rombel, bab: bab }, res => {
+      if (res && res.questions) {
+        adminCurrentQuestions = res.questions;
+        const tbody = document.querySelector('#adminQuestionsTable tbody');
+        tbody.innerHTML = "";
+
+        if (adminCurrentQuestions.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">Belum ada soal untuk bab ini.</td></tr>`;
+        } else {
+          adminCurrentQuestions.forEach((q, idx) => {
+            tbody.innerHTML += `<tr>
+              <td style="text-align:center;">${idx + 1}</td>
+              <td>${q.pertanyaan}</td>
+              <td style="text-align:center; white-space:nowrap;">
+                <button style="width:auto; padding:4px 8px; font-size:11px; background:#f59e0b; color:white;" onclick="openEditFormAdmin(${idx})">Edit</button>
+                <button style="width:auto; padding:4px 8px; font-size:11px; background:#ef4444; color:white;" onclick="deleteSoalAdmin(${idx})">Hapus</button>
+              </td>
+            </tr>`;
+          });
+        }
+        document.getElementById('adminQuestionTableBox').style.display = 'block';
+      }
     });
   }
 
   function openTambahSoalForm() {
     document.getElementById('soalIdInput').value = "";
-    document.getElementById('soalKelasInput').value = document.getElementById('rombelSelect').value || "";
-    document.getElementById('soalBabInput').value = document.getElementById('babSelect').value || "";
+    document.getElementById('soalKelasInput').value = document.getElementById('adminBankRombelSelect').value || "";
+    document.getElementById('soalBabInput').value = document.getElementById('adminBankBabSelect').value || "";
     document.getElementById('soalPertanyaanInput').value = "";
     document.getElementById('soalRubrikInput').value = "";
     document.getElementById('formSoalModal').style.display = 'flex';
   }
 
-  function openEditForm() {
-    document.getElementById('soalIdInput').value = selectedQuestionObject.id;
-    document.getElementById('soalKelasInput').value = selectedQuestionObject.kelas || document.getElementById('rombelSelect').value;
-    document.getElementById('soalBabInput').value = selectedQuestionObject.bab || document.getElementById('babSelect').value;
-    document.getElementById('soalPertanyaanInput').value = selectedQuestionObject.pertanyaan;
-    document.getElementById('soalRubrikInput').value = selectedQuestionObject.rubrik;
+  function openEditFormAdmin(idx) {
+    const q = adminCurrentQuestions[idx];
+    document.getElementById('soalIdInput').value = q.id;
+    document.getElementById('soalKelasInput').value = q.kelas || document.getElementById('adminBankRombelSelect').value;
+    document.getElementById('soalBabInput').value = q.bab || document.getElementById('adminBankBabSelect').value;
+    document.getElementById('soalPertanyaanInput').value = q.pertanyaan;
+    document.getElementById('soalRubrikInput').value = q.rubrik;
     document.getElementById('formSoalModal').style.display = 'flex';
   }
 
   function closeFormSoalModal() { document.getElementById('formSoalModal').style.display = 'none'; }
 
   function saveSoalData() {
+    const passConfirm = prompt("🔒 Menyimpan Soal Memerlukan Password Admin:\nMasukkan Password:");
+    if (!passConfirm) return;
+
     const fileInput = document.getElementById('soalGambarInput');
     const file = fileInput.files[0];
 
     const doSave = (base64, name, mime) => {
       fetchAPI({
         action: "saveQuestion",
-        password: verifiedPass,
+        password: passConfirm,
         questionId: document.getElementById('soalIdInput').value,
         kelas: document.getElementById('soalKelasInput').value,
         bab: document.getElementById('soalBabInput').value,
@@ -861,10 +1037,10 @@
         imageBase64: base64, imageFileName: name, imageMimeType: mime
       }, res => {
         if (res && res.success) {
-          alert(res.message);
+          alert("🎉 BERHASIL: " + res.message);
           closeFormSoalModal();
-          onBabChange();
-        } else alert("Error: " + res.error);
+          fetchAdminQuestionsList();
+        } else alert("❌ GAGAL: " + res.error);
       });
     };
 
@@ -875,13 +1051,18 @@
     } else doSave("", "", "");
   }
 
-  function deleteCurrentSoal() {
-    if (!confirm("Yakin ingin menghapus soal ini?")) return;
-    fetchAPI({ action: "deleteQuestion", password: verifiedPass, questionId: selectedQuestionObject.id }, res => {
+  function deleteSoalAdmin(idx) {
+    const q = adminCurrentQuestions[idx];
+    if (!confirm(`Yakin ingin menghapus soal No. ${idx + 1}?`)) return;
+
+    const passConfirm = prompt("🔒 Menghapus Soal Memerlukan Password Admin:\nMasukkan Password:");
+    if (!passConfirm) return;
+
+    fetchAPI({ action: "deleteQuestion", password: passConfirm, questionId: q.id }, res => {
       if (res && res.success) {
-        alert(res.message);
-        onBabChange();
-      } else alert("Error: " + res.error);
+        alert("🎉 BERHASIL: " + res.message);
+        fetchAdminQuestionsList();
+      } else alert("❌ GAGAL: " + res.error);
     });
   }
 </script>
