@@ -135,13 +135,20 @@
 
     <button type="button" class="btn-record-start" id="btnRecordToggle" onclick="toggleDirectRecording()">🎤 Klik untuk Mulai Merekam Jawaban</button>
     
-    <!-- INDIKATOR BANYAKNYA DETIK SISA WAKTU REKAM -->
     <div id="statusText" style="text-align:center; font-size:13px; font-weight:600; color:#4f46e5;">Status: Siap Merekam</div>
     <div id="recordingTimerDisplay" style="display:none; text-align:center; font-size:12px; font-weight:700; color:#dc2626; margin-top:4px;">
       ⏱️ Sisa waktu rekam: <span id="recTimerSec">60</span> detik
     </div>
 
     <button type="button" class="btn-submit" id="btnSubmitAnswer" onclick="submitAnswerAudio()">✨ Kirim & Evaluasi Jawaban AI</button>
+    
+    <!-- KETERANGAN BATAS KESEMPATAN KIRIM UNTUK SISWA -->
+    <div id="submitLimitNotice" style="text-align:center; font-size:12px; font-weight:700; color:#dc2626; margin-top:8px; display:none;">
+      ⚠️ Mode Ujian: Kesempatan kirim maks. 2x per soal. (Sisa: <span id="attemptsLeftDisplay">2</span>x)
+    </div>
+    <div id="recordingTipNotice" style="text-align:center; font-size:11px; color:#64748b; margin-top:4px;">
+      💡 <i>Tips: Merekam ulang suara tidak memakan kuota. Pastikan transkrip tulisan sudah benar sebelum menekan Kirim!</i>
+    </div>
   </div>
 </div>
 
@@ -163,7 +170,6 @@
       <p id="modalFeedbackDisplay" style="margin:4px 0 0 0; color:#334155;"></p>
     </div>
 
-    <!-- TOMBOL FITUR 2: TEXT-TO-SPEECH AI -->
     <button style="background:#0284c7; color:white; margin-bottom:12px; font-size:13px;" onclick="speakFeedbackTTS()">🔊 Dengarkan Evaluasi (Suara AI)</button>
 
     <div style="background:#e0e7ff; border:1px solid #c7d2fe; padding:10px 14px; border-radius:10px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
@@ -183,7 +189,7 @@
   </div>
 </div>
 
-<!-- MODAL FITUR 3: KARTU SELEBRASI SELESAI BAB -->
+<!-- MODAL KARTU SELEBRASI SELESAI BAB -->
 <div id="celebrationModal" class="modal-overlay">
   <div class="modal-content" style="text-align:center; background:linear-gradient(to bottom, #ffffff, #f0fdf4);">
     <div style="font-size:50px;">🎉</div>
@@ -211,7 +217,6 @@
     </div>
 
     <div id="adminPanel" style="display:none;">
-      <!-- PANEL MONITOR TOKEN -->
       <div style="background:#fef2f2; border:2px dashed #ef4444; padding:15px; border-radius:12px; text-align:center; margin-bottom:15px;">
         <span style="font-size:12px; color:#991b1b; font-weight:700; display:block;">🔑 TOKEN UJIAN AKTIF SAAT INI (5 MENIT):</span>
         <div id="adminTokenDisplay" style="font-size:36px; font-weight:900; color:#dc2626; letter-spacing:6px; margin:5px 0;">-----</div>
@@ -232,7 +237,6 @@
       </div>
       <hr style="margin:20px 0;">
 
-      <!-- FITUR 4: REKAPITULASI NILAI DI KENDALI GURU -->
       <h4>2. Ringkasan Nilai Kelas & Bab</h4>
       <button style="background:#0284c7; color:white; margin-bottom:10px;" onclick="fetchAdminGradeSummary()">📊 Tampilkan Rekap Nilai Kelas Ini</button>
       <div id="adminGradeTableBox" style="display:none; max-height:200px; overflow-y:auto; margin-bottom:15px;">
@@ -294,7 +298,6 @@
   let activeStudentTokenSession = "";
   let tokenTimerInterval = null;
 
-  // VARIABLE UNTUK TIMER 60 DETIK REKAMAN
   let recCountdownInterval = null;
   let recSecondsLeft = 60;
 
@@ -322,10 +325,22 @@
 
   function resetSubmitButtonUI() {
     const btn = document.getElementById('btnSubmitAnswer');
-    if (btn) {
-      btn.disabled = false;
-      btn.innerText = "✨ Kirim & Evaluasi Jawaban AI";
+    if (!btn) return;
+
+    if (selectedQuestionObject && currentAppMode === "SUBMISSION") {
+      const qId = selectedQuestionObject.id;
+      const existingData = questionStatusMap[qId] || {};
+      const attempts = existingData.attempts || (existingData.score !== undefined ? 1 : 0);
+      
+      if (attempts >= 2) {
+        btn.disabled = true;
+        btn.innerText = "🔒 Kesempatan Kirim Habis (Maks 2x)";
+        return;
+      }
     }
+
+    btn.disabled = false;
+    btn.innerText = "✨ Kirim & Evaluasi Jawaban AI";
   }
 
   function initApp() {
@@ -482,7 +497,8 @@
         questionStatusMap[q.id] = {
           score: progress[q.id].score,
           transcript: progress[q.id].transcript,
-          feedback: progress[q.id].feedback
+          feedback: progress[q.id].feedback,
+          attempts: 1 // Jika dari database, anggap sudah 1x kirim
         };
       }
 
@@ -506,7 +522,6 @@
   function selectQuestion(i) {
     activeQuestionIndex = i;
     selectedQuestionObject = currentQuestionsList[i];
-    resetSubmitButtonUI();
     
     document.querySelectorAll('.q-num-btn').forEach((b, idx) => {
       b.className = `q-num-btn ${questionStatusMap[idx] || ''}`;
@@ -535,11 +550,22 @@
       document.getElementById('transcriptBox').innerText = "(Tekan tombol rekam untuk mulai berbicara...)";
     }
 
+    // UPDATE TAMPILAN BATAS KESEMPATAN KIRIM
+    const attempts = existingData.attempts || (existingData.score !== undefined ? 1 : 0);
+    if (currentAppMode === "SUBMISSION") {
+      document.getElementById('submitLimitNotice').style.display = 'block';
+      const left = Math.max(0, 2 - attempts);
+      document.getElementById('attemptsLeftDisplay').innerText = left;
+    } else {
+      document.getElementById('submitLimitNotice').style.display = 'none';
+    }
+
+    resetSubmitButtonUI();
+
     document.getElementById('questionContainer').style.display = 'block';
     if (adminVerified) document.getElementById('adminActionBtns').style.display = 'block';
   }
 
-  // 💡 FITUR 1: REKRAM DENGAN TIMER COUNTDOWN 60 DETIK
   function toggleDirectRecording() {
     const btn = document.getElementById('btnRecordToggle');
     const status = document.getElementById('statusText');
@@ -554,7 +580,6 @@
       btn.className = "btn-record-stop";
       status.innerText = "Status: Sedang Merekam Suara Anda...";
       
-      // Jalankan Timer 60 Detik
       recSecondsLeft = 60;
       recSecElem.innerText = recSecondsLeft;
       timerDisp.style.display = 'block';
@@ -565,7 +590,7 @@
         recSecElem.innerText = recSecondsLeft;
         if (recSecondsLeft <= 0) {
           clearInterval(recCountdownInterval);
-          toggleDirectRecording(); // Stop otomatis saat 0 detik
+          toggleDirectRecording();
         }
       }, 1000);
 
@@ -580,16 +605,15 @@
     }
   }
 
-  // 💡 FITUR 2: TEXT-TO-SPEECH UMPAN BALIK AI
   function speakFeedbackTTS() {
     const feedbackText = document.getElementById('modalFeedbackDisplay').innerText;
     if (!feedbackText) return;
 
     if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel(); // Stop suara sebelumnya jika ada
+      window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(feedbackText);
       utterance.lang = 'id-ID';
-      utterance.rate = 0.95; // Kecepatan bicara normal
+      utterance.rate = 0.95;
       window.speechSynthesis.speak(utterance);
     } else {
       alert("Browser Anda tidak mendukung Text-to-Speech.");
@@ -601,6 +625,15 @@
 
     if (currentAppMode === "SUBMISSION" && !activeStudentTokenSession) {
       return alert("Masukkan Token Ujian terlebih dahulu!");
+    }
+
+    const qId = selectedQuestionObject.id;
+    const existingData = questionStatusMap[qId] || {};
+    let attempts = existingData.attempts || (existingData.score !== undefined ? 1 : 0);
+
+    // CEK BATAS KIRIM 2X DI MODE UJIAN
+    if (currentAppMode === "SUBMISSION" && attempts >= 2) {
+      return alert("Kesempatan mengirim jawaban untuk soal ini sudah habis (Maksimal 2x per soal).");
     }
 
     const submitBtn = document.getElementById('btnSubmitAnswer');
@@ -619,17 +652,24 @@
       studentTranscriptText: liveTranscriptText,
       studentToken: activeStudentTokenSession
     }, res => {
-      resetSubmitButtonUI();
-
       if (res && res.success) {
-        const qId = selectedQuestionObject.id;
+        attempts += 1; // Tambah jumlah pengiriman
+        
         const score = res.highestScore || res.currentScore;
         const transcript = res.transcriptUsed || liveTranscriptText;
         const feedback = res.feedback;
 
-        questionStatusMap[qId] = { score: score, transcript: transcript, feedback: feedback };
+        questionStatusMap[qId] = { score: score, transcript: transcript, feedback: feedback, attempts: attempts };
         updatePaletteColor(activeQuestionIndex, 'green');
         updateAccumulatedScoreUI();
+
+        // Update UI sisa kesempatan kirim
+        if (currentAppMode === "SUBMISSION") {
+          const left = Math.max(0, 2 - attempts);
+          document.getElementById('attemptsLeftDisplay').innerText = left;
+        }
+
+        resetSubmitButtonUI();
 
         document.getElementById('modalQuestionLabel').innerText = `Soal No. ${activeQuestionIndex + 1}`;
         document.getElementById('modalScoreDisplay').innerText = `${score} / 100`;
@@ -638,12 +678,13 @@
 
         const modeNote = res.mode === "PRACTICE" 
           ? `<span style="color:#d97706; font-weight:600;">🟢 Mode Latihan:</span> Kunci Jawaban Ditampilkan & Nilai Tidak Tersimpan.`
-          : `<span style="color:#059669; font-weight:600;">🔴 Mode Ujian:</span> Kunci Jawaban Dirahasiakan & Nilai Terekam di database.`;
+          : `<span style="color:#059669; font-weight:600;">🔴 Mode Ujian:</span> Kunci Jawaban Dirahasiakan & Nilai Terekam di database (Terkirim: ${attempts}/2x).`;
         document.getElementById('modalModeNote').innerHTML = modeNote;
 
         document.getElementById('resultModal').style.display = 'flex';
 
       } else {
+        resetSubmitButtonUI();
         alert("Gagal: " + (res ? res.error : "Terjadi kesalahan pada Server. Silakan coba lagi."));
       }
     });
@@ -654,7 +695,6 @@
     document.getElementById('resultModal').style.display = 'none';
   }
 
-  // 💡 FITUR 3: CEK APAKAH SELURUH SOAL SUDAH SELESAI (KARTU SELEBRASI)
   function checkIfAllCompleted() {
     if (!currentQuestionsList || currentQuestionsList.length === 0) return false;
     return currentQuestionsList.every(q => {
@@ -696,7 +736,6 @@
     document.getElementById('celebrationModal').style.display = 'none';
   }
 
-  // KENDALI GURU & REKAP NILAI
   function openGuruModal() { document.getElementById('guruModal').style.display = 'flex'; }
   function closeGuruModal() { document.getElementById('guruModal').style.display = 'none'; }
   
@@ -715,7 +754,6 @@
     });
   }
 
-  // 💡 FITUR 4: TAMPILKAN TABEL REKAP NILAI DI KENDALI GURU
   function fetchAdminGradeSummary() {
     const rombel = document.getElementById('rombelSelect').value;
     const bab = document.getElementById('babSelect').value;
