@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ujian Wawancara Berbasis AI</title>
+  <title>Ujian Wawancara Berbasis AI Hybrid</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -39,7 +39,6 @@
     .question-box { background: #f0f9ff; padding: 16px; border-left: 5px solid var(--secondary); margin: 15px 0; border-radius: 10px; }
     .img-soal { max-width: 100%; max-height: 250px; border-radius: 10px; margin-top: 10px; border: 1px solid #cbd5e1; }
     
-    /* MODAL POPUP STYLES */
     .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 15px; }
     .modal-content { background: white; padding: 24px; border-radius: 16px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
   </style>
@@ -81,12 +80,21 @@
     </select>
   </div>
 
+  <!-- INPUT TOKEN UNTUK MODE SUBMISSION/UJIAN -->
+  <div id="tokenEntrySection" class="form-group" style="display:none; background:#fef2f2; padding:15px; border-radius:12px; border:1px solid #fca5a5;">
+    <label style="color:#991b1b; font-weight:700;">🔑 Masukkan Token Ujian (Dari Guru):</label>
+    <div style="display:flex; gap:8px;">
+      <input type="text" id="inputStudentToken" placeholder="Contoh: A8K9X" maxlength="5" style="text-transform:uppercase; font-weight:800; letter-spacing:3px; text-align:center; font-size:18px;">
+      <button style="background:#dc2626; color:white; width:auto; padding:0 20px;" onclick="verifyTokenAndStartExam()">Masuk Ujian</button>
+    </div>
+    <small id="tokenSessionStatus" style="color:#991b1b; display:block; margin-top:5px; font-size:11px;">Minta token 5 karakter terbaru kepada Guru pengawas.</small>
+  </div>
+
   <div class="form-group" id="paletteSection" style="display:none;">
-    <!-- KARTU INDIKATOR TOTAL AKUMULASI NILAI BAB -->
     <div id="babTotalCard" style="background:#e0e7ff; border:1px solid #c7d2fe; padding:12px 16px; border-radius:12px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
       <div>
         <span style="font-size:13px; font-weight:700; color:#3730a3; display:block;">📊 Akumulasi Nilai Bab Ini:</span>
-        <small style="font-size:11px; color:#4f46e5;">(Rata-rata dari seluruh soal)</small>
+        <small style="font-size:11px; color:#4f46e5;">(Rata-rata seluruh soal)</small>
       </div>
       <span id="accumulatedBabScoreDisplay" style="font-size:24px; font-weight:800; color:#4338ca;">0 / 100</span>
     </div>
@@ -109,13 +117,11 @@
       </div>
       <p id="questionText" style="margin:8px 0 0 0; font-weight:600; font-size:16px;"></p>
       
-      <!-- GAMBAR SOAL -->
       <div id="gambarSoalBox" style="display:none; text-align:center;">
         <img id="gambarSoalImg" src="" class="img-soal" alt="Gambar Soal">
       </div>
     </div>
 
-    <!-- SPEECH TO TEXT TRANSKRIP BROWSER -->
     <div class="form-group">
       <label>Jawaban Lisan Siswa (Transkrip Otomatis):</label>
       <div id="transcriptBox" style="min-height:60px; padding:10px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; font-size:13px; color:#334155;">
@@ -130,31 +136,28 @@
   </div>
 </div>
 
-<!-- 🌟 MODAL POP-UP HASIL EVALUASI AI -->
+<!-- MODAL POP-UP HASIL EVALUASI -->
 <div id="resultModal" class="modal-overlay">
   <div class="modal-content" style="text-align:center;">
-    <h3 style="margin-top:0; color:var(--primary); font-size:20px;">✨ Hasil Evaluasi AI</h3>
+    <h3 style="margin-top:0; color:var(--primary); font-size:20px;">✨ Hasil Evaluasi Jawaban</h3>
     <h5 id="modalQuestionLabel" style="margin:0 0 10px 0; color:#64748b; font-size:14px; font-weight:600;">Soal No. 1</h5>
     
-    <!-- SKOR SOAL INI -->
     <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:12px; border-radius:12px; margin-bottom:12px;">
       <div style="font-size:12px; color:#166534; font-weight:600;">Nilai Soal Ini:</div>
       <div id="modalScoreDisplay" style="font-size:38px; font-weight:800; color:#15803d;">0 / 100</div>
     </div>
     
-    <!-- DETAIL TRANSKRIP & FEEDBACK -->
-    <div style="text-align:left; background:#f8fafc; padding:12px; border-radius:10px; font-size:13px; margin-bottom:12px; border:1px solid #e2e8f0;">
+    <div style="text-align:left; background:#f8fafc; padding:12px; border-radius:10px; font-size:13px; margin-bottom:12px; border:1px solid #e2e8f0; white-space:pre-wrap;">
       <b style="color:#1e293b;">Transkrip Jawaban:</b>
       <p id="modalTranscriptDisplay" style="margin:4px 0 8px 0; color:#475569; font-style:italic;"></p>
-      <b style="color:#1e293b;">Evaluasi / Umpan Balik AI:</b>
+      <b style="color:#1e293b;">Evaluasi & Umpan Balik:</b>
       <p id="modalFeedbackDisplay" style="margin:4px 0 0 0; color:#334155;"></p>
     </div>
 
-    <!-- AKUMULASI NILAI BAB DI DALAM POPUP -->
     <div style="background:#e0e7ff; border:1px solid #c7d2fe; padding:10px 14px; border-radius:10px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
       <div style="text-align:left;">
         <span style="font-size:12px; color:#3730a3; font-weight:700; display:block;">📊 Akumulasi Nilai Bab Saat Ini:</span>
-        <small style="font-size:10px; color:#4f46e5;">(Rata-rata dari seluruh soal di bab ini)</small>
+        <small style="font-size:10px; color:#4f46e5;">(Rata-rata seluruh soal)</small>
       </div>
       <span id="modalTotalBabScore" style="font-size:22px; font-weight:800; color:#4338ca;">0 / 100</span>
     </div>
@@ -168,10 +171,10 @@
   </div>
 </div>
 
-<!-- MODAL KENDALI GURU -->
+<!-- MODAL KENDALI GURU & MONITOR TOKEN ADMIN -->
 <div id="guruModal" class="modal-overlay">
   <div class="modal-content">
-    <h3 style="margin-top:0;">⚙️ Kendali Guru</h3>
+    <h3 style="margin-top:0;">⚙️ Kendali Guru / Admin</h3>
     <div id="passForm">
       <label>Masukkan Password Admin:</label>
       <input type="password" id="inputAdminPass" placeholder="Password...">
@@ -179,15 +182,23 @@
     </div>
 
     <div id="adminPanel" style="display:none;">
+      <!-- PANEL MONITOR TOKEN -->
+      <div style="background:#fef2f2; border:2px dashed #ef4444; padding:15px; border-radius:12px; text-align:center; margin-bottom:15px;">
+        <span style="font-size:12px; color:#991b1b; font-weight:700; display:block;">🔑 TOKEN UJIAN AKTIF SAAT INI (5 MENIT):</span>
+        <div id="adminTokenDisplay" style="font-size:36px; font-weight:900; color:#dc2626; letter-spacing:6px; margin:5px 0;">-----</div>
+        <small id="adminTokenTimer" style="color:#7f1d1d; font-weight:600; display:block; margin-bottom:8px;">Sisa Waktu: 05:00</small>
+        <button style="background:#dc2626; color:white; padding:6px 12px; font-size:12px; width:auto;" onclick="refreshAdminToken()">🔄 Refresh Token Baru</button>
+      </div>
+
       <h4>1. Mode Penggunaan</h4>
       <div style="display:flex; flex-direction:column; gap:10px;">
         <button style="background:var(--success); color:white; padding:12px; text-align:center;" onclick="setMode('PRACTICE')">
           🟢 <b>Mode Latihan</b><br>
-          <small style="font-weight:400; font-size:12px;">(Nilai tidak tersimpan di database)</small>
+          <small style="font-weight:400; font-size:12px;">(Tunjukkan Kunci Jawaban, Tanpa Token & 0% Kuota AI)</small>
         </button>
         <button style="background:var(--danger); color:white; padding:12px; text-align:center;" onclick="setMode('SUBMISSION')">
           🔴 <b>Mode Ujian</b><br>
-          <small style="font-weight:400; font-size:12px;">(Nilai akan direkam di database)</small>
+          <small style="font-weight:400; font-size:12px;">(Rahasiakan Kunci Jawaban, Wajib Token & Diuji AI Gemini)</small>
         </button>
       </div>
       <hr style="margin:20px 0;">
@@ -236,6 +247,9 @@
   let adminVerified = false, verifiedPass = "", currentAppMode = "SUBMISSION";
   let speechRecognition = null, liveTranscriptText = "", isRecording = false;
   let questionStatusMap = {};
+  
+  let activeStudentTokenSession = "";
+  let tokenTimerInterval = null;
 
   window.onload = function() {
     initApp();
@@ -244,12 +258,18 @@
   function updateModeBadgeUI(mode) {
     currentAppMode = mode;
     const badge = document.getElementById('badgeModeDisplay');
+    const tokenSection = document.getElementById('tokenEntrySection');
+
     if (mode === "PRACTICE") {
-      badge.innerHTML = "🟢 LATIHAN (Nilai tidak tersimpan)";
+      badge.innerHTML = "🟢 LATIHAN (Tampil Kunci & Tanpa Token)";
       badge.style.background = "#10b981";
+      tokenSection.style.display = "none";
     } else {
-      badge.innerHTML = "🔴 UJIAN (Nilai akan direkam)";
+      badge.innerHTML = "🔴 UJIAN (Rahasia Kunci & Wajib Token)";
       badge.style.background = "#ef4444";
+      if (!activeStudentTokenSession) {
+        tokenSection.style.display = "block";
+      }
     }
   }
 
@@ -275,7 +295,6 @@
       data.rombelList.forEach(r => rSelect.innerHTML += `<option value="${r}">${r}</option>`);
     });
 
-    // Inisialisasi Web Speech API (dengan simpan draft otomatis)
     const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (Speech) {
       speechRecognition = new Speech();
@@ -289,7 +308,6 @@
         liveTranscriptText = text;
         document.getElementById('transcriptBox').innerText = liveTranscriptText;
         
-        // Simpan transkrip ke draft
         if (selectedQuestionObject) {
           const qId = selectedQuestionObject.id;
           if (!questionStatusMap[qId]) questionStatusMap[qId] = {};
@@ -302,7 +320,6 @@
     }
   }
 
-  // 💡 PERBAIKAN: API CATCH SELALU MEMANGGIL CALLBACK
   function fetchAPI(payload, callback) {
     fetch(API_URL, { method: "POST", body: JSON.stringify(payload) })
     .then(res => res.json())
@@ -310,6 +327,27 @@
     .catch(err => {
       console.error("Fetch API Catch:", err);
       callback({ success: false, error: "Koneksi/API Error: " + err.message });
+    });
+  }
+
+  function verifyTokenAndStartExam() {
+    const tokenInput = document.getElementById('inputStudentToken').value.trim().toUpperCase();
+    if (!tokenInput || tokenInput.length !== 5) {
+      return alert("Masukkan 5 karakter Token Ujian dengan benar!");
+    }
+
+    fetchAPI({ action: "validateStudentToken", token: tokenInput }, res => {
+      if (res && res.success) {
+        activeStudentTokenSession = tokenInput;
+        document.getElementById('tokenEntrySection').style.background = "#f0fdf4";
+        document.getElementById('tokenEntrySection').style.borderColor = "#86efac";
+        document.getElementById('tokenSessionStatus').style.color = "#166534";
+        document.getElementById('tokenSessionStatus').innerHTML = `✅ <b>Token Terverifikasi (${tokenInput})!</b> Silakan kerjakan soal hingga selesai.`;
+        alert("Token Valid! Anda siap mengerjakan ujian.");
+        onBabChange();
+      } else {
+        alert("Gagal: " + (res ? res.error : "Token Salah"));
+      }
     });
   }
 
@@ -344,6 +382,12 @@
     const rombel = document.getElementById('rombelSelect').value;
     const bab = document.getElementById('babSelect').value;
     const studentName = document.getElementById('studentSelect').value;
+
+    if (currentAppMode === "SUBMISSION" && !activeStudentTokenSession) {
+      document.getElementById('paletteSection').style.display = 'none';
+      document.getElementById('questionContainer').style.display = 'none';
+      return;
+    }
 
     fetchAPI({ action: "getQuestions", rombel: rombel, bab: bab }, res => {
       if (res && res.questions) {
@@ -417,18 +461,15 @@
     selectedQuestionObject = currentQuestionsList[i];
     resetSubmitButtonUI();
     
-    // 1. Update Kotak Nomor Soal
     document.querySelectorAll('.q-num-btn').forEach((b, idx) => {
       b.className = `q-num-btn ${questionStatusMap[idx] || ''}`;
     });
     const activeBtn = document.getElementById(`qBtn_${i}`);
     if (activeBtn) activeBtn.classList.add('active');
 
-    // 2. Update Teks Soal
     document.getElementById('questionNumberLabel').innerText = `Soal No. ${i + 1}`;
     document.getElementById('questionText').innerText = selectedQuestionObject.pertanyaan;
 
-    // 3. Update Gambar Soal
     const imgBox = document.getElementById('gambarSoalBox');
     if (selectedQuestionObject.gambar) {
       document.getElementById('gambarSoalImg').src = selectedQuestionObject.gambar;
@@ -437,7 +478,6 @@
       imgBox.style.display = 'none';
     }
 
-    // 4. Update Teks Transkrip Lisan
     const qId = selectedQuestionObject.id;
     const existingData = questionStatusMap[qId] || {};
     
@@ -475,9 +515,13 @@
   function submitAnswerAudio() {
     if (!selectedQuestionObject) return alert("Pilih soal terlebih dahulu!");
 
+    if (currentAppMode === "SUBMISSION" && !activeStudentTokenSession) {
+      return alert("Masukkan Token Ujian terlebih dahulu!");
+    }
+
     const submitBtn = document.getElementById('btnSubmitAnswer');
     submitBtn.disabled = true;
-    submitBtn.innerText = "⏳ Gemini AI sedang menilai...";
+    submitBtn.innerText = "⏳ AI sedang menilai jawaban...";
 
     fetchAPI({
       action: "processAnswer",
@@ -488,9 +532,9 @@
       bab: document.getElementById('babSelect').value,
       questionText: selectedQuestionObject.pertanyaan,
       rubrikText: selectedQuestionObject.rubrik,
-      studentTranscriptText: liveTranscriptText
+      studentTranscriptText: liveTranscriptText,
+      studentToken: activeStudentTokenSession
     }, res => {
-      // 💡 RE-ENABLE SELALU DIJALANKAN DENGAN AMAN
       resetSubmitButtonUI();
 
       if (res && res.success) {
@@ -503,22 +547,20 @@
         updatePaletteColor(activeQuestionIndex, 'green');
         updateAccumulatedScoreUI();
 
-        // MENGISI KONTEN POP-UP EVALUASI AI
         document.getElementById('modalQuestionLabel').innerText = `Soal No. ${activeQuestionIndex + 1}`;
         document.getElementById('modalScoreDisplay').innerText = `${score} / 100`;
         document.getElementById('modalTranscriptDisplay').innerText = `"${transcript}"`;
         document.getElementById('modalFeedbackDisplay').innerText = feedback;
 
         const modeNote = res.mode === "PRACTICE" 
-          ? `<span style="color:#d97706; font-weight:600;">ℹ️ Mode Latihan:</span> Nilai tidak tersimpan di database.`
-          : `<span style="color:#059669; font-weight:600;">✅ Mode Ujian:</span> Nilai telah direkam di database.`;
+          ? `<span style="color:#d97706; font-weight:600;">🟢 Mode Latihan:</span> Kunci Jawaban Ditampilkan & Nilai Tidak Tersimpan.`
+          : `<span style="color:#059669; font-weight:600;">🔴 Mode Ujian:</span> Kunci Jawaban Dirahasiakan & Nilai Terekam di database.`;
         document.getElementById('modalModeNote').innerHTML = modeNote;
 
-        // BUKA POP-UP MODAL
         document.getElementById('resultModal').style.display = 'flex';
 
       } else {
-        alert("Gagal: " + (res ? res.error : "Terjadi kesalahan pada AI / Server. Silakan coba klik Kirim lagi."));
+        alert("Gagal: " + (res ? res.error : "Terjadi kesalahan pada Server. Silakan coba lagi."));
       }
     });
   }
@@ -536,7 +578,7 @@
     }
   }
 
-  // KENDALI GURU & MODAL LOGIC
+  // KENDALI GURU & MONITOR TOKEN ADMIN
   function openGuruModal() { document.getElementById('guruModal').style.display = 'flex'; }
   function closeGuruModal() { document.getElementById('guruModal').style.display = 'none'; }
   
@@ -549,8 +591,47 @@
         document.getElementById('passForm').style.display = 'none';
         document.getElementById('adminPanel').style.display = 'block';
         if (selectedQuestionObject) document.getElementById('adminActionBtns').style.display = 'block';
+        
+        fetchAdminToken();
       } else alert("Password Admin Salah!");
     });
+  }
+
+  function fetchAdminToken() {
+    fetchAPI({ action: "getTokenAdmin", password: verifiedPass }, res => {
+      if (res && res.success) {
+        document.getElementById('adminTokenDisplay').innerText = res.token;
+        startTokenTimer(res.remainingSeconds);
+      }
+    });
+  }
+
+  function refreshAdminToken() {
+    fetchAPI({ action: "refreshTokenAdmin", password: verifiedPass }, res => {
+      if (res && res.success) {
+        document.getElementById('adminTokenDisplay').innerText = res.token;
+        startTokenTimer(res.remainingSeconds);
+        alert(res.message);
+      }
+    });
+  }
+
+  function startTokenTimer(seconds) {
+    if (tokenTimerInterval) clearInterval(tokenTimerInterval);
+    let secLeft = seconds;
+
+    const timerElem = document.getElementById('adminTokenTimer');
+    tokenTimerInterval = setInterval(() => {
+      if (secLeft <= 0) {
+        clearInterval(tokenTimerInterval);
+        fetchAdminToken();
+        return;
+      }
+      secLeft--;
+      const m = String(Math.floor(secLeft / 60)).padStart(2, '0');
+      const s = String(secLeft % 60).padStart(2, '0');
+      timerElem.innerText = `Sisa Waktu: ${m}:${s}`;
+    }, 1000);
   }
 
   function setMode(mode) {
