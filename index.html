@@ -163,14 +163,7 @@
 
   <button type="button" style="background:#64748b; color:white; margin-bottom:15px;" onclick="switchToStudentView()">⬅️ Kembali ke Halaman Siswa</button>
 
-  <div id="adminLoginForm" class="card">
-    <h3>🔒 Otentikasi Password Admin</h3>
-    <label>Masukkan Password Admin:</label>
-    <input type="password" id="inputAdminPass" placeholder="Password Admin...">
-    <button style="margin-top:10px; background:var(--primary); color:white;" onclick="verifyAdminPass()">Masuk Panel Guru</button>
-  </div>
-
-  <div id="adminMainPanel" style="display:none;">
+  <div id="adminMainPanel">
     <div class="card" style="background:#fef2f2; border:2px dashed #ef4444; text-align:center;">
       <span style="font-size:12px; color:#991b1b; font-weight:700; display:block;">🔑 TOKEN UJIAN AKTIF SAAT INI (BERUBAH SETIAP 5 MENIT):</span>
       <div id="adminTokenDisplay" style="font-size:38px; font-weight:900; color:#dc2626; letter-spacing:6px; margin:5px 0;">-----</div>
@@ -342,7 +335,7 @@
   const API_URL = "https://script.google.com/macros/s/AKfycbzBMx-BvZfCT_w6yG2HJur8KUm2kqK0tfcZhFiD6J7dxH3AOOxXQg72fS4pLzAjNFM_kA/exec";
 
   let studentDataCache = {}, currentQuestionsList = [], activeQuestionIndex = -1, selectedQuestionObject = null;
-  let adminVerified = false, verifiedPass = "", currentAppMode = "SUBMISSION";
+  let verifiedPass = "", currentAppMode = "SUBMISSION";
   let speechRecognition = null, liveTranscriptText = "", isRecording = false;
   let questionStatusMap = {};
   
@@ -354,16 +347,28 @@
   let recSecondsLeft = 60;
 
   let adminCurrentQuestions = [];
-
   let clientQuestionsCache = {};
 
   window.onload = function() {
     initApp();
   };
 
+  // AKSI MASUK HALAMAN ADMIN DENGAN POPUP PASSWORD & NOTIFIKASI
   function switchToAdminView() {
-    document.getElementById('studentPage').style.display = 'none';
-    document.getElementById('adminPage').style.display = 'block';
+    const pass = prompt("🔒 Masukkan Password Admin untuk Mengakses Halaman Kendali:");
+    if (!pass) return;
+
+    fetchAPI({ action: "verifyPassword", password: pass }, res => {
+      if (res && res.success) {
+        verifiedPass = pass;
+        document.getElementById('studentPage').style.display = 'none';
+        document.getElementById('adminPage').style.display = 'block';
+        alert("🎉 BERHASIL: Login Admin Berhasil!");
+        fetchAdminToken();
+      } else {
+        alert("❌ GAGAL: Password Admin Salah!");
+      }
+    });
   }
 
   function switchToStudentView() {
@@ -496,21 +501,19 @@
         document.getElementById('tokenEntrySection').style.borderColor = "#86efac";
         document.getElementById('tokenSessionStatus').style.color = "#166534";
         document.getElementById('tokenSessionStatus').innerHTML = `✅ <b>Token Terverifikasi (${tokenInput})!</b> Silakan kerjakan seluruh soal hingga selesai.`;
-        alert("Token Valid! Anda berhasil masuk sesi ujian.");
+        alert("🎉 BERHASIL: Token Valid! Anda berhasil masuk sesi ujian.");
         onBabChange();
       } else {
-        alert("Gagal: " + (res ? res.error : "Token Salah"));
+        alert("❌ GAGAL: " + (res ? res.error : "Token Salah"));
       }
     });
   }
 
-  // EVENT LENGKAP SAAT KELAS DIUBAH
   function onRombelChange() {
     const rombel = document.getElementById('rombelSelect').value;
     const sSelect = document.getElementById('studentSelect');
     const bSelect = document.getElementById('babSelect');
 
-    // Sembunyikan palet dan soal sebelumnya secara instan
     document.getElementById('paletteSection').style.display = 'none';
     document.getElementById('questionContainer').style.display = 'none';
     document.getElementById('jkDisplay').value = "";
@@ -537,7 +540,6 @@
     }
   }
 
-  // EVENT LENGKAP SAAT NAMA SISWA DIUBAH (OTOMATIS BERPINDAH SOAL/PROGRESS)
   function onStudentChange() {
     const rombel = document.getElementById('rombelSelect').value;
     const studentName = document.getElementById('studentSelect').value;
@@ -550,7 +552,6 @@
       document.getElementById('jkDisplay').value = "";
     }
 
-    // Jika bab sudah terpilih sebelumnya, panggil ulang progress untuk siswa baru ini
     if (rombel && studentName && bab) {
       onBabChange();
     } else {
@@ -559,7 +560,6 @@
     }
   }
 
-  // EVENT LENGKAP SAAT BAB UJIAN DIUBAH
   function onBabChange() {
     const rombel = document.getElementById('rombelSelect').value;
     const bab = document.getElementById('babSelect').value;
@@ -658,7 +658,7 @@
 
   function selectQuestion(i) {
     if (!currentQuestionsList || currentQuestionsList.length === 0) return;
-    
+
     activeQuestionIndex = i;
     selectedQuestionObject = currentQuestionsList[i];
     
@@ -820,7 +820,7 @@
 
       } else {
         resetSubmitButtonUI();
-        alert("Gagal: " + (res ? res.error : "Terjadi kesalahan pada Server. Silakan coba lagi."));
+        alert("❌ GAGAL: " + (res ? res.error : "Terjadi kesalahan pada Server. Silakan coba lagi."));
       }
     });
   }
@@ -871,20 +871,7 @@
     document.getElementById('celebrationModal').style.display = 'none';
   }
 
-  // LOGIKA ADMIN PANEL GURU
-  function verifyAdminPass() {
-    const pass = document.getElementById('inputAdminPass').value;
-    fetchAPI({ action: "verifyPassword", password: pass }, res => {
-      if (res && res.success) {
-        adminVerified = true;
-        verifiedPass = pass;
-        document.getElementById('adminLoginForm').style.display = 'none';
-        document.getElementById('adminMainPanel').style.display = 'block';
-        fetchAdminToken();
-      } else alert("Password Admin Salah!");
-    });
-  }
-
+  // OPERASI ADMIN DENGAN POPUP PASSWORD & NOTIFIKASI SUKSES
   function fetchAdminToken() {
     fetchAPI({ action: "getTokenAdmin", password: verifiedPass }, res => {
       if (res && res.success) {
@@ -895,11 +882,15 @@
   }
 
   function refreshAdminToken() {
-    fetchAPI({ action: "refreshTokenAdmin", password: verifiedPass }, res => {
+    const passConfirm = prompt("🔒 Konfirmasi Password Admin untuk Refresh Token:", verifiedPass);
+    if (!passConfirm) return;
+
+    fetchAPI({ action: "refreshTokenAdmin", password: passConfirm }, res => {
       if (res && res.success) {
         document.getElementById('adminTokenDisplay').innerText = res.token;
         startTokenTimer(res.remainingSeconds);
-      }
+        alert("🎉 BERHASIL: " + res.message);
+      } else alert("❌ GAGAL: " + (res ? res.error : "Password Salah"));
     });
   }
 
@@ -925,7 +916,7 @@
     const toggle = document.getElementById('appModeSwitchToggle');
     const targetMode = toggle.checked ? "SUBMISSION" : "PRACTICE";
 
-    const passConfirm = prompt("🔒 Pengubahan Mode Penggunaan Memerlukan Konfirmasi Password Admin:\nMasukkan Password:");
+    const passConfirm = prompt("🔒 Pengubahan Mode Penggunaan Memerlukan Konfirmasi Password Admin:\nMasukkan Password:", verifiedPass);
     if (!passConfirm) {
       toggle.checked = !toggle.checked;
       return;
@@ -960,7 +951,10 @@
 
     if (!rombel || !bab) return alert("Pilih Kelas dan Bab pada filter rekap terlebih dahulu!");
 
-    fetchAPI({ action: "getAdminGradeSummary", password: verifiedPass, rombel: rombel, bab: bab }, res => {
+    const passConfirm = prompt("🔒 Konfirmasi Password Admin untuk Memuat Rekap Nilai:", verifiedPass);
+    if (!passConfirm) return;
+
+    fetchAPI({ action: "getAdminGradeSummary", password: passConfirm, rombel: rombel, bab: bab }, res => {
       if (res && res.success) {
         const tbody = document.querySelector('#adminSummaryTable tbody');
         tbody.innerHTML = "";
@@ -977,9 +971,9 @@
           });
         }
         document.getElementById('adminGradeTableBox').style.display = 'block';
-        alert("🎉 Rekap Nilai Berhasil Dimuat!");
+        alert("🎉 BERHASIL: Rekap Nilai Berhasil Dimuat!");
       } else {
-        alert("Gagal memuat rekap: " + (res ? res.error : "Error"));
+        alert("❌ GAGAL: " + (res ? res.error : "Error"));
       }
     });
   }
@@ -1049,7 +1043,7 @@
   function closeFormSoalModal() { document.getElementById('formSoalModal').style.display = 'none'; }
 
   function saveSoalData() {
-    const passConfirm = prompt("🔒 Menyimpan Soal Memerlukan Password Admin:\nMasukkan Password:");
+    const passConfirm = prompt("🔒 Menyimpan Soal Memerlukan Password Admin:\nMasukkan Password:", verifiedPass);
     if (!passConfirm) return;
 
     const fileInput = document.getElementById('soalGambarInput');
@@ -1071,7 +1065,7 @@
           clientQuestionsCache = {};
           closeFormSoalModal();
           fetchAdminQuestionsList();
-        } else alert("❌ GAGAL: " + res.error);
+        } else alert("❌ GAGAL: " + (res ? res.error : "Error"));
       });
     };
 
@@ -1086,7 +1080,7 @@
     const q = adminCurrentQuestions[idx];
     if (!confirm(`Yakin ingin menghapus soal No. ${idx + 1}?`)) return;
 
-    const passConfirm = prompt("🔒 Menghapus Soal Memerlukan Password Admin:\nMasukkan Password:");
+    const passConfirm = prompt("🔒 Menghapus Soal Memerlukan Password Admin:\nMasukkan Password:", verifiedPass);
     if (!passConfirm) return;
 
     fetchAPI({ action: "deleteQuestion", password: passConfirm, questionId: q.id }, res => {
@@ -1094,19 +1088,19 @@
         alert("🎉 BERHASIL: " + res.message);
         clientQuestionsCache = {};
         fetchAdminQuestionsList();
-      } else alert("❌ GAGAL: " + res.error);
+      } else alert("❌ GAGAL: " + (res ? res.error : "Error"));
     });
   }
 
   function clearServerCacheManual() {
-    const passConfirm = prompt("🔒 Membersihkan Cache Server Memerlukan Password Admin:\nMasukkan Password:");
+    const passConfirm = prompt("🔒 Membersihkan Cache Server Memerlukan Password Admin:\nMasukkan Password:", verifiedPass);
     if (!passConfirm) return;
 
     fetchAPI({ action: "clearServerCache", password: passConfirm }, res => {
       if (res && res.success) {
         clientQuestionsCache = {};
         alert("🎉 BERHASIL: " + res.message);
-      } else alert("❌ GAGAL: " + res.error);
+      } else alert("❌ GAGAL: " + (res ? res.error : "Error"));
     });
   }
 </script>
