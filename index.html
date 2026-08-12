@@ -128,11 +128,13 @@
         </div>
       </div>
 
+      <!-- KOTAK TRANSKRIP YANG BISA DIGUNAKAN UNTUK KETIK / EDIT MANUAL -->
       <div class="form-group">
-        <label>Jawaban Lisan Siswa (Transkrip Otomatis):</label>
-        <div id="transcriptBox" style="min-height:60px; padding:10px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; font-size:13px; color:#334155;">
-          (Tekan tombol rekam untuk mulai berbicara...)
-        </div>
+        <label>Jawaban Lisan Siswa (Dapat Dibatalkan / Ketik Edit Manual):</label>
+        <textarea id="transcriptBox" rows="3" placeholder="Hasil rekaman suara akan muncul di sini... Siswa juga dapat mengetik atau mengedit teks jawaban secara manual di sini." style="width:100%; padding:10px; border:1.5px solid #cbd5e1; border-radius:10px; font-size:14px; background-color:#ffffff; font-family:'Poppins', sans-serif; resize:vertical;" oninput="onTranscriptManualEdit()"></textarea>
+        <small style="font-size:11px; color:#64748b; display:block; margin-top:4px;">
+          ✍️ <i>Siswa dapat menambah atau membenarkan tulisan di atas jika ada kata yang belum ter-rekam dengan sempurna.</i>
+        </small>
       </div>
 
       <button type="button" class="btn-record-start" id="btnRecordToggle" onclick="toggleDirectRecording()">🎤 Klik untuk Mulai Merekam Jawaban</button>
@@ -185,7 +187,6 @@
       </div>
     </div>
 
-    <!-- FITUR BARU: MANAJEMEN DATA SISWA (CRUD) -->
     <div class="card">
       <h3>2. Kelola Data Siswa (CRUD)</h3>
       <div class="form-group">
@@ -557,7 +558,9 @@
         let text = '';
         for (let i = e.resultIndex; i < e.results.length; i++) text += e.results[i][0].transcript;
         liveTranscriptText = text;
-        document.getElementById('transcriptBox').innerText = liveTranscriptText;
+        
+        // PENGISIAN LANGSUNG KE TEXTAREA SOAL
+        document.getElementById('transcriptBox').value = liveTranscriptText;
         
         if (selectedQuestionObject) {
           const qId = selectedQuestionObject.id;
@@ -569,6 +572,19 @@
         resetSubmitButtonUI();
       };
     }
+  }
+
+  function onTranscriptManualEdit() {
+    liveTranscriptText = document.getElementById('transcriptBox').value;
+    if (selectedQuestionObject) {
+      const qId = selectedQuestionObject.id;
+      if (!questionStatusMap[qId]) questionStatusMap[qId] = {};
+      questionStatusMap[qId].transcript = liveTranscriptText;
+    }
+    if (liveTranscriptText.trim().length > 0) {
+      updatePaletteColor(activeQuestionIndex, 'yellow');
+    }
+    resetSubmitButtonUI();
   }
 
   function fetchAPI(payload, callback) {
@@ -793,11 +809,7 @@
     const existingData = questionStatusMap[qId] || {};
     
     liveTranscriptText = existingData.transcript || "";
-    if (liveTranscriptText) {
-      document.getElementById('transcriptBox').innerText = liveTranscriptText;
-    } else {
-      document.getElementById('transcriptBox').innerText = "(Tekan tombol rekam untuk mulai berbicara...)";
-    }
+    document.getElementById('transcriptBox').value = liveTranscriptText;
 
     const attempts = existingData.attempts || (existingData.score !== undefined ? 1 : 0);
     if (currentAppMode === "SUBMISSION") {
@@ -872,6 +884,12 @@
     if (currentAppMode === "SUBMISSION" && !isStudentTokenVerified) {
       return alert("Masukkan Token Ujian terlebih dahulu!");
     }
+
+    const transcriptInputVal = document.getElementById('transcriptBox').value.trim();
+    if (!transcriptInputVal) {
+      return alert("Jawaban masih kosong! Silakan rekam suara atau ketik jawaban Anda terlebih dahulu.");
+    }
+    liveTranscriptText = transcriptInputVal;
 
     const qId = selectedQuestionObject.id;
     const existingData = questionStatusMap[qId] || {};
