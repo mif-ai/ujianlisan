@@ -41,6 +41,10 @@
     
     .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 15px; }
     .modal-content { background: white; padding: 24px; border-radius: 16px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+    th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: left; }
+    th { background: #f1f5f9; font-weight: 700; }
   </style>
 </head>
 <body>
@@ -130,7 +134,12 @@
     </div>
 
     <button type="button" class="btn-record-start" id="btnRecordToggle" onclick="toggleDirectRecording()">🎤 Klik untuk Mulai Merekam Jawaban</button>
+    
+    <!-- INDIKATOR BANYAKNYA DETIK SISA WAKTU REKAM -->
     <div id="statusText" style="text-align:center; font-size:13px; font-weight:600; color:#4f46e5;">Status: Siap Merekam</div>
+    <div id="recordingTimerDisplay" style="display:none; text-align:center; font-size:12px; font-weight:700; color:#dc2626; margin-top:4px;">
+      ⏱️ Sisa waktu rekam: <span id="recTimerSec">60</span> detik
+    </div>
 
     <button type="button" class="btn-submit" id="btnSubmitAnswer" onclick="submitAnswerAudio()">✨ Kirim & Evaluasi Jawaban AI</button>
   </div>
@@ -154,6 +163,9 @@
       <p id="modalFeedbackDisplay" style="margin:4px 0 0 0; color:#334155;"></p>
     </div>
 
+    <!-- TOMBOL FITUR 2: TEXT-TO-SPEECH AI -->
+    <button style="background:#0284c7; color:white; margin-bottom:12px; font-size:13px;" onclick="speakFeedbackTTS()">🔊 Dengarkan Evaluasi (Suara AI)</button>
+
     <div style="background:#e0e7ff; border:1px solid #c7d2fe; padding:10px 14px; border-radius:10px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
       <div style="text-align:left;">
         <span style="font-size:12px; color:#3730a3; font-weight:700; display:block;">📊 Akumulasi Nilai Bab Saat Ini:</span>
@@ -168,6 +180,23 @@
       <button style="background:#94a3b8; color:white; flex:1;" onclick="closeResultModal()">Tutup</button>
       <button id="btnNextQuestionModal" style="background:var(--primary); color:white; flex:1.5;" onclick="goToNextQuestionFromModal()">Soal Berikutnya ➡️</button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL FITUR 3: KARTU SELEBRASI SELESAI BAB -->
+<div id="celebrationModal" class="modal-overlay">
+  <div class="modal-content" style="text-align:center; background:linear-gradient(to bottom, #ffffff, #f0fdf4);">
+    <div style="font-size:50px;">🎉</div>
+    <h2 style="color:#15803d; margin:5px 0;">Selamat!</h2>
+    <p style="font-size:14px; color:#334155; margin-bottom:15px;">Anda telah menyelesaikan seluruh soal pada bab ini!</p>
+    
+    <div style="background:white; border:2px dashed #86efac; padding:15px; border-radius:12px; margin-bottom:15px;">
+      <span style="font-size:12px; color:#64748b; font-weight:600;">NILAI RATA-RATA AKHIR BAB:</span>
+      <div id="celebFinalScoreDisplay" style="font-size:42px; font-weight:900; color:#166534;">0 / 100</div>
+      <span id="celebBadgeStatus" style="display:inline-block; padding:4px 12px; border-radius:12px; font-size:12px; font-weight:700; background:#dcfce7; color:#15803d;">SANGAT BAIK</span>
+    </div>
+
+    <button style="background:#10b981; color:white;" onclick="closeCelebrationModal()">Selesai & Tutup</button>
   </div>
 </div>
 
@@ -202,7 +231,21 @@
         </button>
       </div>
       <hr style="margin:20px 0;">
-      <h4>2. Kelola Bank Soal</h4>
+
+      <!-- FITUR 4: REKAPITULASI NILAI DI KENDALI GURU -->
+      <h4>2. Ringkasan Nilai Kelas & Bab</h4>
+      <button style="background:#0284c7; color:white; margin-bottom:10px;" onclick="fetchAdminGradeSummary()">📊 Tampilkan Rekap Nilai Kelas Ini</button>
+      <div id="adminGradeTableBox" style="display:none; max-height:200px; overflow-y:auto; margin-bottom:15px;">
+        <table id="adminSummaryTable">
+          <thead>
+            <tr><th>Nama Siswa</th><th>Soal Dijawab</th><th>Rata-Rata</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <hr style="margin:20px 0;">
+      <h4>3. Kelola Bank Soal</h4>
       <button style="background:var(--primary); color:white;" onclick="openTambahSoalForm()">+ Tambah Soal Baru</button>
     </div>
     
@@ -250,6 +293,10 @@
   
   let activeStudentTokenSession = "";
   let tokenTimerInterval = null;
+
+  // VARIABLE UNTUK TIMER 60 DETIK REKAMAN
+  let recCountdownInterval = null;
+  let recSecondsLeft = 60;
 
   window.onload = function() {
     initApp();
@@ -492,9 +539,12 @@
     if (adminVerified) document.getElementById('adminActionBtns').style.display = 'block';
   }
 
+  // 💡 FITUR 1: REKRAM DENGAN TIMER COUNTDOWN 60 DETIK
   function toggleDirectRecording() {
     const btn = document.getElementById('btnRecordToggle');
     const status = document.getElementById('statusText');
+    const timerDisp = document.getElementById('recordingTimerDisplay');
+    const recSecElem = document.getElementById('recTimerSec');
     resetSubmitButtonUI();
 
     if (!isRecording) {
@@ -503,12 +553,46 @@
       btn.innerText = "⏹️ Hentikan Perekaman";
       btn.className = "btn-record-stop";
       status.innerText = "Status: Sedang Merekam Suara Anda...";
+      
+      // Jalankan Timer 60 Detik
+      recSecondsLeft = 60;
+      recSecElem.innerText = recSecondsLeft;
+      timerDisp.style.display = 'block';
+
+      if (recCountdownInterval) clearInterval(recCountdownInterval);
+      recCountdownInterval = setInterval(() => {
+        recSecondsLeft--;
+        recSecElem.innerText = recSecondsLeft;
+        if (recSecondsLeft <= 0) {
+          clearInterval(recCountdownInterval);
+          toggleDirectRecording(); // Stop otomatis saat 0 detik
+        }
+      }, 1000);
+
     } else {
       if (speechRecognition) speechRecognition.stop();
       isRecording = false;
       btn.innerText = "🔄 Rekam Suara Ulang";
       btn.className = "btn-record-start";
       status.innerText = "Status: Rekaman Selesai!";
+      timerDisp.style.display = 'none';
+      if (recCountdownInterval) clearInterval(recCountdownInterval);
+    }
+  }
+
+  // 💡 FITUR 2: TEXT-TO-SPEECH UMPAN BALIK AI
+  function speakFeedbackTTS() {
+    const feedbackText = document.getElementById('modalFeedbackDisplay').innerText;
+    if (!feedbackText) return;
+
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel(); // Stop suara sebelumnya jika ada
+      const utterance = new SpeechSynthesisUtterance(feedbackText);
+      utterance.lang = 'id-ID';
+      utterance.rate = 0.95; // Kecepatan bicara normal
+      window.speechSynthesis.speak(utterance);
+    } else {
+      alert("Browser Anda tidak mendukung Text-to-Speech.");
     }
   }
 
@@ -566,19 +650,53 @@
   }
 
   function closeResultModal() {
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     document.getElementById('resultModal').style.display = 'none';
+  }
+
+  // 💡 FITUR 3: CEK APAKAH SELURUH SOAL SUDAH SELESAI (KARTU SELEBRASI)
+  function checkIfAllCompleted() {
+    if (!currentQuestionsList || currentQuestionsList.length === 0) return false;
+    return currentQuestionsList.every(q => {
+      const data = questionStatusMap[q.id];
+      return data && data.score !== undefined;
+    });
   }
 
   function goToNextQuestionFromModal() {
     closeResultModal();
-    if (activeQuestionIndex + 1 < currentQuestionsList.length) {
+    
+    if (checkIfAllCompleted()) {
+      showCelebrationModal();
+    } else if (activeQuestionIndex + 1 < currentQuestionsList.length) {
       selectQuestion(activeQuestionIndex + 1);
-    } else {
-      alert("🎉 Selamat! Anda telah menyelesaikan seluruh soal pada bab ini.");
     }
   }
 
-  // KENDALI GURU & MONITOR TOKEN ADMIN
+  function showCelebrationModal() {
+    const finalScore = calculateAccumulatedScore();
+    document.getElementById('celebFinalScoreDisplay').innerText = `${finalScore} / 100`;
+    
+    const badge = document.getElementById('celebBadgeStatus');
+    if (finalScore >= 85) {
+      badge.innerText = "SANGAT BAIK / LULUS UTAMA";
+      badge.style.background = "#dcfce7"; badge.style.color = "#15803d";
+    } else if (finalScore >= 75) {
+      badge.innerText = "BAIK / CUKUP";
+      badge.style.background = "#e0e7ff"; badge.style.color = "#4338ca";
+    } else {
+      badge.innerText = "PERLU REMIDI";
+      badge.style.background = "#fee2e2"; badge.style.color = "#b91c1c";
+    }
+
+    document.getElementById('celebrationModal').style.display = 'flex';
+  }
+
+  function closeCelebrationModal() {
+    document.getElementById('celebrationModal').style.display = 'none';
+  }
+
+  // KENDALI GURU & REKAP NILAI
   function openGuruModal() { document.getElementById('guruModal').style.display = 'flex'; }
   function closeGuruModal() { document.getElementById('guruModal').style.display = 'none'; }
   
@@ -594,6 +712,36 @@
         
         fetchAdminToken();
       } else alert("Password Admin Salah!");
+    });
+  }
+
+  // 💡 FITUR 4: TAMPILKAN TABEL REKAP NILAI DI KENDALI GURU
+  function fetchAdminGradeSummary() {
+    const rombel = document.getElementById('rombelSelect').value;
+    const bab = document.getElementById('babSelect').value;
+
+    if (!rombel || !bab) return alert("Pilih Kelas dan Bab di halaman utama terlebih dahulu!");
+
+    fetchAPI({ action: "getAdminGradeSummary", password: verifiedPass, rombel: rombel, bab: bab }, res => {
+      if (res && res.success) {
+        const tbody = document.querySelector('#adminSummaryTable tbody');
+        tbody.innerHTML = "";
+        
+        if (res.summary.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">Belum ada data nilai untuk kelas & bab ini.</td></tr>`;
+        } else {
+          res.summary.forEach(item => {
+            tbody.innerHTML += `<tr>
+              <td><b>${item.name}</b></td>
+              <td style="text-align:center;">${item.answeredCount} Soal</td>
+              <td style="text-align:center; font-weight:800; color:#166534;">${item.avgScore}</td>
+            </tr>`;
+          });
+        }
+        document.getElementById('adminGradeTableBox').style.display = 'block';
+      } else {
+        alert("Gagal memuat rekap: " + (res ? res.error : "Error"));
+      }
     });
   }
 
