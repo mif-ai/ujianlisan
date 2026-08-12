@@ -39,11 +39,9 @@
     .question-box { background: #f0f9ff; padding: 16px; border-left: 5px solid var(--secondary); margin: 15px 0; border-radius: 10px; }
     .img-soal { max-width: 100%; max-height: 250px; border-radius: 10px; margin-top: 10px; border: 1px solid #cbd5e1; }
     
-    /* MODAL POPUP */
     .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 15px; }
     .modal-content { background: white; padding: 24px; border-radius: 16px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
     
-    /* STYLING TOGGLE SWITCH */
     .switch-container { display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 12px 16px; border-radius: 12px; border: 1.5px solid #cbd5e1; }
     .switch { position: relative; display: inline-block; width: 52px; height: 28px; }
     .switch input { opacity: 0; width: 0; height: 0; }
@@ -59,9 +57,7 @@
 </head>
 <body>
 
-<!-- ========================================================================= -->
-<!-- 1. HALAMAN SISWA (STUDENT VIEW) -->
-<!-- ========================================================================= -->
+<!-- HALAMAN SISWA -->
 <div id="studentPage">
   <div class="header-card">
     <span id="badgeModeDisplay" class="badge-mode">Mode: Loading...</span>
@@ -98,7 +94,6 @@
       </select>
     </div>
 
-    <!-- VERIFIKASI TOKEN (HANYA SEKALI DI AWAL SESI UJIAN) -->
     <div id="tokenEntrySection" class="form-group" style="display:none; background:#fef2f2; padding:15px; border-radius:12px; border:1px solid #fca5a5;">
       <label style="color:#991b1b; font-weight:700;">🔑 Masukkan Token Ujian (Dari Guru):</label>
       <div style="display:flex; gap:8px;">
@@ -159,9 +154,7 @@
   </div>
 </div>
 
-<!-- ========================================================================= -->
-<!-- 2. HALAMAN TERSENDIRI KENDALI GURU / ADMIN (ADMIN PAGE VIEW) -->
-<!-- ========================================================================= -->
+<!-- HALAMAN ADMIN / KENDALI GURU -->
 <div id="adminPage" style="display:none;">
   <div class="header-card" style="background: linear-gradient(135deg, #1e293b, #334155);">
     <h1>⚙️ Halaman Kendali Guru / Admin</h1>
@@ -170,7 +163,6 @@
 
   <button type="button" style="background:#64748b; color:white; margin-bottom:15px;" onclick="switchToStudentView()">⬅️ Kembali ke Halaman Siswa</button>
 
-  <!-- FORM LOGIN ADMIN PERTAMA -->
   <div id="adminLoginForm" class="card">
     <h3>🔒 Otentikasi Password Admin</h3>
     <label>Masukkan Password Admin:</label>
@@ -178,10 +170,7 @@
     <button style="margin-top:10px; background:var(--primary); color:white;" onclick="verifyAdminPass()">Masuk Panel Guru</button>
   </div>
 
-  <!-- PANEL UTAMA GURU SETELAH LOGIN -->
   <div id="adminMainPanel" style="display:none;">
-    
-    <!-- CARD 1: MONITOR & REFRESH TOKEN UJIAN -->
     <div class="card" style="background:#fef2f2; border:2px dashed #ef4444; text-align:center;">
       <span style="font-size:12px; color:#991b1b; font-weight:700; display:block;">🔑 TOKEN UJIAN AKTIF SAAT INI (BERUBAH SETIAP 5 MENIT):</span>
       <div id="adminTokenDisplay" style="font-size:38px; font-weight:900; color:#dc2626; letter-spacing:6px; margin:5px 0;">-----</div>
@@ -189,7 +178,6 @@
       <button style="background:#dc2626; color:white; padding:8px 16px; font-size:13px; width:auto;" onclick="refreshAdminToken()">🔄 Refresh Token Baru Saja</button>
     </div>
 
-    <!-- CARD 2: MODE PENGGUNAAN (SWITCH TOGGLE) -->
     <div class="card">
       <h3>1. Mode Penggunaan Aplikasi</h3>
       <div class="switch-container">
@@ -204,7 +192,6 @@
       </div>
     </div>
 
-    <!-- CARD 3: REKAPITULASI NILAI DENGAN FILTER INDEPENDEN -->
     <div class="card">
       <h3>2. Tampilkan Rekap Nilai Kelas</h3>
       <div class="form-group">
@@ -231,7 +218,6 @@
       </div>
     </div>
 
-    <!-- CARD 4: KELOLA BANK SOAL (CRUD) DENGAN FILTER INDEPENDEN -->
     <div class="card">
       <h3>3. Kelola Bank Soal (Tambah, Edit, Hapus)</h3>
       <div class="form-group">
@@ -259,10 +245,17 @@
       </div>
     </div>
 
+    <!-- POIN 3: TOMBOL MANUAL RESET CACHE SERVER UNTUK GURU -->
+    <div class="card" style="background:#f8fafc; border:1px solid #cbd5e1;">
+      <h3 style="margin-top:0; color:#334155;">4. Pemeliharaan Performa Server</h3>
+      <p style="font-size:12px; color:#64748b; margin-bottom:12px;">Gunakan tombol ini jika Anda baru saja mengedit data secara langsung di file Google Sheets untuk memperbarui cache server secara instan.</p>
+      <button style="background:#475569; color:white;" onclick="clearServerCacheManual()">🧹 Reset Cache Server</button>
+    </div>
+
   </div>
 </div>
 
-<!-- MODAL POP-UP HASIL EVALUASI SISWA -->
+<!-- MODAL EVALUASI -->
 <div id="resultModal" class="modal-overlay">
   <div class="modal-content" style="text-align:center;">
     <h3 style="margin-top:0; color:var(--primary); font-size:20px;">✨ Hasil Evaluasi Jawaban</h3>
@@ -299,7 +292,7 @@
   </div>
 </div>
 
-<!-- MODAL KARTU SELEBRASI SELESAI BAB -->
+<!-- MODAL SELEBRASI -->
 <div id="celebrationModal" class="modal-overlay">
   <div class="modal-content" style="text-align:center; background:linear-gradient(to bottom, #ffffff, #f0fdf4);">
     <div style="font-size:50px;">🎉</div>
@@ -316,7 +309,7 @@
   </div>
 </div>
 
-<!-- MODAL FORM INPUT/EDIT SOAL -->
+<!-- MODAL FORM INPUT SOAL -->
 <div id="formSoalModal" class="modal-overlay">
   <div class="modal-content">
     <h3 id="formSoalTitle" style="margin-top:0;">Form Soal</h3>
@@ -354,7 +347,6 @@
   let speechRecognition = null, liveTranscriptText = "", isRecording = false;
   let questionStatusMap = {};
   
-  // SESSION TOKEN SISWA (1X MASUK BERLAKU SELAMA SISWA MENGERJAKAN)
   let activeStudentTokenSession = "";
   let isStudentTokenVerified = false;
 
@@ -362,14 +354,15 @@
   let recCountdownInterval = null;
   let recSecondsLeft = 60;
 
-  // CACHE SOAL ADMIN UNTUK BANK SOAL
   let adminCurrentQuestions = [];
+
+  // POIN 1: CLIENT-SIDE CACHE MEMORY (PRELOADING)
+  let clientQuestionsCache = {};
 
   window.onload = function() {
     initApp();
   };
 
-  // NAVIGASI HALAMAN TERPISAH
   function switchToAdminView() {
     document.getElementById('studentPage').style.display = 'none';
     document.getElementById('adminPage').style.display = 'block';
@@ -440,11 +433,9 @@
       if (!data || !data.rombelList) return;
       studentDataCache = data;
       
-      // Populate Dropdown Siswa
       const rSelect = document.getElementById('rombelSelect');
       rSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
       
-      // Populate Dropdown Admin Rekap & Admin Bank Soal
       const adminRekapRSelect = document.getElementById('adminRekapRombelSelect');
       const adminBankRSelect = document.getElementById('adminBankRombelSelect');
       adminRekapRSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
@@ -492,7 +483,6 @@
     });
   }
 
-  // VERIFIKASI TOKEN (1X BERLAKU SELAMA SISWA UJIAN)
   function verifyTokenAndStartExam() {
     const tokenInput = document.getElementById('inputStudentToken').value.trim().toUpperCase();
     if (!tokenInput || tokenInput.length !== 5) {
@@ -543,6 +533,7 @@
     }
   }
 
+  // POIN 1: NAVIGASI BAB & SOAL MEMAKAI PRELOADING/CACHE CLIENT
   function onBabChange() {
     const rombel = document.getElementById('rombelSelect').value;
     const bab = document.getElementById('babSelect').value;
@@ -554,15 +545,27 @@
       return;
     }
 
-    fetchAPI({ action: "getQuestions", rombel: rombel, bab: bab }, res => {
-      if (res && res.questions) {
-        currentQuestionsList = res.questions;
-        fetchAPI({ action: "getStudentProgress", studentName: studentName, rombel: rombel, bab: bab }, progRes => {
-          const progress = progRes ? progRes.progress : {};
-          renderPalette(progress);
-        });
-      }
-    });
+    const clientKey = rombel + "_" + bab;
+
+    const renderWithQuestions = (questions) => {
+      currentQuestionsList = questions;
+      fetchAPI({ action: "getStudentProgress", studentName: studentName, rombel: rombel, bab: bab }, progRes => {
+        const progress = progRes ? progRes.progress : {};
+        renderPalette(progress);
+      });
+    };
+
+    // CEK REUSABILITY DI CLIENT MEMORY (0 DETIK LOADING)
+    if (clientQuestionsCache[clientKey]) {
+      renderWithQuestions(clientQuestionsCache[clientKey]);
+    } else {
+      fetchAPI({ action: "getQuestions", rombel: rombel, bab: bab }, res => {
+        if (res && res.questions) {
+          clientQuestionsCache[clientKey] = res.questions; // Simpan ke cache browser
+          renderWithQuestions(res.questions);
+        }
+      });
+    }
   }
 
   function calculateAccumulatedScore() {
@@ -750,7 +753,7 @@
       rubrikText: selectedQuestionObject.rubrik,
       studentTranscriptText: liveTranscriptText,
       studentToken: activeStudentTokenSession,
-      tokenVerified: isStudentTokenVerified // Kirim status token terverifikasi
+      tokenVerified: isStudentTokenVerified
     }, res => {
       if (res && res.success) {
         attempts += 1;
@@ -835,9 +838,7 @@
     document.getElementById('celebrationModal').style.display = 'none';
   }
 
-  // =========================================================================
-  // LOGIKA KENDALI GURU (ADMIN PANEL)
-  // =========================================================================
+  // LOGIKA ADMIN PANEL GURU
   function verifyAdminPass() {
     const pass = document.getElementById('inputAdminPass').value;
     fetchAPI({ action: "verifyPassword", password: pass }, res => {
@@ -851,7 +852,6 @@
     });
   }
 
-  // 1. REFRESH TOKEN (TANPA PASSWORD TAMBAHAN & TANPA NOTIFIKASI BERLEBIHAN)
   function fetchAdminToken() {
     fetchAPI({ action: "getTokenAdmin", password: verifiedPass }, res => {
       if (res && res.success) {
@@ -888,14 +888,13 @@
     }, 1000);
   }
 
-  // 2. SWITCH TOGGLE MODE PENGGUNAAN (MINTA PASSWORD & BERI NOTIFIKASI BERHASIL)
   function onAppModeToggleChanged() {
     const toggle = document.getElementById('appModeSwitchToggle');
     const targetMode = toggle.checked ? "SUBMISSION" : "PRACTICE";
 
     const passConfirm = prompt("🔒 Pengubahan Mode Penggunaan Memerlukan Konfirmasi Password Admin:\nMasukkan Password:");
     if (!passConfirm) {
-      toggle.checked = !toggle.checked; // Revert switch if cancelled
+      toggle.checked = !toggle.checked;
       return;
     }
 
@@ -910,7 +909,6 @@
     });
   }
 
-  // 3. REKAP NILAI DENGAN FILTER INDEPENDEN GURU
   function onAdminRekapRombelChange() {
     const rombel = document.getElementById('adminRekapRombelSelect').value;
     const babSelect = document.getElementById('adminRekapBabSelect');
@@ -953,7 +951,6 @@
     });
   }
 
-  // 4. KELOLA BANK SOAL DENGAN FILTER INDEPENDEN GURU
   function onAdminBankRombelChange() {
     const rombel = document.getElementById('adminBankRombelSelect').value;
     const babSelect = document.getElementById('adminBankBabSelect');
@@ -1038,6 +1035,7 @@
       }, res => {
         if (res && res.success) {
           alert("🎉 BERHASIL: " + res.message);
+          clientQuestionsCache = {}; // Purge Client Cache lokal
           closeFormSoalModal();
           fetchAdminQuestionsList();
         } else alert("❌ GAGAL: " + res.error);
@@ -1061,7 +1059,21 @@
     fetchAPI({ action: "deleteQuestion", password: passConfirm, questionId: q.id }, res => {
       if (res && res.success) {
         alert("🎉 BERHASIL: " + res.message);
+        clientQuestionsCache = {}; // Purge Client Cache lokal
         fetchAdminQuestionsList();
+      } else alert("❌ GAGAL: " + res.error);
+    });
+  }
+
+  // POIN 3: TOMBOL RESET CACHE SERVER DARI PANEL ADMIN
+  function clearServerCacheManual() {
+    const passConfirm = prompt("🔒 Membersihkan Cache Server Memerlukan Password Admin:\nMasukkan Password:");
+    if (!passConfirm) return;
+
+    fetchAPI({ action: "clearServerCache", password: passConfirm }, res => {
+      if (res && res.success) {
+        clientQuestionsCache = {};
+        alert("🎉 BERHASIL: " + res.message);
       } else alert("❌ GAGAL: " + res.error);
     });
   }
