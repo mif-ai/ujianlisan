@@ -186,7 +186,7 @@
     </div>
 
     <div class="card">
-      <h3>2. Tampilkan Rekap Nilai Kelas</h3>
+      <h3>2. Tampilkan Rekap Nilai Kelas & Reset Ujian</h3>
       <div class="form-group">
         <label>Pilih Kelas / Rombel Rekap:</label>
         <select id="adminRekapRombelSelect" onchange="onAdminRekapRombelChange()">
@@ -201,10 +201,10 @@
       </div>
       <button style="background:#0284c7; color:white;" onclick="fetchAdminGradeSummary()">📊 Tampilkan Rekap Nilai</button>
 
-      <div id="adminGradeTableBox" style="display:none; max-height:250px; overflow-y:auto; margin-top:15px;">
+      <div id="adminGradeTableBox" style="display:none; max-height:300px; overflow-y:auto; margin-top:15px;">
         <table id="adminSummaryTable">
           <thead>
-            <tr><th>Nama Siswa</th><th>Soal Dijawab</th><th>Rata-Rata</th></tr>
+            <tr><th>Nama Siswa</th><th>Soal Dijawab</th><th>Rata-Rata</th><th>Aksi</th></tr>
           </thead>
           <tbody></tbody>
         </table>
@@ -353,7 +353,6 @@
     initApp();
   };
 
-  // AKSI MASUK HALAMAN ADMIN DENGAN POPUP PASSWORD & NOTIFIKASI
   function switchToAdminView() {
     const pass = prompt("🔒 Masukkan Password Admin untuk Mengakses Halaman Kendali:");
     if (!pass) return;
@@ -871,7 +870,7 @@
     document.getElementById('celebrationModal').style.display = 'none';
   }
 
-  // OPERASI ADMIN DENGAN POPUP PASSWORD & NOTIFIKASI SUKSES
+  // OPERASI ADMIN
   function fetchAdminToken() {
     fetchAPI({ action: "getTokenAdmin", password: verifiedPass }, res => {
       if (res && res.success) {
@@ -960,13 +959,16 @@
         tbody.innerHTML = "";
         
         if (res.summary.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">Belum ada data nilai untuk kelas & bab ini.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Belum ada data nilai untuk kelas & bab ini.</td></tr>`;
         } else {
           res.summary.forEach(item => {
             tbody.innerHTML += `<tr>
               <td><b>${item.name}</b></td>
               <td style="text-align:center;">${item.answeredCount} Soal</td>
               <td style="text-align:center; font-weight:800; color:#166534;">${item.avgScore}</td>
+              <td style="text-align:center;">
+                <button style="width:auto; padding:4px 8px; font-size:11px; background:#dc2626; color:white;" onclick="resetStudentProgressAdmin('${item.name.replace(/'/g, "\\'")}')">🔄 Reset Ujian</button>
+              </td>
             </tr>`;
           });
         }
@@ -974,6 +976,32 @@
         alert("🎉 BERHASIL: Rekap Nilai Berhasil Dimuat!");
       } else {
         alert("❌ GAGAL: " + (res ? res.error : "Error"));
+      }
+    });
+  }
+
+  // FUNGSI AKSI RESET UJIAN SISWA OLEH GURU
+  function resetStudentProgressAdmin(studentName) {
+    const rombel = document.getElementById('adminRekapRombelSelect').value;
+    const bab = document.getElementById('adminRekapBabSelect').value;
+
+    if (!confirm(`Yakin ingin mereset seluruh nilai & kesempatan Ujian untuk siswa ${studentName} di bab ${bab}?\n\nSiswa ini akan bisa mengerjakan ulang seluruh soal dari awal.`)) return;
+
+    const passConfirm = prompt("🔒 Konfirmasi Password Admin untuk Mereset Ujian Siswa:", verifiedPass);
+    if (!passConfirm) return;
+
+    fetchAPI({
+      action: "resetStudentProgress",
+      password: passConfirm,
+      studentName: studentName,
+      rombel: rombel,
+      bab: bab
+    }, res => {
+      if (res && res.success) {
+        alert("🎉 BERHASIL: " + res.message);
+        fetchAdminGradeSummary(); // Refresh rekap
+      } else {
+        alert("❌ GAGAL: " + (res ? res.error : "Terjadi kesalahan"));
       }
     });
   }
