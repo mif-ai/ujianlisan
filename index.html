@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ujian Wawancara Berbasis AI</title>
+  <title>Ujian Wawancara Berbasis AI Hybrid</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -348,6 +348,7 @@
 
   let adminCurrentQuestions = [];
   let clientQuestionsCache = {};
+  let editingQuestionGambarUrl = "";
 
   window.onload = function() {
     initApp();
@@ -402,6 +403,11 @@
       if (toggle) toggle.checked = true;
       if (label) { label.innerText = "🔴 Mode Ujian (SUBMISSION)"; label.style.color = "#ef4444"; }
       if (desc) desc.innerText = "Penilaian presisi (Gemini AI Full Version). Kunci jawaban dirahasiakan.";
+    }
+
+    // Refresh tampilan jika siswa sedang memilih bab
+    if (document.getElementById('rombelSelect').value && document.getElementById('babSelect').value) {
+      onBabChange();
     }
   }
 
@@ -627,7 +633,7 @@
       const btn = document.createElement('button');
       let colorClass = '';
       
-      if (progress[q.id] && progress[q.id].score !== undefined) {
+      if (progress && progress[q.id] && progress[q.id].score !== undefined) {
         colorClass = 'green';
         questionStatusMap[i] = 'green';
         questionStatusMap[q.id] = {
@@ -980,7 +986,6 @@
     });
   }
 
-  // FUNGSI AKSI RESET UJIAN SISWA OLEH GURU
   function resetStudentProgressAdmin(studentName) {
     const rombel = document.getElementById('adminRekapRombelSelect').value;
     const bab = document.getElementById('adminRekapBabSelect').value;
@@ -999,7 +1004,7 @@
     }, res => {
       if (res && res.success) {
         alert("🎉 BERHASIL: " + res.message);
-        fetchAdminGradeSummary(); // Refresh rekap
+        fetchAdminGradeSummary();
       } else {
         alert("❌ GAGAL: " + (res ? res.error : "Terjadi kesalahan"));
       }
@@ -1055,6 +1060,7 @@
     document.getElementById('soalBabInput').value = document.getElementById('adminBankBabSelect').value || "";
     document.getElementById('soalPertanyaanInput').value = "";
     document.getElementById('soalRubrikInput').value = "";
+    editingQuestionGambarUrl = "";
     document.getElementById('formSoalModal').style.display = 'flex';
   }
 
@@ -1065,6 +1071,7 @@
     document.getElementById('soalBabInput').value = q.bab || document.getElementById('adminBankBabSelect').value;
     document.getElementById('soalPertanyaanInput').value = q.pertanyaan;
     document.getElementById('soalRubrikInput').value = q.rubrik;
+    editingQuestionGambarUrl = q.gambar || "";
     document.getElementById('formSoalModal').style.display = 'flex';
   }
 
@@ -1086,6 +1093,7 @@
         bab: document.getElementById('soalBabInput').value,
         pertanyaan: document.getElementById('soalPertanyaanInput').value,
         rubrik: document.getElementById('soalRubrikInput').value,
+        gambarUrl: editingQuestionGambarUrl,
         imageBase64: base64, imageFileName: name, imageMimeType: mime
       }, res => {
         if (res && res.success) {
