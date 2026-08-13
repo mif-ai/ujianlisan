@@ -90,7 +90,7 @@
       <h3 style="margin-top:0; color:var(--primary);">🔐 Input Token Ujian</h3>
       <p style="font-size:13px; color:#64748b;">Masukkan Token Ujian dari Guru untuk memulai pengisian:</p>
       <input type="text" id="inputStudentToken" placeholder="Masukkan Token..." style="text-align:center; font-size:18px; font-weight:700; text-transform:uppercase; margin-bottom:15px;">
-      <button class="btn-primary" onclick="submitStudentToken()">Masuk Ujian</button>
+      <button class="btn-primary" onclick="submitStudentToken()">Verifikasi Token & Masuk Ujian</button>
     </div>
   </div>
 
@@ -117,11 +117,15 @@
     <div class="form-group">
       <label>Pilih Bab / Topik Soal:</label>
       <select id="babSelect" onchange="onBabChange()" disabled>
-        <option value="">-- Pilih Kelas Terlebih Dahulu --</option>
+        <option value="">-- Pilih Nama Terlebih Dahulu --</option>
       </select>
     </div>
 
-    <div class="form-group" id="paletteSection" style="display:none;">
+    <!-- TOMBOL MULAI KERJAKAN SISWA -->
+    <button id="btnStartExam" class="btn-primary" style="margin-top:10px; padding:12px; font-size:15px; background:linear-gradient(135deg, #4f46e5, #7c3aed);" onclick="startExamProcess()" disabled>🚀 MULAI KERJAKAN</button>
+
+    <!-- PALETTE & CONTAINER SOAL (MUNCUL SETELAH KLIK MULAI KERJAKAN) -->
+    <div class="form-group" id="paletteSection" style="display:none; margin-top:20px;">
       <div id="babTotalCard" style="background:#e0e7ff; border:1px solid #c7d2fe; padding:12px 16px; border-radius:12px; margin-bottom:12px;">
         <div style="display:flex; justify-content:space-between; align-items:center;">
           <div>
@@ -398,8 +402,8 @@
 <div id="passwordModal" class="modal-overlay">
   <div class="modal-content" style="text-align:center;">
     <h3 style="margin-top:0; color:var(--primary);">🔐 Konfirmasi Password Guru</h3>
-    <p style="font-size:13px; color:#64748b;">Masukkan Password Admin untuk memproses:</p>
-    <!-- 💡 PASSWORD KOSONG (Ketik Manual) -->
+    <p style="font-size:13px; color:#64748b;">Masukkan Password Admin untuk melanjutkan:</p>
+    <!-- PASSWORD MANUAL (KOSONG DUA-DUANYA) -->
     <input type="password" id="inputActionPass" value="" placeholder="Ketik Password Admin..." style="text-align:center; font-size:16px; margin-bottom:15px;">
     <div style="display:flex; gap:10px;">
       <button class="btn-secondary" style="flex:1;" onclick="closePasswordModal()">Batal</button>
@@ -418,7 +422,7 @@
 </div>
 
 <!-- ========================================================================= -->
-<!-- 4. JAVASCRIPT LOGIC (GABUNGAN SISWA + ADMIN) -->
+<!-- 4. JAVASCRIPT LOGIC (SISWA & ADMIN) -->
 <!-- ========================================================================= -->
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbzBMx-BvZfCT_w6yG2HJur8KUm2kqK0tfcZhFiD6J7dxH3AOOxXQg72fS4pLzAjNFM_kA/exec";
@@ -442,10 +446,6 @@
       currentAppToken = res ? res.token : "PAI2026";
       currentMaxAttempts = res ? (Number(res.maxAttempts) || 0) : 3;
       updateModeBadgeUI(currentAppMode);
-
-      if (currentAppMode === "SUBMISSION" && !sessionStorage.getItem("studentTokenVerified")) {
-        document.getElementById("tokenModal").style.display = "flex";
-      }
 
       // Sync ke form admin
       document.getElementById('modeSelect').value = currentAppMode;
@@ -521,10 +521,10 @@
     if (tabId === 'tabSoal' && soalDataGlobal.length === 0) loadSoalList();
   }
 
-  // SYSTEM POPUP PASSWORD (KOSONGKAN INPUT SAAT MUNCUL)
+  // SYSTEM POPUP PASSWORD ADMIN DENGAN NOTIFIKASI
   function requestPasswordAndExecute(callback) {
     pendingActionCallback = callback;
-    document.getElementById('inputActionPass').value = ""; // Kosongkan input
+    document.getElementById('inputActionPass').value = ""; // Bersihkan kolom password
     document.getElementById('passwordModal').style.display = 'flex';
   }
 
@@ -535,7 +535,7 @@
 
   function confirmActionWithPass() {
     const pass = document.getElementById('inputActionPass').value;
-    if (!pass) return alert("Password wajib diisi!");
+    if (!pass) return alert("Password Admin wajib diisi!");
     
     document.getElementById('passwordModal').style.display = 'none';
     if (pendingActionCallback) {
@@ -556,16 +556,6 @@
   }
 
   // --- LOGIC SISWA ---
-  function submitStudentToken() {
-    const token = document.getElementById("inputStudentToken").value.trim();
-    fetchAPI({ action: "verifyToken", token: token }, res => {
-      if (res && res.success) {
-        sessionStorage.setItem("studentTokenVerified", "true");
-        document.getElementById("tokenModal").style.display = "none";
-      } else alert("Token Ujian Salah!");
-    });
-  }
-
   function updateModeBadgeUI(mode) {
     const badge = document.getElementById('badgeModeDisplay');
     if (mode === "PRACTICE") {
@@ -581,7 +571,9 @@
     const rombel = document.getElementById('rombelSelect').value;
     const sSelect = document.getElementById('studentSelect');
     const bSelect = document.getElementById('babSelect');
+    const btnStart = document.getElementById('btnStartExam');
     
+    btnStart.disabled = true;
     if (rombel && studentDataCache.studentsByRombel && studentDataCache.studentsByRombel[rombel]) {
       sSelect.innerHTML = '<option value="">-- Pilih Nama --</option>';
       studentDataCache.studentsByRombel[rombel].forEach(s => sSelect.innerHTML += `<option value="${s.nama}">${s.nama}</option>`);
@@ -605,12 +597,23 @@
   }
 
   function onBabChange() {
+    const bab = document.getElementById('babSelect').value;
+    document.getElementById('btnStartExam').disabled = !bab;
+  }
+
+  // FUNGSI UTAMA: KLIK "MULAI KERJAKAN" SISWA
+  function startExamProcess() {
     const rombel = document.getElementById('rombelSelect').value;
     const bab = document.getElementById('babSelect').value;
     const studentName = document.getElementById('studentSelect').value;
 
+    if (!rombel || !studentName || !bab) {
+      return alert("Silakan pilih Kelas, Nama Siswa, dan Bab terlebih dahulu!");
+    }
+
+    // Muat soal dan progress terlebih dahulu
     fetchAPI({ action: "getQuestions", rombel: rombel, bab: bab }, res => {
-      if (res && res.questions) {
+      if (res && res.questions && res.questions.length > 0) {
         currentQuestionsList = res.questions;
         fetchAPI({ action: "getStudentProgress", studentName: studentName, rombel: rombel, bab: bab }, progRes => {
           const progress = progRes ? progRes.progress : {};
@@ -619,7 +622,31 @@
           
           updateBabAttemptStatusUI();
           renderPalette(progress);
+
+          // Jika Mode SUBMISSION & Belum verifikasi Token
+          if (currentAppMode === "SUBMISSION" && !sessionStorage.getItem("studentTokenVerified")) {
+            document.getElementById("tokenModal").style.display = "flex";
+          } else {
+            showNotif(true, "Siap Mengerjakan! 🚀", "Soal berhasil dimuat. Selamat mengerjakan!");
+          }
         });
+      } else {
+        alert("Belum ada soal pada Bab ini.");
+      }
+    });
+  }
+
+  function submitStudentToken() {
+    const token = document.getElementById("inputStudentToken").value.trim();
+    if (!token) return alert("Masukkan Token Ujian!");
+
+    fetchAPI({ action: "verifyToken", token: token }, res => {
+      if (res && res.success) {
+        sessionStorage.setItem("studentTokenVerified", "true");
+        document.getElementById("tokenModal").style.display = "none";
+        showNotif(true, "Token Valid! ✅", "Token Ujian benar. Selamat mengerjakan!");
+      } else {
+        showNotif(false, "Token Salah! ❌", "Token Ujian tidak sesuai. Silakan tanyakan Token resmi kepada Guru.");
       }
     });
   }
@@ -871,7 +898,7 @@
     } else alert("🎉 Selamat! Seluruh soal pada bab ini telah selesai.");
   }
 
-  // --- LOGIC ADMIN ---
+  // --- LOGIC ADMIN (DENGAN NOTIFIKASI BERHASIL / GAGAL) ---
   function submitSaveSettings() {
     const mode = document.getElementById('modeSelect').value;
     const token = document.getElementById('tokenInput').value.trim();
@@ -886,9 +913,11 @@
         maxAttempts: maxAttempts
       }, res => {
         if (res && res.success) {
-          showNotif(true, "Berhasil Disimpan!", res.message);
+          showNotif(true, "Password Benar! ✅", res.message);
           updateModeBadgeUI(mode);
-        } else showNotif(false, "Gagal!", res ? res.error : "Error");
+        } else {
+          showNotif(false, "Password Salah / Gagal! ❌", res ? res.error : "Koneksi Error");
+        }
       });
     });
   }
@@ -912,9 +941,11 @@
     requestPasswordAndExecute(password => {
       fetchAPI({ action: "getTeacherSubmissions", password: password, rombel: rombel, bab: bab }, res => {
         if (res && res.success) {
-          showNotif(true, "Data Dimuat", `Berhasil memuat ${res.list.length} data pengerjaan.`);
+          showNotif(true, "Password Benar! ✅", `Berhasil memuat ${res.list.length} data pengerjaan.`);
           renderReviewTable(res.list);
-        } else showNotif(false, "Gagal!", res ? res.error : "Error");
+        } else {
+          showNotif(false, "Password Salah / Gagal! ❌", res ? res.error : "Koneksi Error");
+        }
       });
     });
   }
@@ -963,9 +994,11 @@
     requestPasswordAndExecute(password => {
       fetchAPI({ action: "forceAIGrade", password: password, questionId: qId, studentName: nama, rombel: rombel, bab: bab }, res => {
         if (res && res.success) {
-          showNotif(true, "Penilaian Berhasil!", `Siswa ${nama} berhasil dinilai Guru: ${res.scoreAI}`);
+          showNotif(true, "Password Benar! ✅", `Siswa ${nama} berhasil dinilai Guru: ${res.scoreAI}`);
           submitLoadReview();
-        } else showNotif(false, "Penilaian Gagal!", res ? res.error : "Error");
+        } else {
+          showNotif(false, "Password Salah / Gagal! ❌", res ? res.error : "Koneksi Error");
+        }
       });
     });
   }
@@ -974,9 +1007,11 @@
     requestPasswordAndExecute(password => {
       fetchAPI({ action: "addExtraAttempt", password: password, studentName: nama, rombel: rombel, bab: bab }, res => {
         if (res && res.success) {
-          showNotif(true, "Kesempatan Ditambah!", res.message);
+          showNotif(true, "Password Benar! ✅", res.message);
           submitLoadReview();
-        } else showNotif(false, "Gagal!", res ? res.error : "Error");
+        } else {
+          showNotif(false, "Password Salah / Gagal! ❌", res ? res.error : "Koneksi Error");
+        }
       });
     });
   }
@@ -986,9 +1021,12 @@
     requestPasswordAndExecute(password => {
       fetchAPI({ action: "getStudentListAdmin", password: password }, res => {
         if (res && res.success) {
+          showNotif(true, "Password Benar! ✅", "Data siswa berhasil dimuat.");
           siswaDataGlobal = res.list || [];
           renderSiswaTable(siswaDataGlobal);
-        } else showNotif(false, "Gagal!", res ? res.error : "Error");
+        } else {
+          showNotif(false, "Password Salah / Gagal! ❌", res ? res.error : "Koneksi Error");
+        }
       });
     });
   }
@@ -1059,10 +1097,12 @@
         jk: jk
       }, res => {
         if (res && res.success) {
-          showNotif(true, "Data Siswa Disimpan!", res.message);
+          showNotif(true, "Password Benar! ✅", res.message);
           resetSiswaForm();
           loadSiswaList();
-        } else showNotif(false, "Gagal!", res ? res.error : "Error");
+        } else {
+          showNotif(false, "Password Salah / Gagal! ❌", res ? res.error : "Koneksi Error");
+        }
       });
     });
   }
@@ -1073,9 +1113,11 @@
     requestPasswordAndExecute(password => {
       fetchAPI({ action: "deleteStudent", password: password, rowIndex: rowIndex }, res => {
         if (res && res.success) {
-          showNotif(true, "Dihapus!", res.message);
+          showNotif(true, "Password Benar! ✅", res.message);
           loadSiswaList();
-        } else showNotif(false, "Gagal!", res ? res.error : "Error");
+        } else {
+          showNotif(false, "Password Salah / Gagal! ❌", res ? res.error : "Koneksi Error");
+        }
       });
     });
   }
@@ -1085,9 +1127,12 @@
     requestPasswordAndExecute(password => {
       fetchAPI({ action: "getAllQuestionsAdmin", password: password }, res => {
         if (res && res.success) {
+          showNotif(true, "Password Benar! ✅", "Bank soal berhasil dimuat.");
           soalDataGlobal = res.list || [];
           renderSoalTable(soalDataGlobal);
-        } else showNotif(false, "Gagal!", res ? res.error : "Error");
+        } else {
+          showNotif(false, "Password Salah / Gagal! ❌", res ? res.error : "Koneksi Error");
+        }
       });
     });
   }
@@ -1160,10 +1205,12 @@
           imageBase64: base64, imageFileName: name, imageMimeType: mime
         }, res => {
           if (res && res.success) {
-            showNotif(true, "Soal Tersimpan!", res.message);
+            showNotif(true, "Password Benar! ✅", res.message);
             resetSoalForm();
             loadSoalList();
-          } else showNotif(false, "Gagal!", res ? res.error : "Error");
+          } else {
+            showNotif(false, "Password Salah / Gagal! ❌", res ? res.error : "Koneksi Error");
+          }
         });
       });
     };
@@ -1181,9 +1228,11 @@
     requestPasswordAndExecute(password => {
       fetchAPI({ action: "deleteQuestion", password: password, questionId: questionId }, res => {
         if (res && res.success) {
-          showNotif(true, "Soal Dihapus!", res.message);
+          showNotif(true, "Password Benar! ✅", res.message);
           loadSoalList();
-        } else showNotif(false, "Gagal!", res ? res.error : "Error");
+        } else {
+          showNotif(false, "Password Salah / Gagal! ❌", res ? res.error : "Koneksi Error");
+        }
       });
     });
   }
