@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ujian Wawancara Berbasis AI</title>
+  <title>Ujian Wawancara Berbasis AI & Panel Guru</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -17,23 +17,37 @@
       --text-main: #1e293b;
     }
     * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-    body { background-color: var(--bg-color); padding: 15px; max-width: 720px; margin: auto; color: var(--text-main); }
+    body { background-color: var(--bg-color); padding: 15px; max-width: 900px; margin: auto; color: var(--text-main); }
+    
+    /* HEADER STYLES */
     .header-card { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; padding: 20px; border-radius: 16px; text-align: center; margin-bottom: 20px; position: relative; }
+    .header-card-admin { background: linear-gradient(135deg, #1e293b, #334155); }
     .badge-mode { position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.3); padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; border: 1px solid rgba(255,255,255,0.4); }
+    
+    /* CARD & FORM STYLES */
     .card { background: var(--card-bg); padding: 20px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 20px; }
-    .form-group { margin-bottom: 15px; }
-    label { font-weight: 600; display: block; margin-bottom: 6px; font-size: 13px; }
-    select, input[type="text"], textarea { width: 100%; padding: 12px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 14px; background-color: #f8fafc; }
-    button, .btn-link { padding: 12px 18px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; width: 100%; transition: all 0.2s; text-align: center; text-decoration: none; display: block; }
+    .form-group { margin-bottom: 12px; }
+    label { font-weight: 600; display: block; margin-bottom: 4px; font-size: 13px; }
+    select, input[type="text"], input[type="password"], textarea { width: 100%; padding: 10px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 13px; background-color: #f8fafc; }
+    
+    /* BUTTON STYLES */
+    button, .btn-link { padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s; text-align: center; text-decoration: none; display: inline-block; width: 100%; }
     button:disabled { background: #cbd5e1 !important; color: #64748b !important; cursor: not-allowed; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-success { background: var(--success); color: white; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-warning { background: var(--warning); color: white; }
+    .btn-secondary { background: #64748b; color: white; }
     .btn-guru { background: #334155; color: white; margin-bottom: 15px; }
     .btn-record-start { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; margin: 12px 0; }
     .btn-record-stop { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; margin: 12px 0; animation: pulse 1.5s infinite; }
     @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
     .btn-submit { background: linear-gradient(135deg, #10b981, #059669); color: white; margin-top: 10px; }
     .btn-check-ai { background: linear-gradient(135deg, #7c3aed, #4f46e5); color: white; margin-top: 10px; }
+
+    /* PALETTE & QUESTION STYLES */
     .palette-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
-    .q-num-btn { width: 48px; height: 48px; border-radius: 12px; border: 2px solid #cbd5e1; background: #fff; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .q-num-btn { width: 44px; height: 44px; border-radius: 10px; border: 2px solid #cbd5e1; background: #fff; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .q-num-btn.active { border-color: var(--primary) !important; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3); }
     .q-num-btn.yellow { background-color: #fef08a; color: #854d0e; border-color: #eab308; }
     .q-num-btn.green { background: #10b981; color: white; border-color: #059669; }
@@ -41,115 +55,130 @@
     .question-box { background: #f0f9ff; padding: 16px; border-left: 5px solid var(--secondary); margin: 15px 0; border-radius: 10px; }
     .img-soal { max-width: 100%; max-height: 250px; border-radius: 10px; margin-top: 10px; border: 1px solid #cbd5e1; }
     
-    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 15px; }
-    .modal-content { background: white; padding: 24px; border-radius: 16px; width: 100%; max-width: 580px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    /* TAB NAV STYLES */
+    .nav-tabs { display: flex; gap: 8px; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; overflow-x: auto; }
+    .tab-btn { background: #e2e8f0; color: #475569; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; width: auto; }
+    .tab-btn.active { background: var(--primary); color: white; }
+
+    /* TABLE STYLES */
+    .sub-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
+    .sub-table th, .sub-table td { border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; }
+    .sub-table th { background: #f1f5f9; font-weight: 700; }
+
+    /* MODAL STYLES */
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 15px; }
+    .modal-content { background: white; padding: 24px; border-radius: 16px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
   </style>
 </head>
 <body>
 
-<div class="header-card">
-  <span id="badgeModeDisplay" class="badge-mode">Mode: Loading...</span>
-  <h1>🎙️ Ujian Wawancara Berbasis AI</h1>
-  <p style="margin:0; font-size:13px; opacity:0.9;">Pendidikan Agama Islam & Budi Pekerti | MGMP PAI SMAN 1 Karangbinangun</p>
-</div>
-
-<a href="admin.html" class="btn-link btn-guru">⚙️ Buka Halaman Kendali Guru</a>
-
-<!-- INPUT TOKEN POPUP MODAL (MODE SUBMISSION) -->
-<div id="tokenModal" class="modal-overlay">
-  <div class="modal-content" style="text-align:center;">
-    <h3 style="margin-top:0; color:var(--primary);">🔐 Input Token Ujian</h3>
-    <p style="font-size:13px; color:#64748b;">Masukkan Token Ujian dari Guru untuk memulai pengisian:</p>
-    <input type="text" id="inputStudentToken" placeholder="Masukkan Token..." style="text-align:center; font-size:18px; font-weight:700; text-transform:uppercase; margin-bottom:15px;">
-    <button style="background:var(--primary); color:white;" onclick="submitStudentToken()">Masuk Ujian</button>
-  </div>
-</div>
-
-<div class="card">
-  <div class="form-group">
-    <label>Pilih Kelas / Rombel:</label>
-    <select id="rombelSelect" onchange="onRombelChange()">
-      <option value="">-- Memuat Kelas... --</option>
-    </select>
+<!-- ========================================================================= -->
+<!-- 1. TAMPILAN SISWA (STUDENT VIEW) -->
+<!-- ========================================================================= -->
+<div id="studentView">
+  <div class="header-card">
+    <span id="badgeModeDisplay" class="badge-mode">Mode: Loading...</span>
+    <h1 style="margin:0 0 5px 0; font-size:22px;">🎙️ Ujian Wawancara Berbasis AI</h1>
+    <p style="margin:0; font-size:12px; opacity:0.9;">Pendidikan Agama Islam & Budi Pekerti | MGMP PAI SMAN 1 Karangbinangun</p>
   </div>
 
-  <div class="form-group">
-    <label>Pilih Nama Siswa:</label>
-    <select id="studentSelect" onchange="onStudentChange()" disabled>
-      <option value="">-- Pilih Kelas Terlebih Dahulu --</option>
-    </select>
-  </div>
+  <button class="btn-guru" onclick="showAdminView()">⚙️ Buka Panel Kendali Guru / Admin</button>
 
-  <div class="form-group">
-    <label>Jenis Kelamin:</label>
-    <input type="text" id="jkDisplay" readonly placeholder="Otomatis terisi...">
-  </div>
-
-  <div class="form-group">
-    <label>Pilih Bab / Topik Soal:</label>
-    <select id="babSelect" onchange="onBabChange()" disabled>
-      <option value="">-- Pilih Kelas Terlebih Dahulu --</option>
-    </select>
-  </div>
-
-  <div class="form-group" id="paletteSection" style="display:none;">
-    <div id="babTotalCard" style="background:#e0e7ff; border:1px solid #c7d2fe; padding:12px 16px; border-radius:12px; margin-bottom:12px;">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <span style="font-size:13px; font-weight:700; color:#3730a3; display:block;">📊 Akumulasi Nilai Bab Ini:</span>
-          <small style="font-size:11px; color:#4f46e5;">(Nilai Tertinggi Rata-rata)</small>
-        </div>
-        <span id="accumulatedBabScoreDisplay" style="font-size:24px; font-weight:800; color:#4338ca;">0 / 100</span>
-      </div>
-      <div id="babAttemptStatusBox" style="margin-top:8px; pt-8; border-top:1px dashed #a5b4fc; font-size:12px; font-weight:600; color:#312e81;">
-        Status Percobaan BAB: Loading...
-      </div>
-    </div>
-
-    <label>Pilih Nomor Soal:</label>
-    <div id="questionPalette" class="palette-grid"></div>
-    <div style="margin-top:8px; font-size:11px; color:#64748b;">
-      ⚪ Putih: Belum | 🟡 Kuning: Terekam | 🟢 Hijau: Nilai Mesin AI | 🔵 Biru: Nilai Resmi Guru
+  <!-- INPUT TOKEN MODAL -->
+  <div id="tokenModal" class="modal-overlay">
+    <div class="modal-content" style="text-align:center;">
+      <h3 style="margin-top:0; color:var(--primary);">🔐 Input Token Ujian</h3>
+      <p style="font-size:13px; color:#64748b;">Masukkan Token Ujian dari Guru untuk memulai pengisian:</p>
+      <input type="text" id="inputStudentToken" placeholder="Masukkan Token..." style="text-align:center; font-size:18px; font-weight:700; text-transform:uppercase; margin-bottom:15px;">
+      <button class="btn-primary" onclick="submitStudentToken()">Masuk Ujian</button>
     </div>
   </div>
 
-  <div id="questionContainer" style="display:none;">
-    <div class="question-box">
-      <b id="questionNumberLabel">Soal No. 1</b>
-      <p id="questionText" style="margin:8px 0 0 0; font-weight:600; font-size:16px;"></p>
-      
-      <div id="gambarSoalBox" style="display:none; text-align:center;">
-        <img id="gambarSoalImg" src="" class="img-soal" alt="Gambar Soal">
-      </div>
+  <div class="card">
+    <div class="form-group">
+      <label>Pilih Kelas / Rombel:</label>
+      <select id="rombelSelect" onchange="onRombelChange()">
+        <option value="">-- Memuat Kelas... --</option>
+      </select>
     </div>
 
     <div class="form-group">
-      <label>Jawaban Lisan Siswa (Transkrip Otomatis):</label>
-      <div id="transcriptBox" style="min-height:60px; padding:10px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; font-size:13px; color:#334155;">
-        (Tekan tombol rekam untuk mulai berbicara...)
+      <label>Pilih Nama Siswa:</label>
+      <select id="studentSelect" onchange="onStudentChange()" disabled>
+        <option value="">-- Pilih Kelas Terlebih Dahulu --</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Jenis Kelamin:</label>
+      <input type="text" id="jkDisplay" readonly placeholder="Otomatis terisi...">
+    </div>
+
+    <div class="form-group">
+      <label>Pilih Bab / Topik Soal:</label>
+      <select id="babSelect" onchange="onBabChange()" disabled>
+        <option value="">-- Pilih Kelas Terlebih Dahulu --</option>
+      </select>
+    </div>
+
+    <div class="form-group" id="paletteSection" style="display:none;">
+      <div id="babTotalCard" style="background:#e0e7ff; border:1px solid #c7d2fe; padding:12px 16px; border-radius:12px; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <span style="font-size:13px; font-weight:700; color:#3730a3; display:block;">📊 Akumulasi Nilai Bab Ini:</span>
+            <small style="font-size:11px; color:#4f46e5;">(Nilai Tertinggi Rata-rata)</small>
+          </div>
+          <span id="accumulatedBabScoreDisplay" style="font-size:24px; font-weight:800; color:#4338ca;">0 / 100</span>
+        </div>
+        <div id="babAttemptStatusBox" style="margin-top:8px; pt-8; border-top:1px dashed #a5b4fc; font-size:12px; font-weight:600; color:#312e81;">
+          Status Percobaan BAB: Loading...
+        </div>
+      </div>
+
+      <label>Pilih Nomor Soal:</label>
+      <div id="questionPalette" class="palette-grid"></div>
+      <div style="margin-top:8px; font-size:11px; color:#64748b;">
+        ⚪ Putih: Belum | 🟡 Kuning: Terekam | 🟢 Hijau: Nilai Mesin AI | 🔵 Biru: Nilai Resmi Guru
       </div>
     </div>
 
-    <button type="button" class="btn-record-start" id="btnRecordToggle" onclick="toggleDirectRecording()">🎤 Klik untuk Mulai Merekam Jawaban</button>
-    <div id="statusText" style="text-align:center; font-size:13px; font-weight:600; color:#4f46e5;">Status: Siap Merekam</div>
+    <div id="questionContainer" style="display:none;">
+      <div class="question-box">
+        <b id="questionNumberLabel">Soal No. 1</b>
+        <p id="questionText" style="margin:8px 0 0 0; font-weight:600; font-size:15px;"></p>
+        <div id="gambarSoalBox" style="display:none; text-align:center;">
+          <img id="gambarSoalImg" src="" class="img-soal" alt="Gambar Soal">
+        </div>
+      </div>
 
-    <button type="button" class="btn-submit" id="btnSubmitAnswer" onclick="submitLocalAnswer()">✨ Kirim Jawaban (Cek Nilai Mesin AI)</button>
+      <div class="form-group">
+        <label>Jawaban Lisan Siswa (Transkrip Otomatis):</label>
+        <div id="transcriptBox" style="min-height:60px; padding:10px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; font-size:13px; color:#334155;">
+          (Tekan tombol rekam untuk mulai berbicara...)
+        </div>
+      </div>
+
+      <button type="button" class="btn-record-start" id="btnRecordToggle" onclick="toggleDirectRecording()">🎤 Klik untuk Mulai Merekam Jawaban</button>
+      <div id="statusText" style="text-align:center; font-size:13px; font-weight:600; color:#4f46e5;">Status: Siap Merekam</div>
+
+      <button type="button" class="btn-submit" id="btnSubmitAnswer" onclick="submitLocalAnswer()">✨ Kirim Jawaban (Cek Nilai Mesin AI)</button>
+    </div>
   </div>
 </div>
 
-<!-- MODAL POP-UP HASIL EVALUASI SISWA -->
+<!-- RESULT MODAL SISWA -->
 <div id="resultModal" class="modal-overlay">
   <div class="modal-content" style="text-align:center;">
-    <h3 style="margin-top:0; color:var(--primary); font-size:20px;">✨ Hasil Evaluasi Jawaban</h3>
-    <h5 id="modalQuestionLabel" style="margin:0 0 10px 0; color:#64748b; font-size:14px; font-weight:600;">Soal No. 1</h5>
+    <h3 style="margin-top:0; color:var(--primary); font-size:18px;">✨ Hasil Evaluasi Jawaban</h3>
+    <h5 id="modalQuestionLabel" style="margin:0 0 10px 0; color:#64748b; font-size:13px; font-weight:600;">Soal No. 1</h5>
     
     <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:12px; border-radius:12px; margin-bottom:12px;">
       <div id="modalScoreTypeLabel" style="font-size:12px; color:#166534; font-weight:600;">Nilai Tertinggi Disimpan:</div>
-      <div id="modalScoreDisplay" style="font-size:38px; font-weight:800; color:#15803d;">0 / 100</div>
+      <div id="modalScoreDisplay" style="font-size:36px; font-weight:800; color:#15803d;">0 / 100</div>
       <div id="modalScoreComparisonNote" style="font-size:11px; font-weight:600; margin-top:4px;"></div>
     </div>
     
-    <div style="text-align:left; background:#f8fafc; padding:12px; border-radius:10px; font-size:13px; margin-bottom:12px; border:1px solid #e2e8f0;">
+    <div style="text-align:left; background:#f8fafc; padding:12px; border-radius:10px; font-size:12px; margin-bottom:12px; border:1px solid #e2e8f0;">
       <b style="color:#1e293b;">Transkrip Jawaban:</b>
       <p id="modalTranscriptDisplay" style="margin:4px 0 8px 0; color:#475569; font-style:italic;"></p>
       <b style="color:#1e293b;">Ulasan Umum Jawaban:</b>
@@ -157,29 +186,251 @@
     </div>
 
     <div style="background:#e0e7ff; border:1px solid #c7d2fe; padding:10px 14px; border-radius:10px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
-      <div style="text-align:left;">
-        <span style="font-size:12px; color:#3730a3; font-weight:700; display:block;">📊 Akumulasi Nilai Bab Saat Ini:</span>
-      </div>
-      <span id="modalTotalBabScore" style="font-size:22px; font-weight:800; color:#4338ca;">0 / 100</span>
+      <span style="font-size:12px; color:#3730a3; font-weight:700;">📊 Akumulasi Nilai Bab Saat Ini:</span>
+      <span id="modalTotalBabScore" style="font-size:20px; font-weight:800; color:#4338ca;">0 / 100</span>
     </div>
 
     <button id="btnCheckAIGuru" class="btn-check-ai" onclick="requestAIGrading()">🎓 Cek Nilai dari Guru</button>
 
     <div style="display:flex; gap:10px; margin-top:10px;">
-      <button style="background:#94a3b8; color:white; flex:1;" onclick="closeResultModal()">Tutup</button>
-      <button id="btnNextQuestionModal" style="background:var(--primary); color:white; flex:1.5;" onclick="goToNextQuestionFromModal()">Soal Berikutnya ➡️</button>
+      <button class="btn-secondary" style="flex:1;" onclick="closeResultModal()">Tutup</button>
+      <button id="btnNextQuestionModal" class="btn-primary" style="flex:1.5;" onclick="goToNextQuestionFromModal()">Soal Berikutnya ➡️</button>
     </div>
   </div>
 </div>
 
+
+<!-- ========================================================================= -->
+<!-- 2. TAMPILAN ADMIN / GURU (ADMIN VIEW) -->
+<!-- ========================================================================= -->
+<div id="adminView" style="display:none;">
+  <div class="header-card header-card-admin" style="display:flex; justify-content:space-between; align-items:center;">
+    <div style="text-align:left;">
+      <h2 style="margin:0; font-size:18px;">⚙️ Panel Kendali Guru & Admin</h2>
+      <small style="opacity:0.8;">Pendidikan Agama Islam & Budi Pekerti</small>
+    </div>
+    <button class="btn-secondary" style="width:auto; font-size:12px;" onclick="showStudentView()">⬅️ Ke Tampilan Siswa</button>
+  </div>
+
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="switchTab('tabSettings', event)">1. Mode & Token</button>
+    <button class="tab-btn" onclick="switchTab('tabReview', event)">2. Review Siswa</button>
+    <button class="tab-btn" onclick="switchTab('tabSiswa', event)">3. CRUD Siswa</button>
+    <button class="tab-btn" onclick="switchTab('tabSoal', event)">4. CRUD Bank Soal</button>
+  </div>
+
+  <!-- TAB 1: MODE & TOKEN -->
+  <div id="tabSettings" class="card tab-content">
+    <h3 style="margin-top:0; color:var(--primary); font-size:15px;">1. Pengaturan Mode, Token & Batas Percobaan</h3>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+      <div class="form-group">
+        <label>Mode Aplikasi:</label>
+        <select id="modeSelect">
+          <option value="PRACTICE">🟢 PRACTICE (Latihan Bebas)</option>
+          <option value="SUBMISSION">🔴 SUBMISSION (Ujian Pakai Token)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Token Ujian Aktif:</label>
+        <input type="text" id="tokenInput" placeholder="Contoh: PAI2026" style="text-transform:uppercase;">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Batas Maksimal Percobaan per BAB (Mode Ujian):</label>
+      <select id="maxAttemptsInput">
+        <option value="0">Bebas (Tanpa Batas Percobaan)</option>
+        <option value="1">1 Kali Mengerjakan (Tanpa Revisi)</option>
+        <option value="2">2 Kali Percobaan Mengerjakan/Revisi</option>
+        <option value="3">3 Kali Percobaan Mengerjakan/Revisi</option>
+        <option value="5">5 Kali Percobaan Mengerjakan/Revisi</option>
+      </select>
+    </div>
+
+    <button class="btn-primary" onclick="submitSaveSettings()">💾 Simpan Pengaturan</button>
+  </div>
+
+  <!-- TAB 2: REVIEW SISWA -->
+  <div id="tabReview" class="card tab-content" style="display:none;">
+    <h3 style="margin-top:0; color:var(--primary); font-size:15px;">2. Review Jawaban & Penilaian Guru</h3>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+      <div class="form-group">
+        <label>Filter Rombel:</label>
+        <select id="reviewRombelSelect" onchange="onReviewRombelChange()">
+          <option value="">-- Semua Rombel --</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Filter Bab:</label>
+        <select id="reviewBabSelect">
+          <option value="">-- Semua Bab --</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn-primary" style="background:#7c3aed;" onclick="submitLoadReview()">🔍 Muat Data Hasil Siswa</button>
+
+    <div id="reviewResultBox" style="display:none; margin-top:15px; max-height:400px; overflow-y:auto;">
+      <table class="sub-table">
+        <thead>
+          <tr><th>Data Siswa</th><th>Detail Soal & Nilai</th></tr>
+        </thead>
+        <tbody id="reviewTbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB 3: CRUD SISWA -->
+  <div id="tabSiswa" class="card tab-content" style="display:none;">
+    <h3 style="margin-top:0; color:var(--primary); font-size:15px;">3. Kelola Data Siswa (CRUD)</h3>
+    
+    <div style="background:#f8fafc; padding:12px; border-radius:10px; border:1px solid #e2e8f0; margin-bottom:15px;">
+      <h4 id="siswaFormTitle" style="margin-top:0; font-size:14px;">Form Tambah / Edit Siswa</h4>
+      <input type="hidden" id="siswaRowIndexInput">
+      
+      <div style="display:grid; grid-template-columns: 1fr 2fr 1fr; gap:10px;">
+        <div class="form-group">
+          <label>No. Absen:</label>
+          <input type="text" id="siswaNoInput" placeholder="1">
+        </div>
+        <div class="form-group">
+          <label>Nama Lengkap Siswa:</label>
+          <input type="text" id="siswaNamaInput" placeholder="Nama Siswa...">
+        </div>
+        <div class="form-group">
+          <label>JK (L/P):</label>
+          <select id="siswaJkInput">
+            <option value="L">Laki-laki (L)</option>
+            <option value="P">Perempuan (P)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Rombel / Kelas:</label>
+        <input type="text" id="siswaRombelInput" placeholder="Contoh: X-1 atau XII IPA 1">
+      </div>
+
+      <div style="display:flex; gap:10px;">
+        <button class="btn-success" style="flex:2;" onclick="submitSaveSiswa()">💾 Simpan Data Siswa</button>
+        <button class="btn-secondary" style="flex:1;" onclick="resetSiswaForm()">Reset</button>
+      </div>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <button class="btn-primary" style="width:auto;" onclick="loadSiswaList()">🔄 Refresh Tabel Siswa</button>
+      <input type="text" id="siswaSearchInput" placeholder="🔍 Cari Siswa..." style="width:200px;" onkeyup="filterSiswaTable()">
+    </div>
+
+    <div style="max-height:350px; overflow-y:auto;">
+      <table class="sub-table" id="siswaTable">
+        <thead>
+          <tr><th>No</th><th>Nama Siswa</th><th>Rombel</th><th>JK</th><th>Aksi</th></tr>
+        </thead>
+        <tbody id="siswaTbody">
+          <tr><td colspan="5" style="text-align:center;">Klik 'Refresh Tabel Siswa' untuk memuat data.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB 4: CRUD BANK SOAL -->
+  <div id="tabSoal" class="card tab-content" style="display:none;">
+    <h3 style="margin-top:0; color:var(--primary); font-size:15px;">4. Kelola Bank Soal (CRUD)</h3>
+    
+    <div style="background:#f8fafc; padding:12px; border-radius:10px; border:1px solid #e2e8f0; margin-bottom:15px;">
+      <h4 id="soalFormTitle" style="margin-top:0; font-size:14px;">Form Tambah / Edit Soal</h4>
+      <input type="hidden" id="soalIdInput">
+      
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div class="form-group">
+          <label>Target Rombel / Kelas:</label>
+          <input type="text" id="soalKelasInput" placeholder="Contoh: KELAS X">
+        </div>
+        <div class="form-group">
+          <label>Nama Bab / Topik:</label>
+          <input type="text" id="soalBabInput" placeholder="Contoh: BAB 1">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Teks Pertanyaan Soal:</label>
+        <textarea id="soalPertanyaanInput" rows="2" placeholder="Ketik pertanyaan lisan..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Rubrik Kunci Jawaban:</label>
+        <textarea id="soalRubrikInput" rows="2" placeholder="Point penting kunci jawaban..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Upload Gambar Soal (Opsional):</label>
+        <input type="file" id="soalGambarInput" accept="image/*">
+      </div>
+
+      <div style="display:flex; gap:10px;">
+        <button class="btn-success" style="flex:2;" onclick="submitSaveSoal()">💾 Simpan Soal</button>
+        <button class="btn-secondary" style="flex:1;" onclick="resetSoalForm()">Reset</button>
+      </div>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <button class="btn-primary" style="width:auto;" onclick="loadSoalList()">🔄 Refresh Bank Soal</button>
+      <input type="text" id="soalSearchInput" placeholder="🔍 Cari Soal..." style="width:200px;" onkeyup="filterSoalTable()">
+    </div>
+
+    <div style="max-height:350px; overflow-y:auto;">
+      <table class="sub-table" id="soalTable">
+        <thead>
+          <tr><th>ID</th><th>Target</th><th>Bab</th><th>Pertanyaan</th><th>Aksi</th></tr>
+        </thead>
+        <tbody id="soalTbody">
+          <tr><td colspan="5" style="text-align:center;">Klik 'Refresh Bank Soal' untuk memuat data.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- 3. SHARED MODALS (PASSWORD & NOTIFIKASI) -->
+<!-- ========================================================================= -->
+<div id="passwordModal" class="modal-overlay">
+  <div class="modal-content" style="text-align:center;">
+    <h3 style="margin-top:0; color:var(--primary);">🔐 Konfirmasi Password Guru</h3>
+    <p style="font-size:13px; color:#64748b;">Password Admin telah terisi otomatis:</p>
+    <!-- 💡 TERISI OTOMATIS MERUJUK "mifai1." -->
+    <input type="password" id="inputActionPass" value="mifai1." placeholder="Password Admin..." style="text-align:center; font-size:16px; margin-bottom:15px;">
+    <div style="display:flex; gap:10px;">
+      <button class="btn-secondary" style="flex:1;" onclick="closePasswordModal()">Batal</button>
+      <button class="btn-primary" style="flex:1;" onclick="confirmActionWithPass()">Konfirmasi & Lanjutkan</button>
+    </div>
+  </div>
+</div>
+
+<div id="notifModal" class="modal-overlay">
+  <div class="modal-content" style="text-align:center;">
+    <div id="notifIcon" style="font-size:48px; margin-bottom:8px;">✅</div>
+    <h3 id="notifTitle" style="margin:0 0 8px 0;">Notifikasi</h3>
+    <p id="notifMessage" style="font-size:13px; color:#475569; margin-bottom:15px;"></p>
+    <button class="btn-primary" onclick="closeNotifModal()">Tutup</button>
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- 4. JAVASCRIPT LOGIC (GABUNGAN SISWA + ADMIN) -->
+<!-- ========================================================================= -->
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbzBMx-BvZfCT_w6yG2HJur8KUm2kqK0tfcZhFiD6J7dxH3AOOxXQg72fS4pLzAjNFM_kA/exec";
 
+  // STATE GLOBAL
   let studentDataCache = {}, currentQuestionsList = [], activeQuestionIndex = -1, selectedQuestionObject = null;
   let currentAppMode = "PRACTICE", currentAppToken = "", currentMaxAttempts = 3;
   let studentCurrentBabAttempts = 0, studentEffectiveMaxAttempts = 0;
   let speechRecognition = null, liveTranscriptText = "", isRecording = false;
   let questionStatusMap = {};
+  let pendingActionCallback = null;
+  let siswaDataGlobal = [], soalDataGlobal = [];
 
   window.onload = function() {
     initApp();
@@ -195,14 +446,24 @@
       if (currentAppMode === "SUBMISSION" && !sessionStorage.getItem("studentTokenVerified")) {
         document.getElementById("tokenModal").style.display = "flex";
       }
+
+      // Sync ke form admin
+      document.getElementById('modeSelect').value = currentAppMode;
+      document.getElementById('tokenInput').value = currentAppToken;
+      document.getElementById('maxAttemptsInput').value = currentMaxAttempts;
     });
 
     fetchAPI({ action: "getStudentData" }, data => {
       if (!data || !data.rombelList) return;
       studentDataCache = data;
+      
       const rSelect = document.getElementById('rombelSelect');
       rSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
       data.rombelList.forEach(r => rSelect.innerHTML += `<option value="${r}">${r}</option>`);
+
+      const reviewRSelect = document.getElementById('reviewRombelSelect');
+      reviewRSelect.innerHTML = '<option value="">-- Semua Rombel --</option>';
+      data.rombelList.forEach(r => reviewRSelect.innerHTML += `<option value="${r}">${r}</option>`);
     });
 
     const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -229,29 +490,6 @@
     }
   }
 
-  function submitStudentToken() {
-    const token = document.getElementById("inputStudentToken").value.trim();
-    fetchAPI({ action: "verifyToken", token: token }, res => {
-      if (res && res.success) {
-        sessionStorage.setItem("studentTokenVerified", "true");
-        document.getElementById("tokenModal").style.display = "none";
-      } else {
-        alert("Token Ujian Salah! Silakan tanyakan Token resmi kepada Guru.");
-      }
-    });
-  }
-
-  function updateModeBadgeUI(mode) {
-    const badge = document.getElementById('badgeModeDisplay');
-    if (mode === "PRACTICE") {
-      badge.innerHTML = "🟢 LATIHAN (Tanpa Token)";
-      badge.style.background = "#10b981";
-    } else {
-      badge.innerHTML = "🔴 UJIAN (Token Aktif)";
-      badge.style.background = "#ef4444";
-    }
-  }
-
   function fetchAPI(payload, callback) {
     fetch(API_URL, { method: "POST", body: JSON.stringify(payload) })
     .then(res => res.json())
@@ -260,6 +498,82 @@
       console.error(err);
       callback({ success: false, error: err.message });
     });
+  }
+
+  // NAVIGASI VIEW SISWA VS ADMIN
+  function showAdminView() {
+    document.getElementById('studentView').style.display = 'none';
+    document.getElementById('adminView').style.display = 'block';
+  }
+
+  function showStudentView() {
+    document.getElementById('adminView').style.display = 'none';
+    document.getElementById('studentView').style.display = 'block';
+  }
+
+  function switchTab(tabId, evt) {
+    document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById(tabId).style.display = 'block';
+    if (evt && evt.target) evt.target.classList.add('active');
+
+    if (tabId === 'tabSiswa' && siswaDataGlobal.length === 0) loadSiswaList();
+    if (tabId === 'tabSoal' && soalDataGlobal.length === 0) loadSoalList();
+  }
+
+  // SYSTEM POPUP PASSWORD & NOTIFIKASI
+  function requestPasswordAndExecute(callback) {
+    pendingActionCallback = callback;
+    document.getElementById('passwordModal').style.display = 'flex';
+  }
+
+  function closePasswordModal() {
+    document.getElementById('passwordModal').style.display = 'none';
+    pendingActionCallback = null;
+  }
+
+  function confirmActionWithPass() {
+    const pass = document.getElementById('inputActionPass').value;
+    if (!pass) return alert("Password wajib diisi!");
+    
+    document.getElementById('passwordModal').style.display = 'none';
+    if (pendingActionCallback) {
+      pendingActionCallback(pass);
+    }
+  }
+
+  function showNotif(isSuccess, title, message) {
+    document.getElementById('notifIcon').innerText = isSuccess ? "✅" : "❌";
+    document.getElementById('notifTitle').innerText = title;
+    document.getElementById('notifTitle').style.color = isSuccess ? "#10b981" : "#ef4444";
+    document.getElementById('notifMessage').innerText = message;
+    document.getElementById('notifModal').style.display = 'flex';
+  }
+
+  function closeNotifModal() {
+    document.getElementById('notifModal').style.display = 'none';
+  }
+
+  // --- LOGIC SISWA ---
+  function submitStudentToken() {
+    const token = document.getElementById("inputStudentToken").value.trim();
+    fetchAPI({ action: "verifyToken", token: token }, res => {
+      if (res && res.success) {
+        sessionStorage.setItem("studentTokenVerified", "true");
+        document.getElementById("tokenModal").style.display = "none";
+      } else alert("Token Ujian Salah!");
+    });
+  }
+
+  function updateModeBadgeUI(mode) {
+    const badge = document.getElementById('badgeModeDisplay');
+    if (mode === "PRACTICE") {
+      badge.innerHTML = "🟢 LATIHAN";
+      badge.style.background = "#10b981";
+    } else {
+      badge.innerHTML = "🔴 UJIAN";
+      badge.style.background = "#ef4444";
+    }
   }
 
   function onRombelChange() {
@@ -316,21 +630,19 @@
 
     if (currentAppMode === "SUBMISSION" && studentEffectiveMaxAttempts > 0) {
       if (studentCurrentBabAttempts >= studentEffectiveMaxAttempts) {
-        box.innerHTML = `🔴 Kesempatan BAB Habis (${studentCurrentBabAttempts} dari ${studentEffectiveMaxAttempts}x). Hubungi Guru untuk minta +1 kesempatan.`;
+        box.innerHTML = `🔴 Kesempatan BAB Habis (${studentCurrentBabAttempts}/${studentEffectiveMaxAttempts}x). Minta +1 kesempatan ke Guru.`;
         box.style.color = "#ef4444";
         if (submitBtn) submitBtn.disabled = true;
         if (recordBtn) recordBtn.disabled = true;
       } else {
         const remaining = studentEffectiveMaxAttempts - studentCurrentBabAttempts;
-        box.innerHTML = `🟢 Percobaan BAB: ${studentCurrentBabAttempts} dari ${studentEffectiveMaxAttempts}x (Tersisa ${remaining}x kesempatan lagi)`;
+        box.innerHTML = `🟢 Percobaan BAB: ${studentCurrentBabAttempts}/${studentEffectiveMaxAttempts}x (Tersisa ${remaining}x lagi)`;
         box.style.color = "#312e81";
         if (submitBtn) submitBtn.disabled = false;
         if (recordBtn) recordBtn.disabled = false;
       }
     } else {
-      box.innerHTML = currentAppMode === "SUBMISSION" 
-        ? `🟢 Percobaan BAB: ${studentCurrentBabAttempts}x (Bebas / Tanpa Batas)` 
-        : `🟢 Mode Latihan (Bebas Mengerjakan)`;
+      box.innerHTML = currentAppMode === "SUBMISSION" ? `🟢 Percobaan BAB: ${studentCurrentBabAttempts}x (Bebas)` : `🟢 Mode Latihan`;
       box.style.color = "#312e81";
       if (submitBtn) submitBtn.disabled = false;
       if (recordBtn) recordBtn.disabled = false;
@@ -413,19 +725,13 @@
     if (selectedQuestionObject.gambar) {
       document.getElementById('gambarSoalImg').src = selectedQuestionObject.gambar;
       imgBox.style.display = 'block';
-    } else {
-      imgBox.style.display = 'none';
-    }
+    } else imgBox.style.display = 'none';
 
     const qId = selectedQuestionObject.id;
     const existingData = questionStatusMap[qId] || {};
     
     liveTranscriptText = existingData.transcript || "";
-    if (liveTranscriptText) {
-      document.getElementById('transcriptBox').innerText = liveTranscriptText;
-    } else {
-      document.getElementById('transcriptBox').innerText = "(Tekan tombol rekam untuk mulai berbicara...)";
-    }
+    document.getElementById('transcriptBox').innerText = liveTranscriptText || "(Tekan tombol rekam untuk mulai berbicara...)";
 
     document.getElementById('questionContainer').style.display = 'block';
     updateBabAttemptStatusUI();
@@ -491,30 +797,26 @@
 
         const noteDiv = document.getElementById('modalScoreComparisonNote');
         if (res.wasAiReset) {
-          noteDiv.innerText = "⚠️ Anda baru saja memperbarui jawaban! Nilai Guru sebelumnya berdasarkan jawaban lama. Silakan klik 'Cek Nilai dari Guru' untuk menilai jawaban baru ini.";
+          noteDiv.innerText = "⚠️ Jawaban diperbarui! Silakan klik 'Cek Nilai dari Guru' untuk menilai jawaban baru ini.";
           noteDiv.style.color = "#d97706";
         } else if (res.isHighestUpdated) {
-          noteDiv.innerText = "🎉 Nilai Percobaan Baru Lebih Tinggi & Tersimpan!";
+          noteDiv.innerText = "🎉 Nilai Baru Lebih Tinggi & Tersimpan!";
           noteDiv.style.color = "#15803d";
         } else {
-          noteDiv.innerText = `ℹ️ Nilai tertinggi Anda sebelumnya (${highestScore}) tetap dipertahankan.`;
+          noteDiv.innerText = `ℹ️ Nilai tertinggi sebelumnya (${highestScore}) dipertahankan.`;
           noteDiv.style.color = "#b45309";
         }
 
         document.getElementById('modalQuestionLabel').innerText = `Soal No. ${activeQuestionIndex + 1}`;
-        document.getElementById('modalScoreTypeLabel').innerText = "Nilai Mesin AI (Seketika):";
+        document.getElementById('modalScoreTypeLabel').innerText = "Nilai Mesin AI:";
         document.getElementById('modalScoreDisplay').innerText = `${highestScore} / 100`;
         document.getElementById('modalTranscriptDisplay').innerText = `"${res.transcript}"`;
         document.getElementById('modalFeedbackDisplay').innerText = res.feedback;
 
         document.getElementById('btnCheckAIGuru').style.display = currentAppMode === "PRACTICE" ? "none" : "block";
         document.getElementById('resultModal').style.display = 'flex';
-        
         updateBabAttemptStatusUI();
-
-      } else {
-        alert("Gagal: " + (res ? res.error : "Terjadi kesalahan."));
-      }
+      } else alert("Gagal: " + (res ? res.error : "Error"));
     });
   }
 
@@ -539,7 +841,7 @@
 
       if (res && res.success) {
         if (res.queued) {
-          alert("Jawaban anda masih dalam antrian penilaian Guru. Silakan coba klik 'Cek Nilai dari Guru' dilain waktu.");
+          alert("Jawaban anda dalam antrian. Coba klik 'Cek Nilai dari Guru' dilain waktu.");
         } else {
           const qId = selectedQuestionObject.id;
           questionStatusMap[qId].scoreAI = res.scoreAI;
@@ -549,13 +851,13 @@
           updatePaletteColor(activeQuestionIndex, 'blue');
           updateAccumulatedScoreUI();
 
-          document.getElementById('modalScoreTypeLabel').innerText = "Nilai Resmi Guru (Tertinggi):";
+          document.getElementById('modalScoreTypeLabel').innerText = "Nilai Resmi Guru:";
           document.getElementById('modalScoreDisplay').innerText = `${res.scoreAI} / 100`;
           document.getElementById('modalFeedbackDisplay').innerText = res.feedback;
           document.getElementById('modalScoreComparisonNote').innerText = "✅ Nilai Resmi Guru Berhasil Diperoleh!";
           alert("✨ Nilai dari Guru berhasil diperoleh!");
         }
-      } else alert("Gagal: " + (res ? res.error : "Error Penilaian Guru"));
+      } else alert("Gagal: " + (res ? res.error : "Error"));
     });
   }
 
@@ -565,9 +867,324 @@
     closeResultModal();
     if (activeQuestionIndex + 1 < currentQuestionsList.length) {
       selectQuestion(activeQuestionIndex + 1);
-    } else {
-      alert("🎉 Selamat! Anda telah menyelesaikan seluruh soal pada bab ini.");
+    } else alert("🎉 Selamat! Seluruh soal pada bab ini telah selesai.");
+  }
+
+  // --- LOGIC ADMIN ---
+  function submitSaveSettings() {
+    const mode = document.getElementById('modeSelect').value;
+    const token = document.getElementById('tokenInput').value.trim();
+    const maxAttempts = document.getElementById('maxAttemptsInput').value;
+
+    requestPasswordAndExecute(password => {
+      fetchAPI({
+        action: "switchAppMode",
+        password: password,
+        newMode: mode,
+        newToken: token,
+        maxAttempts: maxAttempts
+      }, res => {
+        if (res && res.success) {
+          showNotif(true, "Berhasil Disimpan!", res.message);
+          updateModeBadgeUI(mode);
+        } else showNotif(false, "Gagal!", res ? res.error : "Error");
+      });
+    });
+  }
+
+  function onReviewRombelChange() {
+    const rombel = document.getElementById('reviewRombelSelect').value;
+    const bSelect = document.getElementById('reviewBabSelect');
+    bSelect.innerHTML = '<option value="">-- Semua Bab --</option>';
+
+    if (rombel) {
+      fetchAPI({ action: "getBabList", rombel: rombel }, res => {
+        if (res && res.babList) res.babList.forEach(bab => bSelect.innerHTML += `<option value="${bab}">${bab}</option>`);
+      });
     }
+  }
+
+  function submitLoadReview() {
+    const rombel = document.getElementById('reviewRombelSelect').value;
+    const bab = document.getElementById('reviewBabSelect').value;
+
+    requestPasswordAndExecute(password => {
+      fetchAPI({ action: "getTeacherSubmissions", password: password, rombel: rombel, bab: bab }, res => {
+        if (res && res.success) {
+          showNotif(true, "Data Dimuat", `Berhasil memuat ${res.list.length} data pengerjaan.`);
+          renderReviewTable(res.list);
+        } else showNotif(false, "Gagal!", res ? res.error : "Error");
+      });
+    });
+  }
+
+  function renderReviewTable(list) {
+    const tbody = document.getElementById('reviewTbody');
+    tbody.innerHTML = "";
+
+    if (!list || list.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:#94a3b8;">Belum ada data pengerjaan siswa.</td></tr>`;
+      document.getElementById('reviewResultBox').style.display = 'block';
+      return;
+    }
+
+    list.forEach(item => {
+      let questionsHtml = "";
+      item.questions.forEach(q => {
+        const statusLabel = q.status === "AI_GRADED"
+          ? `<span style="color:#16a34a; font-weight:bold;">${q.scoreAI} (Guru)</span>`
+          : `<button class="btn-primary" style="padding:2px 6px; font-size:10px; width:auto;" onclick="submitForceAIGrade('${q.qId}','${item.nama}','${item.rombel}','${item.bab}')">📝 Beri Nilai Guru</button>`;
+
+        questionsHtml += `<div style="margin-bottom:6px; font-size:11px;">
+          <b>[${q.qId}]:</b> Mesin: ${q.scoreLocal} | Status: ${statusLabel}
+        </div>`;
+      });
+
+      const attemptLabel = item.effectiveMax > 0 ? `${item.babAttempts}/${item.effectiveMax}x` : `${item.babAttempts}x`;
+
+      tbody.innerHTML += `<tr>
+        <td>
+          <b>${item.nama}</b><br>
+          <small style="color:#64748b;">${item.rombel} | ${item.bab}</small><br>
+          <small style="color:#4f46e5;">Percobaan: ${attemptLabel}</small>
+          <div style="margin-top:6px;">
+            <button class="btn-secondary" style="padding:2px 6px; font-size:10px; width:auto;" onclick="submitAddExtraAttempt('${item.nama}','${item.rombel}','${item.bab}')">➕ +1 Kesempatan</button>
+          </div>
+        </td>
+        <td>${questionsHtml}</td>
+      </tr>`;
+    });
+
+    document.getElementById('reviewResultBox').style.display = 'block';
+  }
+
+  function submitForceAIGrade(qId, nama, rombel, bab) {
+    requestPasswordAndExecute(password => {
+      fetchAPI({ action: "forceAIGrade", password: password, questionId: qId, studentName: nama, rombel: rombel, bab: bab }, res => {
+        if (res && res.success) {
+          showNotif(true, "Penilaian Berhasil!", `Siswa ${nama} berhasil dinilai Guru: ${res.scoreAI}`);
+          submitLoadReview();
+        } else showNotif(false, "Penilaian Gagal!", res ? res.error : "Error");
+      });
+    });
+  }
+
+  function submitAddExtraAttempt(nama, rombel, bab) {
+    requestPasswordAndExecute(password => {
+      fetchAPI({ action: "addExtraAttempt", password: password, studentName: nama, rombel: rombel, bab: bab }, res => {
+        if (res && res.success) {
+          showNotif(true, "Kesempatan Ditambah!", res.message);
+          submitLoadReview();
+        } else showNotif(false, "Gagal!", res ? res.error : "Error");
+      });
+    });
+  }
+
+  // CRUD SISWA
+  function loadSiswaList() {
+    requestPasswordAndExecute(password => {
+      fetchAPI({ action: "getStudentListAdmin", password: password }, res => {
+        if (res && res.success) {
+          siswaDataGlobal = res.list || [];
+          renderSiswaTable(siswaDataGlobal);
+        } else showNotif(false, "Gagal!", res ? res.error : "Error");
+      });
+    });
+  }
+
+  function renderSiswaTable(list) {
+    const tbody = document.getElementById('siswaTbody');
+    tbody.innerHTML = "";
+    if (list.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">Tidak ada data siswa.</td></tr>`;
+      return;
+    }
+
+    list.forEach(item => {
+      tbody.innerHTML += `<tr>
+        <td>${item.no}</td>
+        <td><b>${item.nama}</b></td>
+        <td>${item.rombel}</td>
+        <td>${item.jk}</td>
+        <td>
+          <button class="btn-warning" style="padding:2px 6px; font-size:10px; width:auto;" onclick="editSiswa(${item.rowIndex}, '${item.no}', '${item.nama}', '${item.rombel}', '${item.jk}')">✏️ Edit</button>
+          <button class="btn-danger" style="padding:2px 6px; font-size:10px; width:auto;" onclick="deleteSiswa(${item.rowIndex}, '${item.nama}')">🗑️ Hapus</button>
+        </td>
+      </tr>`;
+    });
+  }
+
+  function filterSiswaTable() {
+    const q = document.getElementById('siswaSearchInput').value.toLowerCase();
+    const filtered = siswaDataGlobal.filter(s => s.nama.toLowerCase().includes(q) || s.rombel.toLowerCase().includes(q));
+    renderSiswaTable(filtered);
+  }
+
+  function editSiswa(rowIndex, no, nama, rombel, jk) {
+    document.getElementById('siswaRowIndexInput').value = rowIndex;
+    document.getElementById('siswaNoInput').value = no;
+    document.getElementById('siswaNamaInput').value = nama;
+    document.getElementById('siswaRombelInput').value = rombel;
+    document.getElementById('siswaJkInput').value = jk || "L";
+    document.getElementById('siswaFormTitle').innerText = "Edit Data Siswa";
+  }
+
+  function resetSiswaForm() {
+    document.getElementById('siswaRowIndexInput').value = "";
+    document.getElementById('siswaNoInput').value = "";
+    document.getElementById('siswaNamaInput').value = "";
+    document.getElementById('siswaRombelInput').value = "";
+    document.getElementById('siswaJkInput').value = "L";
+    document.getElementById('siswaFormTitle').innerText = "Form Tambah / Edit Siswa";
+  }
+
+  function submitSaveSiswa() {
+    const rIdx = document.getElementById('siswaRowIndexInput').value;
+    const no = document.getElementById('siswaNoInput').value;
+    const nama = document.getElementById('siswaNamaInput').value.trim();
+    const rombel = document.getElementById('siswaRombelInput').value.trim();
+    const jk = document.getElementById('siswaJkInput').value;
+
+    if (!nama || !rombel) return alert("Nama Siswa dan Rombel wajib diisi!");
+
+    requestPasswordAndExecute(password => {
+      fetchAPI({
+        action: "saveStudent",
+        password: password,
+        rowIndex: rIdx,
+        no: no,
+        nama: nama,
+        rombel: rombel,
+        jk: jk
+      }, res => {
+        if (res && res.success) {
+          showNotif(true, "Data Siswa Disimpan!", res.message);
+          resetSiswaForm();
+          loadSiswaList();
+        } else showNotif(false, "Gagal!", res ? res.error : "Error");
+      });
+    });
+  }
+
+  function deleteSiswa(rowIndex, nama) {
+    if (!confirm(`Yakin ingin menghapus data siswa ${nama}?`)) return;
+
+    requestPasswordAndExecute(password => {
+      fetchAPI({ action: "deleteStudent", password: password, rowIndex: rowIndex }, res => {
+        if (res && res.success) {
+          showNotif(true, "Dihapus!", res.message);
+          loadSiswaList();
+        } else showNotif(false, "Gagal!", res ? res.error : "Error");
+      });
+    });
+  }
+
+  // CRUD BANK SOAL
+  function loadSoalList() {
+    requestPasswordAndExecute(password => {
+      fetchAPI({ action: "getAllQuestionsAdmin", password: password }, res => {
+        if (res && res.success) {
+          soalDataGlobal = res.list || [];
+          renderSoalTable(soalDataGlobal);
+        } else showNotif(false, "Gagal!", res ? res.error : "Error");
+      });
+    });
+  }
+
+  function renderSoalTable(list) {
+    const tbody = document.getElementById('soalTbody');
+    tbody.innerHTML = "";
+    if (list.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">Tidak ada soal di Bank Soal.</td></tr>`;
+      return;
+    }
+
+    list.forEach(item => {
+      tbody.innerHTML += `<tr>
+        <td><b>${item.id}</b></td>
+        <td>${item.kelas}</td>
+        <td>${item.bab}</td>
+        <td>${item.pertanyaan}</td>
+        <td>
+          <button class="btn-warning" style="padding:2px 6px; font-size:10px; width:auto;" onclick="editSoal('${item.id}', '${item.kelas}', '${item.bab}', \`${escapeQuotes(item.pertanyaan)}\`, \`${escapeQuotes(item.rubrik)}\`)">✏️ Edit</button>
+          <button class="btn-danger" style="padding:2px 6px; font-size:10px; width:auto;" onclick="deleteSoal('${item.id}')">🗑️ Hapus</button>
+        </td>
+      </tr>`;
+    });
+  }
+
+  function escapeQuotes(str) {
+    return (str || '').replace(/'/g, "\\'").replace(/"/g, '\\"');
+  }
+
+  function filterSoalTable() {
+    const q = document.getElementById('soalSearchInput').value.toLowerCase();
+    const filtered = soalDataGlobal.filter(s => s.pertanyaan.toLowerCase().includes(q) || s.bab.toLowerCase().includes(q) || s.kelas.toLowerCase().includes(q));
+    renderSoalTable(filtered);
+  }
+
+  function editSoal(id, kelas, bab, pertanyaan, rubrik) {
+    document.getElementById('soalIdInput').value = id;
+    document.getElementById('soalKelasInput').value = kelas;
+    document.getElementById('soalBabInput').value = bab;
+    document.getElementById('soalPertanyaanInput').value = pertanyaan;
+    document.getElementById('soalRubrikInput').value = rubrik;
+    document.getElementById('soalFormTitle').innerText = "Edit Soal: " + id;
+  }
+
+  function resetSoalForm() {
+    document.getElementById('soalIdInput').value = "";
+    document.getElementById('soalKelasInput').value = "";
+    document.getElementById('soalBabInput').value = "";
+    document.getElementById('soalPertanyaanInput').value = "";
+    document.getElementById('soalRubrikInput').value = "";
+    document.getElementById('soalGambarInput').value = "";
+    document.getElementById('soalFormTitle').innerText = "Form Tambah / Edit Soal";
+  }
+
+  function submitSaveSoal() {
+    const fileInput = document.getElementById('soalGambarInput');
+    const file = fileInput.files[0];
+
+    const doSave = (base64, name, mime) => {
+      requestPasswordAndExecute(password => {
+        fetchAPI({
+          action: "saveQuestion",
+          password: password,
+          questionId: document.getElementById('soalIdInput').value,
+          kelas: document.getElementById('soalKelasInput').value,
+          bab: document.getElementById('soalBabInput').value,
+          pertanyaan: document.getElementById('soalPertanyaanInput').value,
+          rubrik: document.getElementById('soalRubrikInput').value,
+          imageBase64: base64, imageFileName: name, imageMimeType: mime
+        }, res => {
+          if (res && res.success) {
+            showNotif(true, "Soal Tersimpan!", res.message);
+            resetSoalForm();
+            loadSoalList();
+          } else showNotif(false, "Gagal!", res ? res.error : "Error");
+        });
+      });
+    };
+
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = e => doSave(e.target.result, file.name, file.type);
+      reader.readAsDataURL(file);
+    } else doSave("", "", "");
+  }
+
+  function deleteSoal(questionId) {
+    if (!confirm(`Yakin ingin menghapus soal ${questionId}?`)) return;
+
+    requestPasswordAndExecute(password => {
+      fetchAPI({ action: "deleteQuestion", password: password, questionId: questionId }, res => {
+        if (res && res.success) {
+          showNotif(true, "Soal Dihapus!", res.message);
+          loadSoalList();
+        } else showNotif(false, "Gagal!", res ? res.error : "Error");
+      });
+    });
   }
 </script>
 </body>
