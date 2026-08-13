@@ -23,8 +23,8 @@
     .card { background: var(--card-bg); padding: 20px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 20px; }
     .form-group { margin-bottom: 15px; }
     label { font-weight: 600; display: block; margin-bottom: 6px; font-size: 13px; }
-    select, input[type="text"], input[type="password"], textarea { width: 100%; padding: 12px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 14px; background-color: #f8fafc; }
-    button { padding: 12px 18px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; width: 100%; transition: all 0.2s; }
+    select, input[type="text"], textarea { width: 100%; padding: 12px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 14px; background-color: #f8fafc; }
+    button, .btn-link { padding: 12px 18px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; width: 100%; transition: all 0.2s; text-align: center; text-decoration: none; display: block; }
     button:disabled { background: #cbd5e1 !important; color: #64748b !important; cursor: not-allowed; }
     .btn-guru { background: #334155; color: white; margin-bottom: 15px; }
     .btn-record-start { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; margin: 12px 0; }
@@ -43,10 +43,6 @@
     
     .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 15px; }
     .modal-content { background: white; padding: 24px; border-radius: 16px; width: 100%; max-width: 580px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-    
-    .sub-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
-    .sub-table th, .sub-table td { border: 1px solid #cbd5e1; padding: 8px; text-align: left; }
-    .sub-table th { background: #f1f5f9; }
   </style>
 </head>
 <body>
@@ -57,7 +53,7 @@
   <p style="margin:0; font-size:13px; opacity:0.9;">Pendidikan Agama Islam & Budi Pekerti | MGMP PAI SMAN 1 Karangbinangun</p>
 </div>
 
-<button type="button" class="btn-guru" onclick="openGuruModal()">⚙️ Kendali Guru / Admin</button>
+<a href="admin.html" class="btn-link btn-guru">⚙️ Buka Halaman Kendali Guru</a>
 
 <!-- INPUT TOKEN POPUP MODAL (MODE SUBMISSION) -->
 <div id="tokenModal" class="modal-overlay">
@@ -119,13 +115,7 @@
 
   <div id="questionContainer" style="display:none;">
     <div class="question-box">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <b id="questionNumberLabel">Soal No. 1</b>
-        <div id="adminActionBtns" style="display:none;">
-          <button style="width:auto; padding:4px 8px; font-size:12px; background:#f59e0b; color:white;" onclick="openEditForm()">Edit</button>
-          <button style="width:auto; padding:4px 8px; font-size:12px; background:#ef4444; color:white;" onclick="deleteCurrentSoal()">Hapus</button>
-        </div>
-      </div>
+      <b id="questionNumberLabel">Soal No. 1</b>
       <p id="questionText" style="margin:8px 0 0 0; font-weight:600; font-size:16px;"></p>
       
       <div id="gambarSoalBox" style="display:none; text-align:center;">
@@ -147,7 +137,7 @@
   </div>
 </div>
 
-<!-- 🌟 MODAL POP-UP HASIL EVALUASI -->
+<!-- MODAL POP-UP HASIL EVALUASI SISWA -->
 <div id="resultModal" class="modal-overlay">
   <div class="modal-content" style="text-align:center;">
     <h3 style="margin-top:0; color:var(--primary); font-size:20px;">✨ Hasil Evaluasi Jawaban</h3>
@@ -182,99 +172,11 @@
   </div>
 </div>
 
-<!-- MODAL KENDALI GURU -->
-<div id="guruModal" class="modal-overlay">
-  <div class="modal-content">
-    <h3 style="margin-top:0;">⚙️ Kendali Guru</h3>
-    <div id="passForm">
-      <label>Masukkan Password Admin:</label>
-      <input type="password" id="inputAdminPass" placeholder="Password...">
-      <button style="margin-top:10px; background:var(--primary); color:white;" onclick="verifyAdminPass()">Verifikasi Password</button>
-    </div>
-
-    <div id="adminPanel" style="display:none;">
-      <h4>1. Mode, Token & Batas Percobaan BAB</h4>
-      <div style="display:flex; flex-direction:column; gap:10px;">
-        <button style="background:var(--success); color:white; padding:10px;" onclick="setModeUI('PRACTICE')">🟢 Set Mode PRACTICE (Latihan)</button>
-        <button style="background:var(--danger); color:white; padding:10px;" onclick="setModeUI('SUBMISSION')">🔴 Set Mode SUBMISSION (Ujian)</button>
-      </div>
-      
-      <div style="margin-top:12px;">
-        <label>Token Ujian Aktif:</label>
-        <input type="text" id="adminTokenInput" placeholder="Token Ujian..." style="text-transform:uppercase;">
-      </div>
-
-      <div style="margin-top:10px;">
-        <label>Batas Maksimal Percobaan Per BAB (Mode Ujian):</label>
-        <select id="adminMaxAttemptsInput">
-          <option value="0">Bebas (Tanpa Batas Percobaan)</option>
-          <option value="1">1 Kali Mengerjakan (Tanpa Re-take/Revisi)</option>
-          <option value="2">2 Kali Percobaan Mengerjakan/Revisi</option>
-          <option value="3" selected>3 Kali Percobaan Mengerjakan/Revisi</option>
-          <option value="5">5 Kali Percobaan Mengerjakan/Revisi</option>
-        </select>
-      </div>
-
-      <button style="background:#334155; color:white; margin-top:10px;" onclick="saveGuruSettings()">Simpan Pengaturan Guru</button>
-
-      <hr style="margin:20px 0;">
-      <h4>2. Review Jawaban & Penilaian Guru</h4>
-      <button style="background:#7c3aed; color:white;" onclick="loadTeacherReviewPanel()">🔍 Refresh Panel Review Siswa</button>
-      <div id="teacherReviewBox" style="display:none; margin-top:10px;">
-        <div style="max-height:280px; overflow-y:auto;">
-          <table class="sub-table">
-            <thead>
-              <tr><th>Siswa</th><th>Soal</th><th>Status Penilaian Guru</th></tr>
-            </thead>
-            <tbody id="teacherReviewTbody"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <hr style="margin:20px 0;">
-      <h4>3. Kelola Bank Soal</h4>
-      <button style="background:var(--primary); color:white;" onclick="openTambahSoalForm()">+ Tambah Soal Baru</button>
-    </div>
-    
-    <button style="margin-top:15px; background:#94a3b8; color:white;" onclick="closeGuruModal()">Tutup</button>
-  </div>
-</div>
-
-<!-- MODAL FORM INPUT/EDIT SOAL -->
-<div id="formSoalModal" class="modal-overlay">
-  <div class="modal-content">
-    <h3 id="formSoalTitle" style="margin-top:0;">Form Soal</h3>
-    <input type="hidden" id="soalIdInput">
-    <div class="form-group">
-      <label>Target Kelas / Rombel:</label>
-      <input type="text" id="soalKelasInput">
-    </div>
-    <div class="form-group">
-      <label>Nama Bab / Topik:</label>
-      <input type="text" id="soalBabInput">
-    </div>
-    <div class="form-group">
-      <label>Teks Pertanyaan Soal:</label>
-      <textarea id="soalPertanyaanInput" rows="3"></textarea>
-    </div>
-    <div class="form-group">
-      <label>Rubrik Kunci Jawaban:</label>
-      <textarea id="soalRubrikInput" rows="3"></textarea>
-    </div>
-    <div class="form-group">
-      <label>Upload Gambar Soal (Opsional):</label>
-      <input type="file" id="soalGambarInput" accept="image/*">
-    </div>
-    <button style="background:var(--success); color:white; margin-top:10px;" onclick="saveSoalData()">Simpan Soal</button>
-    <button style="background:#94a3b8; color:white; margin-top:5px;" onclick="closeFormSoalModal()">Batal</button>
-  </div>
-</div>
-
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbzBMx-BvZfCT_w6yG2HJur8KUm2kqK0tfcZhFiD6J7dxH3AOOxXQg72fS4pLzAjNFM_kA/exec";
 
   let studentDataCache = {}, currentQuestionsList = [], activeQuestionIndex = -1, selectedQuestionObject = null;
-  let adminVerified = false, verifiedPass = "", currentAppMode = "PRACTICE", currentAppToken = "", currentMaxAttempts = 3;
+  let currentAppMode = "PRACTICE", currentAppToken = "", currentMaxAttempts = 3;
   let studentCurrentBabAttempts = 0, studentEffectiveMaxAttempts = 0;
   let speechRecognition = null, liveTranscriptText = "", isRecording = false;
   let questionStatusMap = {};
@@ -526,7 +428,6 @@
     }
 
     document.getElementById('questionContainer').style.display = 'block';
-    if (adminVerified) document.getElementById('adminActionBtns').style.display = 'block';
     updateBabAttemptStatusUI();
   }
 
@@ -549,7 +450,6 @@
     }
   }
 
-  // TAHAP 1: PENILAIAN MESIN AI
   function submitLocalAnswer() {
     if (!selectedQuestionObject) return alert("Pilih soal terlebih dahulu!");
 
@@ -586,7 +486,7 @@
         studentCurrentBabAttempts = res.currentBabAttempts || studentCurrentBabAttempts;
         studentEffectiveMaxAttempts = res.effectiveMaxAttempts || studentEffectiveMaxAttempts;
 
-        updatePaletteColor(activeQuestionIndex, 'green'); // Kembali Hijau jika merevisi
+        updatePaletteColor(activeQuestionIndex, 'green');
         updateAccumulatedScoreUI();
 
         const noteDiv = document.getElementById('modalScoreComparisonNote');
@@ -618,7 +518,6 @@
     });
   }
 
-  // TAHAP 2: PEMANGGILAN PENILAIAN GURU
   function requestAIGrading() {
     const checkBtn = document.getElementById('btnCheckAIGuru');
     checkBtn.disabled = true;
@@ -669,170 +568,6 @@
     } else {
       alert("🎉 Selamat! Anda telah menyelesaikan seluruh soal pada bab ini.");
     }
-  }
-
-  // KENDALI GURU & REVIEW
-  function openGuruModal() { document.getElementById('guruModal').style.display = 'flex'; }
-  function closeGuruModal() { document.getElementById('guruModal').style.display = 'none'; }
-  
-  function verifyAdminPass() {
-    const pass = document.getElementById('inputAdminPass').value;
-    fetchAPI({ action: "verifyPassword", password: pass }, res => {
-      if (res && res.success) {
-        adminVerified = true;
-        verifiedPass = pass;
-        document.getElementById('passForm').style.display = 'none';
-        document.getElementById('adminPanel').style.display = 'block';
-        document.getElementById('adminTokenInput').value = currentAppToken;
-        document.getElementById('adminMaxAttemptsInput').value = currentMaxAttempts;
-      } else alert("Password Admin Salah!");
-    });
-  }
-
-  function setModeUI(mode) {
-    currentAppMode = mode;
-    saveGuruSettings();
-  }
-
-  function saveGuruSettings() {
-    const token = document.getElementById('adminTokenInput').value.trim();
-    const maxAttempts = document.getElementById('adminMaxAttemptsInput').value;
-
-    fetchAPI({ 
-      action: "switchAppMode", 
-      password: verifiedPass, 
-      newMode: currentAppMode, 
-      newToken: token,
-      maxAttempts: maxAttempts
-    }, res => {
-      if (res && res.success) {
-        alert(res.message);
-        currentAppToken = token;
-        currentMaxAttempts = Number(maxAttempts);
-        updateModeBadgeUI(currentAppMode);
-      } else alert("Gagal: " + res.error);
-    });
-  }
-
-  function loadTeacherReviewPanel() {
-    const rombel = document.getElementById('rombelSelect').value;
-    const bab = document.getElementById('babSelect').value;
-
-    fetchAPI({ action: "getTeacherSubmissions", password: verifiedPass, rombel: rombel, bab: bab }, res => {
-      if (res && res.success) {
-        const tbody = document.getElementById('teacherReviewTbody');
-        tbody.innerHTML = "";
-        
-        res.list.forEach(item => {
-          let questionsHtml = "";
-          item.questions.forEach(q => {
-            const aiStatusLabel = q.status === "AI_GRADED"
-              ? `<span style="color:#16a34a; font-weight:bold;">${q.scoreAI} (Guru)</span>`
-              : `<button style="padding:2px 6px; font-size:10px; background:#7c3aed; color:white; width:auto;" onclick="forceAIGrade('${q.qId}','${item.nama}','${item.rombel}','${item.bab}')">📝 Beri Nilai Guru</button>`;
-            
-            questionsHtml += `<div style="margin-bottom:4px; font-size:11px;">
-              <b>${q.qId}:</b> Mesin:${q.scoreLocal} | ${aiStatusLabel}
-            </div>`;
-          });
-
-          const attemptLabel = item.effectiveMax > 0 ? `${item.babAttempts}/${item.effectiveMax}x` : `${item.babAttempts}x`;
-
-          tbody.innerHTML += `<tr>
-            <td>
-              <b>${item.nama}</b><br>
-              <small style="color:#64748b;">${item.rombel} | ${item.bab}</small><br>
-              <small style="color:#4f46e5;">Coba: ${attemptLabel}</small>
-              <div style="margin-top:4px;">
-                <button style="padding:2px 6px; font-size:10px; background:#334155; color:white; width:auto;" onclick="grantExtraAttempt('${item.nama}','${item.rombel}','${item.bab}')">➕ +1 Kesempatan</button>
-              </div>
-            </td>
-            <td>${questionsHtml}</td>
-          </tr>`;
-        });
-        document.getElementById('teacherReviewBox').style.display = 'block';
-      }
-    });
-  }
-
-  function forceAIGrade(qId, nama, rombel, bab) {
-    fetchAPI({ action: "forceAIGrade", password: verifiedPass, questionId: qId, studentName: nama, rombel: rombel, bab: bab }, res => {
-      if (res && res.success) {
-        alert("Berhasil menilai " + nama + " untuk " + qId + " dengan Skor: " + (res.scoreAI || res.currentScore));
-        loadTeacherReviewPanel();
-      } else alert("Gagal / Antrian Penilaian Penuh.");
-    });
-  }
-
-  function grantExtraAttempt(nama, rombel, bab) {
-    fetchAPI({ action: "addExtraAttempt", password: verifiedPass, studentName: nama, rombel: rombel, bab: bab }, res => {
-      if (res && res.success) {
-        alert(res.message);
-        loadTeacherReviewPanel();
-        if (document.getElementById('studentSelect').value === nama && document.getElementById('babSelect').value === bab) {
-          onBabChange();
-        }
-      } else alert("Gagal menambah kesempatan: " + res.error);
-    });
-  }
-
-  function openTambahSoalForm() {
-    document.getElementById('soalIdInput').value = "";
-    document.getElementById('soalKelasInput').value = document.getElementById('rombelSelect').value || "";
-    document.getElementById('soalBabInput').value = document.getElementById('babSelect').value || "";
-    document.getElementById('soalPertanyaanInput').value = "";
-    document.getElementById('soalRubrikInput').value = "";
-    document.getElementById('formSoalModal').style.display = 'flex';
-  }
-
-  function openEditForm() {
-    document.getElementById('soalIdInput').value = selectedQuestionObject.id;
-    document.getElementById('soalKelasInput').value = selectedQuestionObject.kelas || document.getElementById('rombelSelect').value;
-    document.getElementById('soalBabInput').value = selectedQuestionObject.bab || document.getElementById('babSelect').value;
-    document.getElementById('soalPertanyaanInput').value = selectedQuestionObject.pertanyaan;
-    document.getElementById('soalRubrikInput').value = selectedQuestionObject.rubrik;
-    document.getElementById('formSoalModal').style.display = 'flex';
-  }
-
-  function closeFormSoalModal() { document.getElementById('formSoalModal').style.display = 'none'; }
-
-  function saveSoalData() {
-    const fileInput = document.getElementById('soalGambarInput');
-    const file = fileInput.files[0];
-
-    const doSave = (base64, name, mime) => {
-      fetchAPI({
-        action: "saveQuestion",
-        password: verifiedPass,
-        questionId: document.getElementById('soalIdInput').value,
-        kelas: document.getElementById('soalKelasInput').value,
-        bab: document.getElementById('soalBabInput').value,
-        pertanyaan: document.getElementById('soalPertanyaanInput').value,
-        rubrik: document.getElementById('soalRubrikInput').value,
-        imageBase64: base64, imageFileName: name, imageMimeType: mime
-      }, res => {
-        if (res && res.success) {
-          alert(res.message);
-          closeFormSoalModal();
-          onBabChange();
-        } else alert("Error: " + res.error);
-      });
-    };
-
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = e => doSave(e.target.result, file.name, file.type);
-      reader.readAsDataURL(file);
-    } else doSave("", "", "");
-  }
-
-  function deleteCurrentSoal() {
-    if (!confirm("Yakin ingin menghapus soal ini?")) return;
-    fetchAPI({ action: "deleteQuestion", password: verifiedPass, questionId: selectedQuestionObject.id }, res => {
-      if (res && res.success) {
-        alert(res.message);
-        onBabChange();
-      } else alert("Error: " + res.error);
-    });
   }
 </script>
 </body>
