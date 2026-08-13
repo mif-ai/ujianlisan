@@ -398,9 +398,9 @@
 <div id="passwordModal" class="modal-overlay">
   <div class="modal-content" style="text-align:center;">
     <h3 style="margin-top:0; color:var(--primary);">🔐 Konfirmasi Password Guru</h3>
-    <p style="font-size:13px; color:#64748b;">Password Admin telah terisi otomatis:</p>
-    <!-- 💡 TERISI OTOMATIS MERUJUK "mifai1." -->
-    <input type="password" id="inputActionPass" value="mifai1." placeholder="Password Admin..." style="text-align:center; font-size:16px; margin-bottom:15px;">
+    <p style="font-size:13px; color:#64748b;">Masukkan Password Admin untuk memproses:</p>
+    <!-- 💡 PASSWORD KOSONG (Ketik Manual) -->
+    <input type="password" id="inputActionPass" value="" placeholder="Ketik Password Admin..." style="text-align:center; font-size:16px; margin-bottom:15px;">
     <div style="display:flex; gap:10px;">
       <button class="btn-secondary" style="flex:1;" onclick="closePasswordModal()">Batal</button>
       <button class="btn-primary" style="flex:1;" onclick="confirmActionWithPass()">Konfirmasi & Lanjutkan</button>
@@ -521,9 +521,10 @@
     if (tabId === 'tabSoal' && soalDataGlobal.length === 0) loadSoalList();
   }
 
-  // SYSTEM POPUP PASSWORD & NOTIFIKASI
+  // SYSTEM POPUP PASSWORD (KOSONGKAN INPUT SAAT MUNCUL)
   function requestPasswordAndExecute(callback) {
     pendingActionCallback = callback;
+    document.getElementById('inputActionPass').value = ""; // Kosongkan input
     document.getElementById('passwordModal').style.display = 'flex';
   }
 
