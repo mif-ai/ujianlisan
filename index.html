@@ -421,7 +421,7 @@
 </div>
 
 <!-- ========================================================================= -->
-<!-- 3. JAVASCRIPT LOGIC (SINGLE PAGE APPLICATION - FIXES APPLIED) -->
+<!-- 3. JAVASCRIPT LOGIC (SINGLE PAGE APPLICATION - FIXED SPEECH ENGINE) -->
 <!-- ========================================================================= -->
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbzBMx-BvZfCT_w6yG2HJur8KUm2kqK0tfcZhFiD6J7dxH3AOOxXQg72fS4pLzAjNFM_kA/exec";
@@ -485,27 +485,40 @@
     initSpeechToText();
   }
 
+  // 💡 PERBAIKAN MESIN VOICE SPEECH-TO-TEXT (NO OVER-TYPING)
   function initSpeechToText() {
     const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (Speech) {
       speechRecognition = new Speech();
       speechRecognition.lang = 'id-ID';
       speechRecognition.continuous = true;
-      speechRecognition.interimResults = true;
+      speechRecognition.interimResults = false; // Matikan draf sementara agar tidak duplikasi teks
 
       speechRecognition.onresult = e => {
-        let fullText = '';
-        for (let i = 0; i < e.results.length; i++) {
-          fullText += e.results[i][0].transcript;
+        let addedText = '';
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          if (e.results[i].isFinal) {
+            addedText += e.results[i][0].transcript + ' ';
+          }
         }
-        const textarea = document.getElementById('transcriptTextarea');
-        textarea.value = fullText;
-        onTranscriptInput();
+        
+        if (addedText.trim() !== '') {
+          const textarea = document.getElementById('transcriptTextarea');
+          const currentText = textarea.value.trim();
+          textarea.value = currentText ? currentText + ' ' + addedText.trim() : addedText.trim();
+          onTranscriptInput();
+        }
       };
 
       speechRecognition.onerror = e => {
         document.getElementById('statusText').innerText = "⚠️ Mikrofon tidak merespons: " + e.error;
         isRecording = false;
+      };
+
+      speechRecognition.onend = () => {
+        if (isRecording) {
+          try { speechRecognition.start(); } catch(err) {}
+        }
       };
     }
   }
@@ -626,7 +639,6 @@
     document.getElementById('btnStartExam').disabled = !document.getElementById('babSelect').value;
   }
 
-  // 💡 PERBAIKAN MEMORI SOAL & HARD-RESET PADA MODE LATIHAN
   function startExamProcess() {
     const rombel = document.getElementById('rombelSelect').value;
     const bab = document.getElementById('babSelect').value;
@@ -634,7 +646,6 @@
 
     if (!rombel || !studentName || !bab) return alert("Pilih Kelas, Nama Siswa, dan Bab!");
 
-    // Hard-reset seluruh memori sebelum memuat soal baru
     selectedQuestionObject = null;
     activeQuestionIndex = -1;
     document.getElementById('transcriptTextarea').value = "";
@@ -849,8 +860,8 @@
         status.innerText = "Status: Sedang Merekam Suara Anda...";
       } catch (err) { alert("Mikrofon error: " + err.message); }
     } else {
-      speechRecognition.stop();
       isRecording = false;
+      speechRecognition.stop();
       btn.innerText = "🎤 Klik untuk Merekam Suara";
       btn.className = "btn-record-start";
       status.innerText = "Status: Rekaman Selesai!";
