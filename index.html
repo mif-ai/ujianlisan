@@ -254,7 +254,10 @@
       <h2 style="margin:0; font-size:18px;">⚙️ Panel Kendali Guru & Admin</h2>
       <small style="opacity:0.8;">Asesmen Wawancara Berbasis AI</small>
     </div>
-    <button class="btn-secondary" style="width:auto; font-size:12px;" onclick="showStudentView()">⬅️ Ke Tampilan Siswa</button>
+    <div style="display:flex; gap:8px;">
+      <button class="btn-danger" style="width:auto; font-size:11px; padding:6px 12px;" onclick="userClickLogout()">🚪 Logout Admin</button>
+      <button class="btn-secondary" style="width:auto; font-size:11px; padding:6px 12px; background:#475569;" onclick="showStudentView()">⬅️ Tampilan Siswa</button>
+    </div>
   </div>
 
   <div class="nav-tabs">
@@ -409,7 +412,7 @@
     </div>
   </div>
 
-  <!-- TAB 6: REVIEW JAWABAN & PENILAIAN GURU (MURNI READ SHEET NilaiWawancara) -->
+  <!-- TAB 6: REVIEW JAWABAN & PENILAIAN GURU -->
   <div id="tabReview" class="card tab-content" style="display:none;">
     <h3 style="margin-top:0; color:var(--primary); font-size:15px;">📝 Review Jawaban & Penilaian Guru</h3>
     <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
@@ -427,9 +430,9 @@
 
     <button class="btn-primary" style="background:#7c3aed;" onclick="submitLoadReview()">🔍 Muat Data Hasil Siswa</button>
 
-    <div id="reviewResultBox" style="display:none; margin-top:15px; max-height:400px; overflow-y:auto;">
+    <div id="reviewResultBox" style="display:none; margin-top:15px; max-height:450px; overflow-y:auto;">
       <table class="sub-table">
-        <thead><tr><th style="width:220px;">Data Siswa</th><th>Detail Pertanyaan, Jawaban & Penilaian</th></tr></thead>
+        <thead><tr><th style="width:200px;">Data Siswa</th><th>Detail Pertanyaan, Jawaban & Penilaian</th></tr></thead>
         <tbody id="reviewTbody"></tbody>
       </table>
     </div>
@@ -450,15 +453,15 @@
 <!-- PRINT AREA -->
 <div id="printArea" style="display:none;"></div>
 
-<!-- PASSWORD CONFIRMATION MODAL -->
-<div id="passwordModal" class="modal-overlay">
+<!-- ADMIN LOGIN MODAL -->
+<div id="adminLoginModal" class="modal-overlay">
   <div class="modal-content" style="text-align:center;">
-    <h3 style="margin-top:0; color:var(--primary);">🔐 Konfirmasi Password Guru</h3>
-    <p style="font-size:13px; color:#64748b;">Masukkan Password Admin untuk memproses:</p>
-    <input type="password" id="inputActionPass" value="" placeholder="Ketik Password Admin..." style="text-align:center; font-size:16px; margin-bottom:15px;">
+    <h3 style="margin-top:0; color:var(--primary);">🔐 Masuk Panel Guru / Admin</h3>
+    <p style="font-size:13px; color:#64748b;">Masukkan Password Admin untuk mengakses panel:</p>
+    <input type="password" id="inputAdminLoginPass" placeholder="Ketik Password Admin..." style="text-align:center; font-size:16px; margin-bottom:15px;" onkeyup="if(event.key==='Enter') submitAdminLogin()">
     <div style="display:flex; gap:10px;">
-      <button class="btn-secondary" style="flex:1;" onclick="closePasswordModal()">Batal</button>
-      <button class="btn-primary" style="flex:1;" onclick="confirmActionWithPass()">Konfirmasi & Lanjutkan</button>
+      <button class="btn-secondary" style="flex:1;" onclick="closeAdminLoginModal()">Batal</button>
+      <button class="btn-primary" style="flex:1;" onclick="submitAdminLogin()">Masuk</button>
     </div>
   </div>
 </div>
@@ -479,7 +482,11 @@
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbzBMx-BvZfCT_w6yG2HJur8KUm2kqK0tfcZhFiD6J7dxH3AOOxXQg72fS4pLzAjNFM_kA/exec";
 
-  // STATE GLOBAL
+  // STATE GLOBAL & SESI ADMIN
+  let adminSessionPassword = null;
+  let adminInactivityTimer = null;
+  const INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000; // 5 Menit Inaktivitas
+
   let studentDataCache = {}, currentQuestionsList = [], activeQuestionIndex = -1, selectedQuestionObject = null;
   let currentAppMode = "PRACTICE", currentAppToken = "", currentAppTimer = 0;
   let activeBabTimer = 0;
@@ -487,14 +494,33 @@
   
   let questionState = {}; 
   let paletteColors = []; 
-  
-  let pendingActionCallback = null;
   let siswaDataGlobal = [], soalDataGlobal = [];
   let examTimerInterval = null, remainingExamSeconds = 0;
 
   window.onload = function() {
     initApp();
+    setupInactivityTracker();
   };
+
+  // DETEKSI AKTIVITAS PENGGUNA DENGAN WAKTU KADALUARSA 5 MENIT
+  function setupInactivityTracker() {
+    const activityEvents = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
+    activityEvents.forEach(evt => {
+      window.addEventListener(evt, () => {
+        if (adminSessionPassword && document.getElementById('adminView').style.display !== 'none') {
+          resetInactivityTimer();
+        }
+      }, { passive: true });
+    });
+  }
+
+  function resetInactivityTimer() {
+    if (adminInactivityTimer) clearTimeout(adminInactivityTimer);
+    adminInactivityTimer = setTimeout(() => {
+      logoutAdmin();
+      showNotif(false, "Sesi Kadaluarsa ⏳", "Sesi Admin telah berakhir karena 5 menit tidak ada aktivitas. Silakan masuk kembali.");
+    }, INACTIVITY_TIMEOUT_MS);
+  }
 
   function cleanScoreValue(val) {
     if (val === null || val === undefined || val === "") return 0;
@@ -654,10 +680,54 @@
     });
   }
 
+  // LOGIK AUTENTIKASI ADMIN & MODAL LOGIN
   function showAdminView() {
     stopRecordingIfActive();
-    document.getElementById('studentView').style.display = 'none';
-    document.getElementById('adminView').style.display = 'block';
+    if (adminSessionPassword) {
+      document.getElementById('studentView').style.display = 'none';
+      document.getElementById('adminView').style.display = 'block';
+      resetInactivityTimer();
+      switchTab('tabDashboard');
+    } else {
+      document.getElementById('inputAdminLoginPass').value = "";
+      document.getElementById('adminLoginModal').style.display = 'flex';
+      setTimeout(() => document.getElementById('inputAdminLoginPass').focus(), 200);
+    }
+  }
+
+  function closeAdminLoginModal() {
+    document.getElementById('adminLoginModal').style.display = 'none';
+  }
+
+  function submitAdminLogin() {
+    const pass = document.getElementById('inputAdminLoginPass').value;
+    if (!pass) return alert("Masukkan Password Admin!");
+
+    fetchAPI({ action: "verifyAdminPassword", password: pass }, res => {
+      if (res && res.success) {
+        adminSessionPassword = pass;
+        closeAdminLoginModal();
+        document.getElementById('studentView').style.display = 'none';
+        document.getElementById('adminView').style.display = 'block';
+        resetInactivityTimer();
+        showNotif(true, "BERHASIL ✅", "Selamat datang di Panel Kendali Guru / Admin.");
+        switchTab('tabDashboard');
+      } else {
+        showNotif(false, "GAGAL ❌", "Password Admin Salah. Silakan coba lagi.");
+      }
+    });
+  }
+
+  function logoutAdmin() {
+    adminSessionPassword = null;
+    if (adminInactivityTimer) clearTimeout(adminInactivityTimer);
+    document.getElementById('adminView').style.display = 'none';
+    document.getElementById('studentView').style.display = 'block';
+  }
+
+  function userClickLogout() {
+    logoutAdmin();
+    showNotif(true, "BERHASIL ✅", "Anda telah berhasil keluar (logout) dari Panel Admin.");
   }
 
   function showStudentView() {
@@ -676,29 +746,10 @@
     if (tabId === 'tabSoal' && soalDataGlobal.length === 0) loadSoalList();
   }
 
-  function requestPasswordAndExecute(callback) {
-    pendingActionCallback = callback;
-    document.getElementById('inputActionPass').value = ""; 
-    document.getElementById('passwordModal').style.display = 'flex';
-  }
-
-  function closePasswordModal() {
-    document.getElementById('passwordModal').style.display = 'none';
-    pendingActionCallback = null;
-  }
-
-  function confirmActionWithPass() {
-    const pass = document.getElementById('inputActionPass').value;
-    if (!pass) return alert("Password Admin wajib diisi!");
-    
-    document.getElementById('passwordModal').style.display = 'none';
-    if (pendingActionCallback) pendingActionCallback(pass);
-  }
-
   function showNotif(isSuccess, title, message) {
-    document.getElementById('notifIcon').innerText = isSuccess ? "✅" : "⏳";
+    document.getElementById('notifIcon').innerText = isSuccess ? "✅" : "❌";
     document.getElementById('notifTitle').innerText = title;
-    document.getElementById('notifTitle').style.color = isSuccess ? "#10b981" : "#f59e0b";
+    document.getElementById('notifTitle').style.color = isSuccess ? "#10b981" : "#ef4444";
     document.getElementById('notifMessage').innerText = message;
     document.getElementById('notifModal').style.display = 'flex';
   }
@@ -968,7 +1019,6 @@
 
     document.getElementById('transcriptTextarea').value = loadedText;
 
-    // TAMPILKAN HASIL PENILAIAN GURU JIKA SOAL INI SUDAH DINILAI GURU
     const feedbackBox = document.getElementById('teacherFeedbackBox');
     if (questionState[qId] && questionState[qId].status === "GRADED" && questionState[qId].scoreAI !== null) {
       document.getElementById('teacherScoreBadge').innerText = `${questionState[qId].scoreAI} / 100`;
@@ -1170,35 +1220,32 @@
     document.getElementById('btnStartExam').disabled = false;
   }
 
-  // --- LOGIC ADMIN ---
+  // --- LOGIC AKSI ADMIN (MENGGUNAKAN SESI TANPA INPUT PASSWORD BERULANG) ---
   function loadDashboardStats() {
-    requestPasswordAndExecute(password => {
-      fetchAPI({ action: "getDashboardStats", password: password }, res => {
-        if (res && res.success) {
-          showNotif(true, "Password Benar! ✅", "Dashboard statistik dimuat.");
-          document.getElementById('statTotalSiswa').innerText = res.totalSiswa;
-          document.getElementById('statTotalSoal').innerText = res.totalSoal;
-          document.getElementById('statPartisipasi').innerText = res.partisipasi + "%";
-          document.getElementById('statRecheck').innerText = res.recheckCount;
-          document.getElementById('statAvgAI').innerText = res.avgAI || res.avgLocal;
-        } else showNotif(false, "Gagal! ❌", res ? res.error : "Error");
-      });
+    if (!adminSessionPassword) return showAdminView();
+    fetchAPI({ action: "getDashboardStats", password: adminSessionPassword }, res => {
+      if (res && res.success) {
+        document.getElementById('statTotalSiswa').innerText = res.totalSiswa;
+        document.getElementById('statTotalSoal').innerText = res.totalSoal;
+        document.getElementById('statPartisipasi').innerText = res.partisipasi + "%";
+        document.getElementById('statRecheck').innerText = res.recheckCount;
+        document.getElementById('statAvgAI').innerText = res.avgAI || res.avgLocal;
+      } else showNotif(false, "GAGAL ❌", res ? res.error : "Gagal memuat statistik");
     });
   }
 
   function submitSaveSettings() {
+    if (!adminSessionPassword) return showAdminView();
     const mode = document.getElementById('modeSelect').value;
     const token = document.getElementById('tokenInput').value.trim();
     const timer = document.getElementById('timerInput').value;
 
-    requestPasswordAndExecute(password => {
-      fetchAPI({ action: "switchAppMode", password: password, newMode: mode, newToken: token, newTimer: timer }, res => {
-        if (res && res.success) {
-          showNotif(true, "Berhasil Tersimpan! ✅", res.message);
-          currentAppToken = token;
-          updateModeBadgeUI(mode);
-        } else showNotif(false, "Gagal! ❌", res ? res.error : "Error");
-      });
+    fetchAPI({ action: "switchAppMode", password: adminSessionPassword, newMode: mode, newToken: token, newTimer: timer }, res => {
+      if (res && res.success) {
+        showNotif(true, "BERHASIL ✅", res.message);
+        currentAppToken = token;
+        updateModeBadgeUI(mode);
+      } else showNotif(false, "GAGAL ❌", res ? res.error : "Gagal menyimpan mode");
     });
   }
 
@@ -1215,36 +1262,38 @@
   }
 
   function submitSaveBabTimer() {
+    if (!adminSessionPassword) return showAdminView();
     const rombel = document.getElementById('timerRombelSelect').value;
     const bab = document.getElementById('timerBabSelect').value;
     const timerVal = document.getElementById('timerBabInput').value;
 
     if (!rombel || !bab) return alert("Pilih Rombel dan Bab terlebih dahulu!");
 
-    requestPasswordAndExecute(password => {
-      fetchAPI({ action: "saveBabTimer", password: password, rombel: rombel, bab: bab, timer: timerVal }, res => {
-        if (res && res.success) {
-          showNotif(true, "Timer Disimpan! ⏱️", res.message);
-        } else showNotif(false, "Gagal! ❌", res ? res.error : "Error");
-      });
+    fetchAPI({ action: "saveBabTimer", password: adminSessionPassword, rombel: rombel, bab: bab, timer: timerVal }, res => {
+      if (res && res.success) {
+        showNotif(true, "BERHASIL ✅", res.message);
+      } else showNotif(false, "GAGAL ❌", res ? res.error : "Gagal menyimpan timer");
     });
   }
 
   function submitSaveSchoolSettings() {
+    if (!adminSessionPassword) return showAdminView();
     const namaSekolah = document.getElementById('inputNamaSekolah').value.trim();
     const mapel = document.getElementById('inputMataPelajaran').value.trim();
     const guru = document.getElementById('inputNamaGuru').value.trim();
     const newPass = document.getElementById('inputNewAdminPassword').value;
 
-    requestPasswordAndExecute(password => {
-      fetchAPI({ action: "saveSchoolSettings", password: password, namaSekolah: namaSekolah, mataPelajaran: mapel, namaGuru: guru, newPassword: newPass }, res => {
-        if (res && res.success) {
-          showNotif(true, "Berhasil Tersimpan! ✅", res.message);
-          document.getElementById('displayNamaSekolah').innerText = namaSekolah;
-          document.getElementById('displayMataPelajaran').innerText = mapel;
-          document.getElementById('displayNamaGuru').innerText = guru;
-        } else showNotif(false, "Gagal! ❌", res ? res.error : "Error");
-      });
+    fetchAPI({ action: "saveSchoolSettings", password: adminSessionPassword, namaSekolah: namaSekolah, mataPelajaran: mapel, namaGuru: guru, newPassword: newPass }, res => {
+      if (res && res.success) {
+        showNotif(true, "BERHASIL ✅", res.message);
+        document.getElementById('displayNamaSekolah').innerText = namaSekolah;
+        document.getElementById('displayMataPelajaran').innerText = mapel;
+        document.getElementById('displayNamaGuru').innerText = guru;
+        if (newPass && newPass.trim() !== "") {
+          adminSessionPassword = newPass.trim();
+          document.getElementById('inputNewAdminPassword').value = "";
+        }
+      } else showNotif(false, "GAGAL ❌", res ? res.error : "Gagal menyimpan identitas");
     });
   }
 
@@ -1267,21 +1316,19 @@
   }
 
   function submitLoadReview() {
+    if (!adminSessionPassword) return showAdminView();
     const rombel = document.getElementById('reviewRombelSelect').value;
     const bab = document.getElementById('reviewBabSelect').value;
     const status = document.getElementById('reviewStatusSelect').value;
 
-    requestPasswordAndExecute(password => {
-      fetchAPI({ action: "getTeacherSubmissions", password: password, rombel: rombel, bab: bab, filterStatus: status }, res => {
-        if (res && res.success) {
-          showNotif(true, "Data Dimuat ✅", `Memuat ${res.list.length} pengerjaan siswa.`);
-          renderReviewTable(res.list);
-        } else showNotif(false, "Gagal! ❌", res ? res.error : "Error");
-      });
+    fetchAPI({ action: "getTeacherSubmissions", password: adminSessionPassword, rombel: rombel, bab: bab, filterStatus: status }, res => {
+      if (res && res.success) {
+        showNotif(true, "BERHASIL ✅", `Memuat ${res.list.length} data pengerjaan siswa.`);
+        renderReviewTable(res.list);
+      } else showNotif(false, "GAGAL ❌", res ? res.error : "Gagal memuat hasil siswa");
     });
   }
 
-  // MENAMPILKAN MURNI INFORMASI DARI NilaiWawancara
   function renderReviewTable(list) {
     const tbody = document.getElementById('reviewTbody');
     tbody.innerHTML = "";
@@ -1301,29 +1348,27 @@
         const aiScoreDisplay = cleanAI > 0 ? `<b style="color:#15803d;">${cleanAI} (Nilai Guru)</b>` : `<span style="color:#d97706;">Belum Dinilai</span>`;
 
         qHtml += `<div style="margin-bottom:12px; border-bottom:1px dashed #cbd5e1; padding-bottom:10px;">
-          <div><b>[${q.qId}] Soal:</b> ${q.pertanyaan} ${recheckBadge}</div>
-          <div style="background:#f1f5f9; padding:8px; border-radius:6px; margin:6px 0; font-style:italic;">"${q.transcript || 'Belum ada jawaban'}"</div>
+          <div style="font-size:13px; font-weight:600; color:#1e293b; margin-bottom:4px;"><b>[${q.qId}] Soal:</b> ${q.pertanyaan} ${recheckBadge}</div>
+          <div style="background:#f1f5f9; padding:8px 12px; border-radius:8px; margin:6px 0; font-style:italic; color:#334155; font-size:12px; border-left:3px solid #cbd5e1;">"${q.transcript || 'Belum ada jawaban'}"</div>
           <div style="font-size:12px; margin-bottom:4px;">
             <b>Nilai Robot:</b> ${cleanLoc} | <b>Nilai Guru:</b> ${aiScoreDisplay}
           </div>
           ${q.feedback ? `<div style="font-size:11px; color:#475569; margin-bottom:6px;"><b>Ulasan/Catatan:</b> ${q.feedback}</div>` : ''}
           <div style="font-size:10px; color:#94a3b8; margin-bottom:6px;">🕒 Waktu Submit: ${q.waktu || '-'}</div>
           <div style="display:flex; gap:6px;">
-            <button class="btn-warning" style="padding:4px 8px; font-size:10px; width:auto;" onclick="promptManualGrade('${q.qId}','${item.nama}','${item.rombel}','${item.bab}')">📝 Input Nilai Manual</button>
-            <button class="btn-primary" style="padding:4px 8px; font-size:10px; width:auto; background:linear-gradient(135deg, #7c3aed, #4f46e5);" onclick="triggerTeacherAIGrade('${q.qId}','${item.nama}','${item.rombel}','${item.bab}', \`${escapeQuotes(q.transcript)}\`)">🤖 Penilaian AI Gemini</button>
+            <button class="btn-warning" style="padding:5px 10px; font-size:11px; width:auto;" onclick="promptManualGrade('${q.qId}','${item.nama}','${item.rombel}','${item.bab}')">📝 Input Nilai Manual</button>
+            <button class="btn-primary" style="padding:5px 10px; font-size:11px; width:auto; background:linear-gradient(135deg, #7c3aed, #4f46e5);" onclick="triggerTeacherAIGrade('${q.qId}','${item.nama}','${item.rombel}','${item.bab}', \`${escapeQuotes(q.transcript)}\`)">🤖 Penilaian AI Gemini</button>
           </div>
         </div>`;
       });
 
       tbody.innerHTML += `<tr>
-        <td style="width:220px; vertical-align:top;">
-          <b>${item.nama}</b><br>
-          <small style="color:#64748b;">${item.rombel} | ${item.bab}</small><br>
-          <div style="margin-top:8px;">
-            <button class="btn-primary" style="padding:4px 8px; font-size:10px; width:auto;" onclick="submitAddExtraTime('${item.nama}','${item.rombel}','${item.bab}')">⏱️ +10 Menit Waktu</button>
-          </div>
+        <td style="width:200px; vertical-align:top; padding:12px; background:#fafafa;">
+          <b style="font-size:13px; color:#0f172a; display:block;">${item.nama}</b>
+          <small style="color:#64748b; display:block; margin-bottom:10px; font-weight:600;">${item.rombel} | ${item.bab}</small>
+          <button class="btn-primary" style="padding:6px 10px; font-size:11px; width:100%;" onclick="submitAddExtraTime('${item.nama}','${item.rombel}','${item.bab}')">⏱️ +10 Menit Waktu</button>
         </td>
-        <td style="vertical-align:top;">${qHtml}</td>
+        <td style="vertical-align:top; padding:12px;">${qHtml}</td>
       </tr>`;
     });
 
@@ -1331,54 +1376,49 @@
   }
 
   function promptManualGrade(qId, nama, rombel, bab) {
+    if (!adminSessionPassword) return showAdminView();
     const score = prompt(`Masukkan Nilai Guru (0-100) untuk ${nama}:`, "85");
     if (score === null) return;
     const feedback = prompt("Masukkan Catatan Ulasan Guru:", "Telah dinilai resmi oleh Guru.");
 
-    requestPasswordAndExecute(password => {
-      fetchAPI({ action: "forceAIGrade", password: password, questionId: qId, studentName: nama, rombel: rombel, bab: bab, customScore: score, customFeedback: feedback }, res => {
-        if (res && res.success) {
-          showNotif(true, "Penilaian Disimpan! ✅", `Nilai ${score} berhasil disimpan.`);
-          submitLoadReview();
-        } else showNotif(false, "Gagal! ❌", res ? res.error : "Error");
-      });
+    fetchAPI({ action: "forceAIGrade", password: adminSessionPassword, questionId: qId, studentName: nama, rombel: rombel, bab: bab, customScore: score, customFeedback: feedback }, res => {
+      if (res && res.success) {
+        showNotif(true, "BERHASIL ✅", `Nilai ${score} berhasil disimpan.`);
+        submitLoadReview();
+      } else showNotif(false, "GAGAL ❌", res ? res.error : "Gagal menyimpan nilai");
     });
   }
 
   function triggerTeacherAIGrade(qId, nama, rombel, bab, transcript) {
+    if (!adminSessionPassword) return showAdminView();
     if (!transcript || transcript.trim() === "") return alert("Jawaban siswa masih kosong, tidak dapat dinilai.");
 
-    requestPasswordAndExecute(password => {
-      fetchAPI({ action: "triggerGeminiGradingTeacher", password: password, questionId: qId, studentName: nama, rombel: rombel, bab: bab, studentTranscriptText: transcript }, res => {
-        if (res && res.success) {
-          showNotif(true, "Penilaian AI Berhasil! 🤖", `AI Gemini memberikan skor ${res.scoreAI}. Catatan: ${res.feedback}`);
-          submitLoadReview();
-        } else showNotif(false, "Antrian Penilaian ⏳", res ? res.error : "Masih dalam Antrian Penilaian");
-      });
+    fetchAPI({ action: "triggerGeminiGradingTeacher", password: adminSessionPassword, questionId: qId, studentName: nama, rombel: rombel, bab: bab, studentTranscriptText: transcript }, res => {
+      if (res && res.success) {
+        showNotif(true, "BERHASIL 🤖", `AI Gemini memberikan skor ${res.scoreAI}. Catatan: ${res.feedback}`);
+        submitLoadReview();
+      } else showNotif(false, "GAGAL ⏳", res ? res.error : "Masih dalam Antrian Penilaian");
     });
   }
 
   function submitAddExtraTime(nama, rombel, bab) {
-    requestPasswordAndExecute(password => {
-      fetchAPI({ action: "addExtraTime", password: password, studentName: nama, rombel: rombel, bab: bab }, res => {
-        if (res && res.success) {
-          showNotif(true, "Tambahan Waktu Ditambah! ⏱️", res.message);
-          submitLoadReview();
-        } else showNotif(false, "Gagal! ❌", res ? res.error : "Error");
-      });
+    if (!adminSessionPassword) return showAdminView();
+    fetchAPI({ action: "addExtraTime", password: adminSessionPassword, studentName: nama, rombel: rombel, bab: bab }, res => {
+      if (res && res.success) {
+        showNotif(true, "BERHASIL ⏱️", res.message);
+        submitLoadReview();
+      } else showNotif(false, "GAGAL ❌", res ? res.error : "Gagal menambah waktu");
     });
   }
 
   // CRUD SISWA
   function loadSiswaList() {
-    requestPasswordAndExecute(password => {
-      fetchAPI({ action: "getStudentListAdmin", password: password }, res => {
-        if (res && res.success) {
-          showNotif(true, "Siswa Dimuat ✅", "Data siswa berhasil dimuat.");
-          siswaDataGlobal = res.list || [];
-          renderSiswaTable(siswaDataGlobal);
-        } else showNotif(false, "Gagal! ❌", res ? res.error : "Error");
-      });
+    if (!adminSessionPassword) return showAdminView();
+    fetchAPI({ action: "getStudentListAdmin", password: adminSessionPassword }, res => {
+      if (res && res.success) {
+        siswaDataGlobal = res.list || [];
+        renderSiswaTable(siswaDataGlobal);
+      } else showNotif(false, "GAGAL ❌", res ? res.error : "Gagal memuat siswa");
     });
   }
 
@@ -1428,6 +1468,7 @@
   }
 
   function submitSaveSiswa() {
+    if (!adminSessionPassword) return showAdminView();
     const rIdx = document.getElementById('siswaRowIndexInput').value;
     const no = document.getElementById('siswaNoInput').value;
     const nama = document.getElementById('siswaNamaInput').value.trim();
@@ -1436,39 +1477,34 @@
 
     if (!nama || !rombel) return alert("Nama dan Rombel wajib diisi!");
 
-    requestPasswordAndExecute(password => {
-      fetchAPI({ action: "saveStudent", password: password, rowIndex: rIdx, no: no, nama: nama, rombel: rombel, jk: jk }, res => {
-        if (res && res.success) {
-          showNotif(true, "Siswa Disimpan! ✅", res.message);
-          resetSiswaForm();
-          loadSiswaList();
-        } else showNotif(false, "Gagal! ❌", res ? res.error : "Error");
-      });
+    fetchAPI({ action: "saveStudent", password: adminSessionPassword, rowIndex: rIdx, no: no, nama: nama, rombel: rombel, jk: jk }, res => {
+      if (res && res.success) {
+        showNotif(true, "BERHASIL ✅", res.message);
+        resetSiswaForm();
+        loadSiswaList();
+      } else showNotif(false, "GAGAL ❌", res ? res.error : "Gagal menyimpan siswa");
     });
   }
 
   function deleteSiswa(rowIndex, nama) {
+    if (!adminSessionPassword) return showAdminView();
     if (!confirm(`Hapus data siswa ${nama}?`)) return;
-    requestPasswordAndExecute(password => {
-      fetchAPI({ action: "deleteStudent", password: password, rowIndex: rowIndex }, res => {
-        if (res && res.success) {
-          showNotif(true, "Dihapus! ✅", res.message);
-          loadSiswaList();
-        } else showNotif(false, "Gagal! ❌", res ? res.error : "Error");
-      });
+    fetchAPI({ action: "deleteStudent", password: adminSessionPassword, rowIndex: rowIndex }, res => {
+      if (res && res.success) {
+        showNotif(true, "BERHASIL ✅", res.message);
+        loadSiswaList();
+      } else showNotif(false, "GAGAL ❌", res ? res.error : "Gagal menghapus siswa");
     });
   }
 
   // CRUD BANK SOAL
   function loadSoalList() {
-    requestPasswordAndExecute(password => {
-      fetchAPI({ action: "getAllQuestionsAdmin", password: password }, res => {
-        if (res && res.success) {
-          showNotif(true, "Soal Dimuat ✅", "Bank soal berhasil dimuat.");
-          soalDataGlobal = res.list || [];
-          renderSoalTable(soalDataGlobal);
-        } else showNotif(false, "Gagal! ❌", res ? res.error : "Error");
-      });
+    if (!adminSessionPassword) return showAdminView();
+    fetchAPI({ action: "getAllQuestionsAdmin", password: adminSessionPassword }, res => {
+      if (res && res.success) {
+        soalDataGlobal = res.list || [];
+        renderSoalTable(soalDataGlobal);
+      } else showNotif(false, "GAGAL ❌", res ? res.error : "Gagal memuat bank soal");
     });
   }
 
@@ -1517,27 +1553,26 @@
   }
 
   function submitSaveSoal() {
+    if (!adminSessionPassword) return showAdminView();
     const fileInput = document.getElementById('soalGambarInput');
     const file = fileInput.files[0];
 
     const doSave = (base64, name, mime) => {
-      requestPasswordAndExecute(password => {
-        fetchAPI({
-          action: "saveQuestion",
-          password: password,
-          questionId: document.getElementById('soalIdInput').value,
-          kelas: document.getElementById('soalKelasInput').value,
-          bab: document.getElementById('soalBabInput').value,
-          pertanyaan: document.getElementById('soalPertanyaanInput').value,
-          rubrik: document.getElementById('soalRubrikInput').value,
-          imageBase64: base64, imageFileName: name, imageMimeType: mime
-        }, res => {
-          if (res && res.success) {
-            showNotif(true, "Soal Disimpan! ✅", res.message);
-            resetSoalForm();
-            loadSoalList();
-          } else showNotif(false, "Gagal! ❌", res ? res.error : "Error");
-        });
+      fetchAPI({
+        action: "saveQuestion",
+        password: adminSessionPassword,
+        questionId: document.getElementById('soalIdInput').value,
+        kelas: document.getElementById('soalKelasInput').value,
+        bab: document.getElementById('soalBabInput').value,
+        pertanyaan: document.getElementById('soalPertanyaanInput').value,
+        rubrik: document.getElementById('soalRubrikInput').value,
+        imageBase64: base64, imageFileName: name, imageMimeType: mime
+      }, res => {
+        if (res && res.success) {
+          showNotif(true, "BERHASIL ✅", res.message);
+          resetSoalForm();
+          loadSoalList();
+        } else showNotif(false, "GAGAL ❌", res ? res.error : "Gagal menyimpan soal");
       });
     };
 
@@ -1549,82 +1584,80 @@
   }
 
   function deleteSoal(questionId) {
+    if (!adminSessionPassword) return showAdminView();
     if (!confirm(`Hapus soal ${questionId}? Berkas gambar di Drive juga akan terhapus.`)) return;
-    requestPasswordAndExecute(password => {
-      fetchAPI({ action: "deleteQuestion", password: password, questionId: questionId }, res => {
-        if (res && res.success) {
-          showNotif(true, "Dihapus! ✅", res.message);
-          loadSoalList();
-        } else showNotif(false, "Gagal! ❌", res ? res.error : "Error");
-      });
+    fetchAPI({ action: "deleteQuestion", password: adminSessionPassword, questionId: questionId }, res => {
+      if (res && res.success) {
+        showNotif(true, "BERHASIL ✅", res.message);
+        loadSoalList();
+      } else showNotif(false, "GAGAL ❌", res ? res.error : "Gagal menghapus soal");
     });
   }
 
   // CETAK REKAP NILAI (A4 NARROW MARGIN)
   function generatePrintPreview() {
+    if (!adminSessionPassword) return showAdminView();
     const rombel = document.getElementById('cetakRombelSelect').value;
     const bab = document.getElementById('cetakBabSelect').value;
 
     if (!rombel || !bab) return alert("Pilih Rombel dan Bab terlebih dahulu!");
 
-    requestPasswordAndExecute(password => {
-      fetchAPI({ action: "getTeacherSubmissions", password: password, rombel: rombel, bab: bab }, res => {
-        if (res && res.success && res.list) {
-          const printArea = document.getElementById('printArea');
-          const today = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+    fetchAPI({ action: "getTeacherSubmissions", password: adminSessionPassword, rombel: rombel, bab: bab }, res => {
+      if (res && res.success && res.list) {
+        const printArea = document.getElementById('printArea');
+        const today = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
 
-          let tableRows = "";
-          res.list.forEach((item, idx) => {
-            let avgLocal = 0, avgAI = 0, count = item.questions.length;
-            item.questions.forEach(q => {
-              avgLocal += cleanScoreValue(q.scoreLocal);
-              avgAI += cleanScoreValue(q.scoreAI);
-            });
-            avgLocal = count > 0 ? Math.round(avgLocal / count) : 0;
-            avgAI = count > 0 ? Math.round(avgAI / count) : 0;
-
-            tableRows += `<tr>
-              <td style="text-align:center;">${idx + 1}</td>
-              <td><b>${item.nama}</b></td>
-              <td style="text-align:center;">${item.jk}</td>
-              <td style="text-align:center;">${avgLocal}</td>
-              <td style="text-align:center; font-weight:bold;">${avgAI > 0 ? avgAI : '-'}</td>
-            </tr>`;
+        let tableRows = "";
+        res.list.forEach((item, idx) => {
+          let avgLocal = 0, avgAI = 0, count = item.questions.length;
+          item.questions.forEach(q => {
+            avgLocal += cleanScoreValue(q.scoreLocal);
+            avgAI += cleanScoreValue(q.scoreAI);
           });
+          avgLocal = count > 0 ? Math.round(avgLocal / count) : 0;
+          avgAI = count > 0 ? Math.round(avgAI / count) : 0;
 
-          printArea.innerHTML = `
-            <div class="print-header">
-              <h2 style="margin:0;">REKAPITULASI ASESMEN WAWANCARA & ESAI</h2>
-              <h3 style="margin:4px 0;">${document.getElementById('displayNamaSekolah').innerText}</h3>
-              <p style="margin:0; font-size:10pt;">Mata Pelajaran: ${document.getElementById('displayMataPelajaran').innerText} | Rombel: ${rombel} | Bab: ${bab}</p>
+          tableRows += `<tr>
+            <td style="text-align:center;">${idx + 1}</td>
+            <td><b>${item.nama}</b></td>
+            <td style="text-align:center;">${item.jk}</td>
+            <td style="text-align:center;">${avgLocal}</td>
+            <td style="text-align:center; font-weight:bold;">${avgAI > 0 ? avgAI : '-'}</td>
+          </tr>`;
+        });
+
+        printArea.innerHTML = `
+          <div class="print-header">
+            <h2 style="margin:0;">REKAPITULASI ASESMEN WAWANCARA & ESAI</h2>
+            <h3 style="margin:4px 0;">${document.getElementById('displayNamaSekolah').innerText}</h3>
+            <p style="margin:0; font-size:10pt;">Mata Pelajaran: ${document.getElementById('displayMataPelajaran').innerText} | Rombel: ${rombel} | Bab: ${bab}</p>
+          </div>
+
+          <table class="print-table">
+            <thead>
+              <tr>
+                <th style="width:40px;">No</th>
+                <th>Nama Lengkap Siswa</th>
+                <th style="width:50px;">JK</th>
+                <th style="width:90px;">Nilai Robot</th>
+                <th style="width:90px;">Nilai Guru</th>
+              </tr>
+            </thead>
+            <tbody>${tableRows}</tbody>
+          </table>
+
+          <div class="sig-box">
+            <div></div>
+            <div style="text-align:center;">
+              <p style="margin:0;">Karangbinangun, ${today}</p>
+              <p style="margin:0 0 50px 0;">Guru Pengampu Mata Pelajaran,</p>
+              <b><u>${document.getElementById('displayNamaGuru').innerText}</u></b>
             </div>
+          </div>
+        `;
 
-            <table class="print-table">
-              <thead>
-                <tr>
-                  <th style="width:40px;">No</th>
-                  <th>Nama Lengkap Siswa</th>
-                  <th style="width:50px;">JK</th>
-                  <th style="width:90px;">Nilai Robot</th>
-                  <th style="width:90px;">Nilai Guru</th>
-                </tr>
-              </thead>
-              <tbody>${tableRows}</tbody>
-            </table>
-
-            <div class="sig-box">
-              <div></div>
-              <div style="text-align:center;">
-                <p style="margin:0;">Karangbinangun, ${today}</p>
-                <p style="margin:0 0 50px 0;">Guru Pengampu Mata Pelajaran,</p>
-                <b><u>${document.getElementById('displayNamaGuru').innerText}</u></b>
-              </div>
-            </div>
-          `;
-
-          window.print();
-        } else alert("Gagal memuat rekap nilai.");
-      });
+        window.print();
+      } else showNotif(false, "GAGAL ❌", "Gagal memuat rekap nilai.");
     });
   }
 </script>
