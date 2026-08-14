@@ -421,7 +421,7 @@
 </div>
 
 <!-- ========================================================================= -->
-<!-- 3. JAVASCRIPT LOGIC (SINGLE PAGE APPLICATION - FIXED SPEECH ENGINE) -->
+<!-- 3. JAVASCRIPT LOGIC (SINGLE PAGE APPLICATION - REVISED VOICE ENGINE) -->
 <!-- ========================================================================= -->
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbzBMx-BvZfCT_w6yG2HJur8KUm2kqK0tfcZhFiD6J7dxH3AOOxXQg72fS4pLzAjNFM_kA/exec";
@@ -485,14 +485,14 @@
     initSpeechToText();
   }
 
-  // 💡 PERBAIKAN MESIN VOICE SPEECH-TO-TEXT (NO OVER-TYPING)
+  // 💡 ENGINE VOICE REVISI TOTAL (SANGAT STABIL & CEGAH KATA GANDA)
   function initSpeechToText() {
     const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (Speech) {
       speechRecognition = new Speech();
       speechRecognition.lang = 'id-ID';
-      speechRecognition.continuous = true;
-      speechRecognition.interimResults = false; // Matikan draf sementara agar tidak duplikasi teks
+      speechRecognition.continuous = false; // Mode per-kalimat agar tidak pernah duplikasi
+      speechRecognition.interimResults = false;
 
       speechRecognition.onresult = e => {
         let addedText = '';
@@ -502,24 +502,83 @@
           }
         }
         
-        if (addedText.trim() !== '') {
+        const newSnippet = addedText.trim();
+        if (newSnippet !== '') {
           const textarea = document.getElementById('transcriptTextarea');
           const currentText = textarea.value.trim();
-          textarea.value = currentText ? currentText + ' ' + addedText.trim() : addedText.trim();
-          onTranscriptInput();
+          
+          // Filter Proteksi: Jangan menambahkan jika teks baru sama persis dengan yang baru saja diketik
+          if (!currentText.toLowerCase().endsWith(newSnippet.toLowerCase())) {
+            textarea.value = currentText ? currentText + ' ' + newSnippet : newSnippet;
+            onTranscriptInput();
+          }
         }
       };
 
       speechRecognition.onerror = e => {
-        document.getElementById('statusText').innerText = "⚠️ Mikrofon tidak merespons: " + e.error;
-        isRecording = false;
+        if (e.error !== 'no-speech' && e.error !== 'aborted') {
+          document.getElementById('statusText').innerText = "⚠️ Mikrofon: " + e.error;
+        }
       };
 
       speechRecognition.onend = () => {
+        // Otomatis restart halus jika tombol rekam masih aktif
         if (isRecording) {
-          try { speechRecognition.start(); } catch(err) {}
+          try {
+            speechRecognition.start();
+          } catch(err) {
+            setTimeout(() => { if (isRecording) speechRecognition.start(); }, 300);
+          }
+        } else {
+          updateRecordButtonUI(false);
         }
       };
+    }
+  }
+
+  function toggleDirectRecording() {
+    const btn = document.getElementById('btnRecordToggle');
+    const status = document.getElementById('statusText');
+
+    if (!speechRecognition) return alert("Browser tidak mendukung Speech-to-Text. Silakan ketik langsung.");
+
+    if (!isRecording) {
+      try {
+        isRecording = true;
+        speechRecognition.start();
+        updateRecordButtonUI(true);
+      } catch (err) { 
+        isRecording = false;
+        alert("Mikrofon error: " + err.message); 
+      }
+    } else {
+      stopRecordingIfActive();
+    }
+  }
+
+  function stopRecordingIfActive() {
+    if (isRecording) {
+      isRecording = false;
+      if (speechRecognition) {
+        try { speechRecognition.stop(); } catch(e) {}
+      }
+      updateRecordButtonUI(false);
+    }
+  }
+
+  function updateRecordButtonUI(recording) {
+    const btn = document.getElementById('btnRecordToggle');
+    const status = document.getElementById('statusText');
+    if (!btn || !status) return;
+
+    if (recording) {
+      btn.innerText = "⏹️ Hentikan Perekaman";
+      btn.className = "btn-record-stop";
+      status.innerText = "Status: 🔴 Merekam Suara Anda...";
+    } else {
+      btn.innerText = "🎤 Klik untuk Merekam Suara";
+      btn.className = "btn-record-start";
+      status.innerText = "Status: Perekaman Selesai/Siap";
     }
   }
 
@@ -534,6 +593,7 @@
   }
 
   function showAdminView() {
+    stopRecordingIfActive();
     document.getElementById('studentView').style.display = 'none';
     document.getElementById('adminView').style.display = 'block';
   }
@@ -597,6 +657,7 @@
   }
 
   function resetQuestionViewDOM() {
+    stopRecordingIfActive();
     selectedQuestionObject = null;
     activeQuestionIndex = -1;
     document.getElementById('transcriptTextarea').value = "";
@@ -640,6 +701,7 @@
   }
 
   function startExamProcess() {
+    stopRecordingIfActive();
     const rombel = document.getElementById('rombelSelect').value;
     const bab = document.getElementById('babSelect').value;
     const studentName = document.getElementById('studentSelect').value;
@@ -765,6 +827,8 @@
   }
 
   function selectQuestion(i) {
+    stopRecordingIfActive(); // Hentikan rekam suara saat berpindah soal
+
     if (selectedQuestionObject) {
       const currentVal = document.getElementById('transcriptTextarea').value;
       const prevQId = selectedQuestionObject.id;
@@ -845,30 +909,8 @@
     return localStorage.getItem(key) || "";
   }
 
-  function toggleDirectRecording() {
-    const btn = document.getElementById('btnRecordToggle');
-    const status = document.getElementById('statusText');
-
-    if (!speechRecognition) return alert("Browser tidak mendukung Speech-to-Text. Silakan ketik langsung.");
-
-    if (!isRecording) {
-      try {
-        speechRecognition.start();
-        isRecording = true;
-        btn.innerText = "⏹️ Hentikan Perekaman";
-        btn.className = "btn-record-stop";
-        status.innerText = "Status: Sedang Merekam Suara Anda...";
-      } catch (err) { alert("Mikrofon error: " + err.message); }
-    } else {
-      isRecording = false;
-      speechRecognition.stop();
-      btn.innerText = "🎤 Klik untuk Merekam Suara";
-      btn.className = "btn-record-start";
-      status.innerText = "Status: Rekaman Selesai!";
-    }
-  }
-
   function submitSaveAnswerOnly() {
+    stopRecordingIfActive();
     if (!selectedQuestionObject) return;
     const textVal = document.getElementById('transcriptTextarea').value.trim();
 
@@ -893,6 +935,7 @@
   }
 
   function submitLocalAnswer(isAuto) {
+    stopRecordingIfActive();
     if (!selectedQuestionObject) return;
     const textVal = document.getElementById('transcriptTextarea').value.trim();
 
@@ -932,6 +975,7 @@
   }
 
   function requestAIGrading() {
+    stopRecordingIfActive();
     const textVal = document.getElementById('transcriptTextarea').value.trim();
     if (!textVal) return alert("Jawaban Anda masih kosong!");
 
