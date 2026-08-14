@@ -50,7 +50,7 @@
 
     /* PALETTE & QUESTIONS */
     .palette-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
-    .q-num-btn { width: 44px; height: 44px; border-radius: 12px; border: 2px solid #cbd5e1; background: #fff; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+    .q-num-btn { width: 44px; height: 44px; border-radius: 12px; border: 2px solid #cbd5e1; background: #fff; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; color: #334155; }
     .q-num-btn.active { border-color: var(--primary) !important; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3); }
     .q-num-btn.yellow { background: #fef08a; color: #854d0e; border-color: #eab308; }
     .q-num-btn.green { background: #10b981; color: white; border-color: #059669; }
@@ -164,7 +164,7 @@
       <label>Pilih Nomor Soal:</label>
       <div id="questionPalette" class="palette-grid"></div>
       <div style="margin-top:8px; font-size:11px; color:#64748b;">
-        ⚪ Putih: Belum | 🟡 Kuning: Draft | 🟢 Hijau: Nilai AI | 🔵 Biru: Nilai Guru
+        ⚪ Putih: Belum | 🟡 Kuning: Ada Jawaban | 🟢 Hijau: Nilai AI | 🔵 Biru: Nilai Guru
       </div>
     </div>
 
@@ -421,16 +421,20 @@
 </div>
 
 <!-- ========================================================================= -->
-<!-- 3. JAVASCRIPT LOGIC (SINGLE PAGE APPLICATION) -->
+<!-- 3. JAVASCRIPT LOGIC (SINGLE PAGE APPLICATION - REVISED) -->
 <!-- ========================================================================= -->
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbzBMx-BvZfCT_w6yG2HJur8KUm2kqK0tfcZhFiD6J7dxH3AOOxXQg72fS4pLzAjNFM_kA/exec";
 
-  // STATE GLOBAL
+  // STATE GLOBAL SISI SISWA
   let studentDataCache = {}, currentQuestionsList = [], activeQuestionIndex = -1, selectedQuestionObject = null;
   let currentAppMode = "PRACTICE", currentAppToken = "", currentAppTimer = 0;
   let speechRecognition = null, isRecording = false;
-  let questionStatusMap = {};
+  
+  // 💡 PERBAIKAN STATE PENANGANAN JAWABAN & PALET
+  let questionState = {}; // Format: { [qId]: { transcript, scoreLocal, scoreAI, feedback, status } }
+  let paletteColors = []; // Format: ['yellow', 'green', ...] per indeks soal
+  
   let pendingActionCallback = null;
   let siswaDataGlobal = [], soalDataGlobal = [];
   let examTimerInterval = null, remainingExamSeconds = 0;
@@ -491,10 +495,12 @@
       speechRecognition.interimResults = true;
 
       speechRecognition.onresult = e => {
-        let text = '';
-        for (let i = e.resultIndex; i < e.results.length; i++) text += e.results[i][0].transcript;
+        let fullText = '';
+        for (let i = 0; i < e.results.length; i++) {
+          fullText += e.results[i][0].transcript;
+        }
         const textarea = document.getElementById('transcriptTextarea');
-        textarea.value = text;
+        textarea.value = fullText;
         onTranscriptInput();
       };
 
@@ -610,7 +616,7 @@
     document.getElementById('btnStartExam').disabled = !document.getElementById('babSelect').value;
   }
 
-  // 💡 FIX PERBAIKAN 1: MODE LATIHAN START DARI 0
+  // 💡 PERBAIKAN UTAMA MODE LATIHAN & INITIALIZATION
   function startExamProcess() {
     const rombel = document.getElementById('rombelSelect').value;
     const bab = document.getElementById('babSelect').value;
@@ -623,25 +629,44 @@
         currentQuestionsList = res.questions;
 
         if (currentAppMode === "PRACTICE") {
-          // Jika LATIHAN: Reset Total Progress (Mulai dari 0)
-          renderPalette({});
+          // Clean Local Storage Draf Khusus Mode Latihan
+          currentQuestionsList.forEach(q => {
+            localStorage.removeItem(`draft_${studentName}_${q.id}`);
+          });
+
+          questionState = {};
+          paletteColors = new Array(currentQuestionsList.length).fill('');
+
+          renderPaletteUIOnly();
           renderActionButtons();
           startTimerCountdown(0);
+          selectQuestion(0);
           showNotif(true, "Mode Latihan Siap! 🟢", "Seluruh jawaban dimulai dari 0. Selamat berlatih!");
         } else {
-          // Jika UJIAN: Muat progress simpanan dari Google Sheet
+          // Mode Ujian
           fetchAPI({ action: "getStudentProgress", studentName: studentName, rombel: rombel, bab: bab }, progRes => {
             const progress = progRes ? progRes.progress : {};
             const extraTime = progRes ? Number(progRes.extraTime) || 0 : 0;
             
-            renderPalette(progress);
+            questionState = {};
+            paletteColors = new Array(currentQuestionsList.length).fill('');
+
+            currentQuestionsList.forEach((q, i) => {
+              if (progress && progress[q.id]) {
+                questionState[q.id] = progress[q.id];
+                paletteColors[i] = progress[q.id].status === "GRADED" ? 'blue' : (progress[q.id].scoreLocal ? 'green' : 'yellow');
+              }
+            });
+
+            renderPaletteUIOnly();
             renderActionButtons();
 
             if (!sessionStorage.getItem("studentTokenVerified")) {
               document.getElementById("tokenModal").style.display = "flex";
             } else {
               startTimerCountdown(extraTime);
-              showNotif(true, "Ujian Dimuat! 🚀", "Soal berhasil dimuat. Selamat mengerjakan!");
+              selectQuestion(0);
+              showNotif(true, "Ujian Dimuat! 🚀", "Soal berhasil dimuat.");
             }
           });
         }
@@ -710,68 +735,23 @@
           <button class="btn-primary" style="flex:1;" onclick="submitSaveAnswerOnly()">🔵 Kirim Jawaban</button>
           <button class="btn-success" style="flex:1;" onclick="submitLocalAnswer(false)">🟢 Cek Nilai AI</button>
         </div>
-        <button class="btn-check-ai" style="margin-top:10px;" onclick="requestAIGrading()">🎓 Cek Nilai dari Guru</button>
+        <button class="btn-primary" style="margin-top:10px; background:linear-gradient(135deg, #1e293b, #0f172a);" onclick="requestAIGrading()">🎓 Cek Nilai dari Guru</button>
       `;
     }
   }
 
-  function renderPalette(progress) {
-    const container = document.getElementById('questionPalette');
-    container.innerHTML = "";
-    document.getElementById('paletteSection').style.display = 'block';
-    
-    questionStatusMap = {};
-
-    currentQuestionsList.forEach((q, i) => {
-      const btn = document.createElement('button');
-      let colorClass = '';
-      
-      if (progress && progress[q.id]) {
-        colorClass = progress[q.id].status === "GRADED" ? 'blue' : (progress[q.id].scoreLocal ? 'green' : 'yellow');
-        questionStatusMap[i] = colorClass;
-        questionStatusMap[q.id] = {
-          scoreLocal: progress[q.id].scoreLocal,
-          scoreAI: progress[q.id].scoreAI,
-          transcript: progress[q.id].transcript,
-          feedback: progress[q.id].feedback,
-          status: progress[q.id].status
-        };
-      }
-
-      btn.className = `q-num-btn ${colorClass}`;
-      btn.id = `qBtn_${i}`;
-      btn.innerText = i + 1;
-      btn.onclick = () => selectQuestion(i);
-      container.appendChild(btn);
-    });
-
-    updateAccumulatedScoreUI();
-    selectQuestion(0);
-  }
-
-  function updatePaletteColor(idx, color) {
-    questionStatusMap[idx] = color;
-    const btn = document.getElementById(`qBtn_${idx}`);
-    if (btn) btn.className = `q-num-btn ${color} active`;
-  }
-
-  // 💡 FIX PERBAIKAN 2: SINKRONISASI BACA/SIMPAN TEKS SOAL 1, 2, 3+
+  // 💡 PERBAIKAN PERPINDAHAN SOAL & PENYIMPANAN MEMORI LOKAL
   function selectQuestion(i) {
-    // Simpan draf soal sebelumnya terlebih dahulu
     if (selectedQuestionObject) {
-      const prevVal = document.getElementById('transcriptTextarea').value;
-      if (!questionStatusMap[selectedQuestionObject.id]) questionStatusMap[selectedQuestionObject.id] = {};
-      questionStatusMap[selectedQuestionObject.id].transcript = prevVal;
+      const currentVal = document.getElementById('transcriptTextarea').value;
+      const prevQId = selectedQuestionObject.id;
+      if (!questionState[prevQId]) questionState[prevQId] = {};
+      questionState[prevQId].transcript = currentVal;
     }
 
     activeQuestionIndex = i;
     selectedQuestionObject = currentQuestionsList[i];
-    
-    document.querySelectorAll('.q-num-btn').forEach((b, idx) => {
-      b.className = `q-num-btn ${questionStatusMap[idx] || ''}`;
-    });
-    const activeBtn = document.getElementById(`qBtn_${i}`);
-    if (activeBtn) activeBtn.classList.add('active');
+    const qId = selectedQuestionObject.id;
 
     document.getElementById('questionNumberLabel').innerText = `Soal No. ${i + 1}`;
     document.getElementById('questionText').innerText = selectedQuestionObject.pertanyaan;
@@ -782,24 +762,54 @@
       imgBox.style.display = 'block';
     } else imgBox.style.display = 'none';
 
-    const qId = selectedQuestionObject.id;
-    const existingData = questionStatusMap[qId] || {};
-    
-    // Muat jawaban nomor yang baru dipilih
-    const loadedText = existingData.transcript || getLocalStorageDraft(qId);
-    document.getElementById('transcriptTextarea').value = loadedText;
+    let loadedText = "";
+    if (questionState[qId] && questionState[qId].transcript !== undefined) {
+      loadedText = questionState[qId].transcript;
+    } else if (currentAppMode !== "PRACTICE") {
+      loadedText = getLocalStorageDraft(qId);
+    }
 
+    document.getElementById('transcriptTextarea').value = loadedText;
+    renderPaletteUIOnly();
     document.getElementById('questionContainer').style.display = 'block';
   }
 
   function onTranscriptInput() {
     const val = document.getElementById('transcriptTextarea').value;
     if (selectedQuestionObject) {
-      saveLocalStorageDraft(selectedQuestionObject.id, val);
-      if (!questionStatusMap[selectedQuestionObject.id]) questionStatusMap[selectedQuestionObject.id] = {};
-      questionStatusMap[selectedQuestionObject.id].transcript = val;
-      updatePaletteColor(activeQuestionIndex, val.trim().length > 0 ? 'yellow' : '');
+      const qId = selectedQuestionObject.id;
+      if (!questionState[qId]) questionState[qId] = {};
+      questionState[qId].transcript = val;
+
+      if (currentAppMode !== "PRACTICE") {
+        saveLocalStorageDraft(qId, val);
+      }
+
+      const status = questionState[qId].status;
+      if (status !== "LOCAL_GRADED" && status !== "GRADED") {
+        paletteColors[activeQuestionIndex] = val.trim().length > 0 ? 'yellow' : '';
+      }
+      renderPaletteUIOnly();
     }
+  }
+
+  function renderPaletteUIOnly() {
+    const container = document.getElementById('questionPalette');
+    container.innerHTML = "";
+    document.getElementById('paletteSection').style.display = 'block';
+
+    currentQuestionsList.forEach((q, i) => {
+      const btn = document.createElement('button');
+      const colorClass = paletteColors[i] || '';
+      
+      btn.className = `q-num-btn ${colorClass} ${i === activeQuestionIndex ? 'active' : ''}`;
+      btn.id = `qBtn_${i}`;
+      btn.innerText = i + 1;
+      btn.onclick = () => selectQuestion(i);
+      container.appendChild(btn);
+    });
+
+    updateAccumulatedScoreUI();
   }
 
   function saveLocalStorageDraft(qId, text) {
@@ -852,7 +862,8 @@
       studentTranscriptText: textVal
     }, res => {
       if (res && res.success) {
-        updatePaletteColor(activeQuestionIndex, 'yellow');
+        paletteColors[activeQuestionIndex] = 'yellow';
+        renderPaletteUIOnly();
         showNotif(true, "Jawaban Disimpan! 🔵", "Jawaban berhasil disimpan. Guru dapat mereview hasil Anda.");
       } else alert("Gagal menyimpan.");
     });
@@ -876,15 +887,15 @@
     }, res => {
       if (res && res.success) {
         const qId = selectedQuestionObject.id;
-        questionStatusMap[qId] = {
+        questionState[qId] = {
           scoreLocal: res.scoreLocal,
           transcript: res.transcript,
           feedback: res.feedback,
           status: "LOCAL_GRADED"
         };
 
-        updatePaletteColor(activeQuestionIndex, 'green');
-        updateAccumulatedScoreUI();
+        paletteColors[activeQuestionIndex] = 'green';
+        renderPaletteUIOnly();
 
         if (!isAuto) {
           document.getElementById('modalQuestionLabel').innerText = `Soal No. ${activeQuestionIndex + 1}`;
@@ -916,12 +927,13 @@
           showNotif(false, "Antrean Penilaian ⏳", "Jawaban Anda sedang dalam antrean penilaian Guru.");
         } else {
           const qId = selectedQuestionObject.id;
-          questionStatusMap[qId].scoreAI = res.scoreAI;
-          questionStatusMap[qId].feedback = res.feedback;
-          questionStatusMap[qId].status = "GRADED";
+          if (!questionState[qId]) questionState[qId] = {};
+          questionState[qId].scoreAI = res.scoreAI;
+          questionState[qId].feedback = res.feedback;
+          questionState[qId].status = "GRADED";
 
-          updatePaletteColor(activeQuestionIndex, 'blue');
-          updateAccumulatedScoreUI();
+          paletteColors[activeQuestionIndex] = 'blue';
+          renderPaletteUIOnly();
 
           document.getElementById('modalScoreTypeLabel').innerText = "Nilai Resmi Guru:";
           document.getElementById('modalScoreDisplay').innerText = `${res.scoreAI} / 100`;
@@ -936,7 +948,7 @@
     if (!currentQuestionsList || currentQuestionsList.length === 0) return 0;
     let sum = 0;
     currentQuestionsList.forEach(q => {
-      const data = questionStatusMap[q.id];
+      const data = questionState[q.id];
       if (data) {
         let sc = data.scoreAI !== null && data.scoreAI !== undefined ? data.scoreAI : data.scoreLocal;
         if (sc !== undefined) sum += Number(sc) || 0;
@@ -974,7 +986,6 @@
     });
   }
 
-  // 💡 FIX PERBAIKAN 5: MODE & TOKEN PERMANEN
   function submitSaveSettings() {
     const mode = document.getElementById('modeSelect').value;
     const token = document.getElementById('tokenInput').value.trim();
@@ -990,7 +1001,6 @@
     });
   }
 
-  // 💡 FIX PERBAIKAN 3: IDENTITAS SEKOLAH PERMANEN
   function submitSaveSchoolSettings() {
     const namaSekolah = document.getElementById('inputNamaSekolah').value.trim();
     const mapel = document.getElementById('inputMataPelajaran').value.trim();
@@ -1042,7 +1052,6 @@
     });
   }
 
-  // 💡 FIX PERBAIKAN 4: REVIEW JAWABAN (MANUAL + TRIGGER AI 5 API KEY)
   function renderReviewTable(list) {
     const tbody = document.getElementById('reviewTbody');
     tbody.innerHTML = "";
