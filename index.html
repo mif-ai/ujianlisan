@@ -429,7 +429,7 @@
   // STATE GLOBAL
   let studentDataCache = {}, currentQuestionsList = [], activeQuestionIndex = -1, selectedQuestionObject = null;
   let currentAppMode = "PRACTICE", currentAppToken = "", currentAppTimer = 0;
-  let speechRecognition = null, liveTranscriptText = "", isRecording = false;
+  let speechRecognition = null, isRecording = false;
   let questionStatusMap = {};
   let pendingActionCallback = null;
   let siswaDataGlobal = [], soalDataGlobal = [];
@@ -493,8 +493,8 @@
       speechRecognition.onresult = e => {
         let text = '';
         for (let i = e.resultIndex; i < e.results.length; i++) text += e.results[i][0].transcript;
-        liveTranscriptText = text;
-        document.getElementById('transcriptTextarea').value = liveTranscriptText;
+        const textarea = document.getElementById('transcriptTextarea');
+        textarea.value = text;
         onTranscriptInput();
       };
 
@@ -515,7 +515,6 @@
     });
   }
 
-  // NAVIGASI VIEW SISWA VS ADMIN
   function showAdminView() {
     document.getElementById('studentView').style.display = 'none';
     document.getElementById('adminView').style.display = 'block';
@@ -537,7 +536,6 @@
     if (tabId === 'tabSoal' && soalDataGlobal.length === 0) loadSoalList();
   }
 
-  // PASSWORD MODAL & NOTIFIKASI POPUP
   function requestPasswordAndExecute(callback) {
     pendingActionCallback = callback;
     document.getElementById('inputActionPass').value = ""; 
@@ -569,7 +567,6 @@
     document.getElementById('notifModal').style.display = 'none';
   }
 
-  // --- LOGIC SISWA ---
   function updateModeBadgeUI(mode) {
     const badge = document.getElementById('badgeModeDisplay');
     if (mode === "PRACTICE") {
@@ -613,6 +610,7 @@
     document.getElementById('btnStartExam').disabled = !document.getElementById('babSelect').value;
   }
 
+  // 💡 FIX PERBAIKAN 1: MODE LATIHAN START DARI 0
   function startExamProcess() {
     const rombel = document.getElementById('rombelSelect').value;
     const bab = document.getElementById('babSelect').value;
@@ -623,20 +621,30 @@
     fetchAPI({ action: "getQuestions", rombel: rombel, bab: bab }, res => {
       if (res && res.questions && res.questions.length > 0) {
         currentQuestionsList = res.questions;
-        fetchAPI({ action: "getStudentProgress", studentName: studentName, rombel: rombel, bab: bab }, progRes => {
-          const progress = progRes ? progRes.progress : {};
-          const extraTime = progRes ? Number(progRes.extraTime) || 0 : 0;
-          
-          renderPalette(progress);
-          renderActionButtons();
 
-          if (currentAppMode === "SUBMISSION" && !sessionStorage.getItem("studentTokenVerified")) {
-            document.getElementById("tokenModal").style.display = "flex";
-          } else {
-            startTimerCountdown(extraTime);
-            showNotif(true, "Siap Mengerjakan! 🚀", "Soal berhasil dimuat. Selamat mengerjakan!");
-          }
-        });
+        if (currentAppMode === "PRACTICE") {
+          // Jika LATIHAN: Reset Total Progress (Mulai dari 0)
+          renderPalette({});
+          renderActionButtons();
+          startTimerCountdown(0);
+          showNotif(true, "Mode Latihan Siap! 🟢", "Seluruh jawaban dimulai dari 0. Selamat berlatih!");
+        } else {
+          // Jika UJIAN: Muat progress simpanan dari Google Sheet
+          fetchAPI({ action: "getStudentProgress", studentName: studentName, rombel: rombel, bab: bab }, progRes => {
+            const progress = progRes ? progRes.progress : {};
+            const extraTime = progRes ? Number(progRes.extraTime) || 0 : 0;
+            
+            renderPalette(progress);
+            renderActionButtons();
+
+            if (!sessionStorage.getItem("studentTokenVerified")) {
+              document.getElementById("tokenModal").style.display = "flex";
+            } else {
+              startTimerCountdown(extraTime);
+              showNotif(true, "Ujian Dimuat! 🚀", "Soal berhasil dimuat. Selamat mengerjakan!");
+            }
+          });
+        }
       } else alert("Belum ada soal pada Bab ini.");
     });
   }
@@ -683,7 +691,8 @@
   }
 
   function autoSaveAllAnswersOnTimeUp() {
-    if (selectedQuestionObject && liveTranscriptText) {
+    const textVal = document.getElementById('transcriptTextarea').value.trim();
+    if (selectedQuestionObject && textVal) {
       submitLocalAnswer(true);
     }
   }
@@ -717,7 +726,7 @@
       const btn = document.createElement('button');
       let colorClass = '';
       
-      if (progress[q.id]) {
+      if (progress && progress[q.id]) {
         colorClass = progress[q.id].status === "GRADED" ? 'blue' : (progress[q.id].scoreLocal ? 'green' : 'yellow');
         questionStatusMap[i] = colorClass;
         questionStatusMap[q.id] = {
@@ -746,7 +755,15 @@
     if (btn) btn.className = `q-num-btn ${color} active`;
   }
 
+  // 💡 FIX PERBAIKAN 2: SINKRONISASI BACA/SIMPAN TEKS SOAL 1, 2, 3+
   function selectQuestion(i) {
+    // Simpan draf soal sebelumnya terlebih dahulu
+    if (selectedQuestionObject) {
+      const prevVal = document.getElementById('transcriptTextarea').value;
+      if (!questionStatusMap[selectedQuestionObject.id]) questionStatusMap[selectedQuestionObject.id] = {};
+      questionStatusMap[selectedQuestionObject.id].transcript = prevVal;
+    }
+
     activeQuestionIndex = i;
     selectedQuestionObject = currentQuestionsList[i];
     
@@ -768,17 +785,20 @@
     const qId = selectedQuestionObject.id;
     const existingData = questionStatusMap[qId] || {};
     
-    liveTranscriptText = existingData.transcript || getLocalStorageDraft(qId);
-    document.getElementById('transcriptTextarea').value = liveTranscriptText;
+    // Muat jawaban nomor yang baru dipilih
+    const loadedText = existingData.transcript || getLocalStorageDraft(qId);
+    document.getElementById('transcriptTextarea').value = loadedText;
 
     document.getElementById('questionContainer').style.display = 'block';
   }
 
   function onTranscriptInput() {
-    liveTranscriptText = document.getElementById('transcriptTextarea').value;
+    const val = document.getElementById('transcriptTextarea').value;
     if (selectedQuestionObject) {
-      saveLocalStorageDraft(selectedQuestionObject.id, liveTranscriptText);
-      updatePaletteColor(activeQuestionIndex, 'yellow');
+      saveLocalStorageDraft(selectedQuestionObject.id, val);
+      if (!questionStatusMap[selectedQuestionObject.id]) questionStatusMap[selectedQuestionObject.id] = {};
+      questionStatusMap[selectedQuestionObject.id].transcript = val;
+      updatePaletteColor(activeQuestionIndex, val.trim().length > 0 ? 'yellow' : '');
     }
   }
 
@@ -817,6 +837,10 @@
 
   function submitSaveAnswerOnly() {
     if (!selectedQuestionObject) return;
+    const textVal = document.getElementById('transcriptTextarea').value.trim();
+
+    if (!textVal) return alert("Jawaban masih kosong. Silakan rekam suara atau ketik jawaban Anda!");
+
     fetchAPI({
       action: "saveStudentAnswer",
       questionId: selectedQuestionObject.id,
@@ -825,17 +849,20 @@
       jenisKelamin: document.getElementById('jkDisplay').value,
       bab: document.getElementById('babSelect').value,
       questionText: selectedQuestionObject.pertanyaan,
-      studentTranscriptText: liveTranscriptText
+      studentTranscriptText: textVal
     }, res => {
       if (res && res.success) {
         updatePaletteColor(activeQuestionIndex, 'yellow');
-        showNotif(true, "Jawaban Disimpan! 🔵", "Jawaban berhasil disimpan. Guru akan melihat tanda Re-check.");
+        showNotif(true, "Jawaban Disimpan! 🔵", "Jawaban berhasil disimpan. Guru dapat mereview hasil Anda.");
       } else alert("Gagal menyimpan.");
     });
   }
 
   function submitLocalAnswer(isAuto) {
     if (!selectedQuestionObject) return;
+    const textVal = document.getElementById('transcriptTextarea').value.trim();
+
+    if (!textVal && !isAuto) return alert("Jawaban masih kosong. Silakan rekam suara atau ketik jawaban Anda!");
 
     fetchAPI({
       action: "processLocalGrade",
@@ -845,7 +872,7 @@
       jenisKelamin: document.getElementById('jkDisplay').value,
       bab: document.getElementById('babSelect').value,
       questionText: selectedQuestionObject.pertanyaan,
-      studentTranscriptText: liveTranscriptText
+      studentTranscriptText: textVal
     }, res => {
       if (res && res.success) {
         const qId = selectedQuestionObject.id;
@@ -871,6 +898,9 @@
   }
 
   function requestAIGrading() {
+    const textVal = document.getElementById('transcriptTextarea').value.trim();
+    if (!textVal) return alert("Jawaban Anda masih kosong!");
+
     fetchAPI({
       action: "processAIGrade",
       questionId: selectedQuestionObject.id,
@@ -879,7 +909,7 @@
       jenisKelamin: document.getElementById('jkDisplay').value,
       bab: document.getElementById('babSelect').value,
       questionText: selectedQuestionObject.pertanyaan,
-      studentTranscriptText: liveTranscriptText
+      studentTranscriptText: textVal
     }, res => {
       if (res && res.success) {
         if (res.queued) {
@@ -944,6 +974,7 @@
     });
   }
 
+  // 💡 FIX PERBAIKAN 5: MODE & TOKEN PERMANEN
   function submitSaveSettings() {
     const mode = document.getElementById('modeSelect').value;
     const token = document.getElementById('tokenInput').value.trim();
@@ -952,13 +983,14 @@
     requestPasswordAndExecute(password => {
       fetchAPI({ action: "switchAppMode", password: password, newMode: mode, newToken: token, newTimer: timer }, res => {
         if (res && res.success) {
-          showNotif(true, "Berhasil! ✅", res.message);
+          showNotif(true, "Berhasil Tersimpan! ✅", res.message);
           updateModeBadgeUI(mode);
         } else showNotif(false, "Gagal! ❌", res ? res.error : "Error");
       });
     });
   }
 
+  // 💡 FIX PERBAIKAN 3: IDENTITAS SEKOLAH PERMANEN
   function submitSaveSchoolSettings() {
     const namaSekolah = document.getElementById('inputNamaSekolah').value.trim();
     const mapel = document.getElementById('inputMataPelajaran').value.trim();
@@ -968,7 +1000,7 @@
     requestPasswordAndExecute(password => {
       fetchAPI({ action: "saveSchoolSettings", password: password, namaSekolah: namaSekolah, mataPelajaran: mapel, namaGuru: guru, newPassword: newPass }, res => {
         if (res && res.success) {
-          showNotif(true, "Berhasil! ✅", res.message);
+          showNotif(true, "Berhasil Tersimpan! ✅", res.message);
           document.getElementById('displayNamaSekolah').innerText = namaSekolah;
           document.getElementById('displayMataPelajaran').innerText = mapel;
           document.getElementById('displayNamaGuru').innerText = guru;
@@ -1010,6 +1042,7 @@
     });
   }
 
+  // 💡 FIX PERBAIKAN 4: REVIEW JAWABAN (MANUAL + TRIGGER AI 5 API KEY)
   function renderReviewTable(list) {
     const tbody = document.getElementById('reviewTbody');
     tbody.innerHTML = "";
@@ -1031,8 +1064,9 @@
           <div style="color:#0369a1; font-size:11px;"><b>Kunci Rubrik:</b> ${q.rubrik}</div>
           <div style="background:#f1f5f9; padding:6px; border-radius:6px; margin:4px 0; font-style:italic;">"${q.transcript || 'Belum ada jawaban'}"</div>
           <div>Mesin AI: ${q.scoreLocal || 0} | Nilai Resmi Guru: ${aiScoreDisplay}</div>
-          <div style="margin-top:4px; display:flex; gap:6px;">
-            <button class="btn-warning" style="padding:4px 8px; font-size:10px; width:auto;" onclick="promptManualGrade('${q.qId}','${item.nama}','${item.rombel}','${item.bab}')">📝 Input Nilai Manual / Trigger AI</button>
+          <div style="margin-top:6px; display:flex; gap:6px;">
+            <button class="btn-warning" style="padding:4px 8px; font-size:10px; width:auto;" onclick="promptManualGrade('${q.qId}','${item.nama}','${item.rombel}','${item.bab}')">📝 Input Nilai Manual</button>
+            <button class="btn-primary" style="padding:4px 8px; font-size:10px; width:auto; background:linear-gradient(135deg, #7c3aed, #4f46e5);" onclick="triggerTeacherAIGrade('${q.qId}','${item.nama}','${item.rombel}','${item.bab}', \`${escapeQuotes(q.transcript)}\`)">🤖 Penilaian AI Gemini</button>
           </div>
         </div>`;
       });
@@ -1063,6 +1097,19 @@
           showNotif(true, "Penilaian Disimpan! ✅", `Nilai ${score} berhasil disimpan.`);
           submitLoadReview();
         } else showNotif(false, "Gagal! ❌", res ? res.error : "Error");
+      });
+    });
+  }
+
+  function triggerTeacherAIGrade(qId, nama, rombel, bab, transcript) {
+    if (!transcript || transcript.trim() === "") return alert("Jawaban siswa masih kosong, AI tidak dapat menilai.");
+
+    requestPasswordAndExecute(password => {
+      fetchAPI({ action: "triggerGeminiGradingTeacher", password: password, questionId: qId, studentName: nama, rombel: rombel, bab: bab, studentTranscriptText: transcript }, res => {
+        if (res && res.success) {
+          showNotif(true, "Penilaian AI Berhasil! 🤖", `AI Gemini memberikan skor ${res.scoreAI}. Catatan: ${res.feedback}`);
+          submitLoadReview();
+        } else showNotif(false, "Gagal Penilaian AI ❌", res ? res.error : "Error");
       });
     });
   }
