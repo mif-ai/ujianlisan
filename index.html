@@ -163,7 +163,7 @@
             <span id="accumulatedLocalScoreDisplay" style="font-size:20px; font-weight:800; color:#10b981;">0 / 100</span>
           </div>
           <div style="background:white; padding:8px; border-radius:10px; border:1px solid #c7d2fe;">
-            <small style="font-size:11px; color:#475569; font-weight:600; display:block;">🎓 Rata-Rata Nilai Guru (Gemini)</small>
+            <small style="font-size:11px; color:#475569; font-weight:600; display:block;">🎓 Rata-Rata Nilai Gemini AI</small>
             <span id="accumulatedAIScoreDisplay" style="font-size:20px; font-weight:800; color:#1d4ed8;">- / 100</span>
           </div>
         </div>
@@ -172,7 +172,7 @@
       <label>Pilih Nomor Soal:</label>
       <div id="questionPalette" class="palette-grid"></div>
       <div style="margin-top:8px; font-size:11px; color:#64748b;">
-        ⚪ Putih: Belum | 🟡 Kuning: Ada Jawaban/Diubah | 🟢 Hijau: Nilai AI | 🔵 Biru: Nilai Guru
+        ⚪ Putih: Belum | 🟡 Kuning: Ada Jawaban/Diubah | 🟢 Hijau: Nilai AI Sistem | 🔵 Biru: Nilai Gemini AI
       </div>
     </div>
 
@@ -272,10 +272,11 @@
     </div>
   </div>
 
-  <!-- TAB 2: MODE, TOKEN & TIMER -->
+  <!-- TAB 2: MODE, TOKEN & TIMER BEBAS / SPESIFIK BAB -->
   <div id="tabSettings" class="card tab-content" style="display:none;">
-    <h3 style="margin-top:0; color:var(--primary); font-size:15px;">⚙️ Mode Aplikasi, Token Ujian & Timer</h3>
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+    <h3 style="margin-top:0; color:var(--primary); font-size:15px;">⚙️ Mode Aplikasi & Token Ujian</h3>
+    
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:15px;">
       <div class="form-group">
         <label>Mode Aplikasi:</label>
         <select id="modeSelect">
@@ -290,19 +291,39 @@
     </div>
 
     <div class="form-group">
-      <label>Durasi Timer Ujian (Mode SUBMISSION):</label>
-      <select id="timerInput">
-        <option value="0">♾️ Tanpa Batas Waktu (Bebas)</option>
-        <option value="15">⏱️ 15 Menit</option>
-        <option value="30">⏱️ 30 Menit</option>
-        <option value="45">⏱️ 45 Menit</option>
-        <option value="60">⏱️ 60 Menit</option>
-      </select>
+      <label>Durasi Timer Default Aplikasi (Menit):</label>
+      <input type="number" id="timerInput" placeholder="Masukkan menit, misal 45 (Isi 0 jika tanpa batas)" min="0">
+      <small style="color:#64748b; font-size:11px;">*Digunakan jika Bab belum memiliki pengaturan timer khusus.</small>
     </div>
 
-    <div style="display:flex; gap:10px;">
-      <button class="btn-primary" style="flex:2;" onclick="submitSaveSettings()">💾 Simpan Pengaturan Mode & Timer</button>
-      <button class="btn-secondary" style="flex:1;" onclick="openGoogleSheetDirect()">🔗 Buka Database Google Sheet</button>
+    <div style="display:flex; gap:10px; margin-bottom:20px;">
+      <button class="btn-primary" style="flex:2;" onclick="submitSaveSettings()">💾 Simpan Pengaturan Utama</button>
+      <button class="btn-secondary" style="flex:1;" onclick="openGoogleSheetDirect()">🔗 Buka Database Sheet</button>
+    </div>
+
+    <hr style="border:none; border-top:1px dashed #cbd5e1; margin:20px 0;">
+
+    <h4 style="margin-top:0; color:var(--primary); font-size:14px;">⏱️ Pengaturan Timer Khusus Per Bab / Topik Materinya</h4>
+    <div style="background:#f8fafc; padding:14px; border-radius:12px; border:1px solid #e2e8f0;">
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div class="form-group">
+          <label>Pilih Rombel / Kelas:</label>
+          <select id="timerRombelSelect" onchange="onTimerRombelChange()">
+            <option value="">-- Pilih --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Pilih Bab / Topik Soal:</label>
+          <select id="timerBabSelect">
+            <option value="">-- Pilih Rombel Dahulu --</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Durasi Ujian Bab Ini (Dalam Menit):</label>
+        <input type="number" id="timerBabInput" placeholder="Misal: 30, 60, 90, 120... (0 = Tanpa Batas Waktu)" min="0">
+      </div>
+      <button class="btn-success" onclick="submitSaveBabTimer()">💾 Simpan Timer Khusus Bab Ini</button>
     </div>
   </div>
 
@@ -452,6 +473,7 @@
   // STATE GLOBAL
   let studentDataCache = {}, currentQuestionsList = [], activeQuestionIndex = -1, selectedQuestionObject = null;
   let currentAppMode = "PRACTICE", currentAppToken = "", currentAppTimer = 0;
+  let activeBabTimer = 0;
   let speechRecognition = null, isRecording = false;
   
   let questionState = {}; 
@@ -509,6 +531,10 @@
       const reviewRSelect = document.getElementById('reviewRombelSelect');
       reviewRSelect.innerHTML = '<option value="">-- Semua Rombel --</option>';
       data.rombelList.forEach(r => reviewRSelect.innerHTML += `<option value="${r}">${r}</option>`);
+
+      const timerRSelect = document.getElementById('timerRombelSelect');
+      timerRSelect.innerHTML = '<option value="">-- Pilih Rombel --</option>';
+      data.rombelList.forEach(r => timerRSelect.innerHTML += `<option value="${r}">${r}</option>`);
 
       const cetakRSelect = document.getElementById('cetakRombelSelect');
       cetakRSelect.innerHTML = '<option value="">-- Pilih --</option>';
@@ -661,9 +687,9 @@
   }
 
   function showNotif(isSuccess, title, message) {
-    document.getElementById('notifIcon').innerText = isSuccess ? "✅" : "❌";
+    document.getElementById('notifIcon').innerText = isSuccess ? "✅" : "⏳";
     document.getElementById('notifTitle').innerText = title;
-    document.getElementById('notifTitle').style.color = isSuccess ? "#10b981" : "#ef4444";
+    document.getElementById('notifTitle').style.color = isSuccess ? "#10b981" : "#f59e0b";
     document.getElementById('notifMessage').innerText = message;
     document.getElementById('notifModal').style.display = 'flex';
   }
@@ -744,6 +770,7 @@
     fetchAPI({ action: "getQuestions", rombel: rombel, bab: bab }, res => {
       if (res && res.questions && res.questions.length > 0) {
         currentQuestionsList = res.questions;
+        activeBabTimer = Number(res.babTimer) || 0;
 
         if (currentAppMode === "PRACTICE") {
           currentQuestionsList.forEach(q => {
@@ -754,7 +781,7 @@
 
           renderPaletteUIOnly();
           renderActionButtons();
-          startTimerCountdown(0);
+          startTimerCountdown(0, activeBabTimer);
           selectQuestion(0);
           showNotif(true, "Mode Latihan Siap! 🟢", "Seluruh jawaban dimulai murni dari 0. Selamat berlatih!");
         } else {
@@ -787,13 +814,12 @@
             renderPaletteUIOnly();
             renderActionButtons();
 
-            // Validasi Token Ujian untuk Akses Baru / Setelah Keluar
             const hasVerifiedSession = sessionStorage.getItem("verifiedExamSession");
             if (!hasVerifiedSession) {
               document.getElementById("inputStudentToken").value = "";
               document.getElementById("tokenModal").style.display = "flex";
             } else {
-              startTimerCountdown(extraTime);
+              startTimerCountdown(extraTime, activeBabTimer);
               selectQuestion(0);
             }
           });
@@ -810,7 +836,7 @@
       if (res && res.success) {
         sessionStorage.setItem("verifiedExamSession", "true");
         document.getElementById("tokenModal").style.display = "none";
-        startTimerCountdown(0);
+        startTimerCountdown(0, activeBabTimer);
         selectQuestion(0);
         showNotif(true, "Token Valid! ✅", "Selamat mengerjakan ujian!");
       } else {
@@ -819,16 +845,18 @@
     });
   }
 
-  function startTimerCountdown(extraMinutes) {
+  function startTimerCountdown(extraMinutes, durationMinutes) {
     clearInterval(examTimerInterval);
     const box = document.getElementById('timerDisplayBox');
 
-    if (currentAppMode === "PRACTICE" || currentAppTimer === 0) {
+    const totalMinutes = durationMinutes + extraMinutes;
+
+    if (currentAppMode === "PRACTICE" || totalMinutes <= 0) {
       box.innerText = "⏱️ Timer: ♾️ Tanpa Batas Waktu";
       return;
     }
 
-    remainingExamSeconds = (currentAppTimer + extraMinutes) * 60;
+    remainingExamSeconds = totalMinutes * 60;
     examTimerInterval = setInterval(() => {
       remainingExamSeconds--;
       if (remainingExamSeconds <= 0) {
@@ -843,7 +871,6 @@
     }, 1000);
   }
 
-  // AUTO-SAVE SELURUH NOMOR SAAT TIMER HABIS
   function autoSaveAllAnswersOnTimeUp() {
     stopRecordingIfActive();
     
@@ -888,15 +915,15 @@
     if (currentAppMode === "PRACTICE") {
       btnBox.innerHTML = `
         <button class="btn-primary" style="background:linear-gradient(135deg, #10b981, #059669);" onclick="submitLocalAnswer(false)">🟢 Kirim Jawaban & Cek Nilai AI</button>
-        <button class="btn-secondary" disabled style="margin-top:8px;">🔴 Cek Nilai Guru (OFF di Mode Latihan)</button>
+        <button class="btn-secondary" disabled style="margin-top:8px;">🔴 Cek Nilai Gemini AI (OFF di Mode Latihan)</button>
       `;
     } else {
       btnBox.innerHTML = `
         <div style="display:flex; gap:10px; margin-top:10px;">
           <button class="btn-primary" style="flex:1;" onclick="submitSaveAnswerOnly()">🔵 Kirim Jawaban</button>
-          <button class="btn-success" style="flex:1;" onclick="submitLocalAnswer(false)">🟢 Cek Nilai AI</button>
+          <button class="btn-success" style="flex:1;" onclick="submitLocalAnswer(false)">🟢 Cek Nilai AI Sistem</button>
         </div>
-        <button class="btn-primary" style="margin-top:10px; background:linear-gradient(135deg, #1e293b, #0f172a);" onclick="requestAIGrading()">🎓 Cek Nilai dari Guru</button>
+        <button class="btn-primary" style="margin-top:10px; background:linear-gradient(135deg, #1e293b, #0f172a);" onclick="requestAIGrading()">🎓 Cek Nilai dari Guru / Gemini AI</button>
         <button class="btn-danger" style="margin-top:12px; font-weight:700;" onclick="openFinishExamModal()">🏁 AKHIRI UJIAN</button>
       `;
     }
@@ -937,7 +964,6 @@
     document.getElementById('questionContainer').style.display = 'block';
   }
 
-  // INDIKATOR WARNA PALET BERUBAH KUNING SAAT DITULIS / DIUBAH
   function onTranscriptInput() {
     const val = document.getElementById('transcriptTextarea').value;
     if (selectedQuestionObject) {
@@ -1007,7 +1033,7 @@
       if (res && res.success) {
         paletteColors[activeQuestionIndex] = 'yellow';
         renderPaletteUIOnly();
-        showNotif(true, "Jawaban Disimpan! 🔵", "Jawaban berhasil disimpan. Guru dapat mereview hasil Anda.");
+        showNotif(true, "Jawaban Disimpan! 🔵", "Jawaban berhasil disimpan. Guru/AI dapat mereview hasil Anda.");
       } else alert("Gagal menyimpan.");
     });
   }
@@ -1054,10 +1080,14 @@
     });
   }
 
+  // MEMANGGIL GEMINI AI API KEY (PENANGANAN NOTIFIKASI ANTRIAN SAAT KUOTA HABIS)
   function requestAIGrading() {
     stopRecordingIfActive();
+    if (!selectedQuestionObject) return;
     const textVal = document.getElementById('transcriptTextarea').value.trim();
-    if (!textVal) return alert("Jawaban Anda masih kosong!");
+    if (!textVal) return alert("Jawaban Anda masih kosong! Silakan rekam atau ketik terlebih dahulu.");
+
+    showNotif(true, "Memproses AI Gemini... 🤖", "Sedang mengevaluasi jawaban Anda menggunakan AI Gemini...");
 
     fetchAPI({
       action: "processAIGrade",
@@ -1069,31 +1099,31 @@
       questionText: selectedQuestionObject.pertanyaan,
       studentTranscriptText: textVal
     }, res => {
+      closeNotifModal();
       if (res && res.success) {
-        if (res.queued) {
-          showNotif(false, "Antrean Penilaian ⏳", "Jawaban Anda sedang dalam antrean penilaian Guru.");
-        } else {
-          const qId = selectedQuestionObject.id;
-          const cleanSc = cleanScoreValue(res.scoreAI);
+        const qId = selectedQuestionObject.id;
+        const cleanSc = cleanScoreValue(res.scoreAI);
 
-          if (!questionState[qId]) questionState[qId] = {};
-          questionState[qId].scoreAI = cleanSc;
-          questionState[qId].feedback = res.feedback;
-          questionState[qId].status = "GRADED";
+        if (!questionState[qId]) questionState[qId] = {};
+        questionState[qId].scoreAI = cleanSc;
+        questionState[qId].feedback = res.feedback;
+        questionState[qId].status = "GRADED";
 
-          paletteColors[activeQuestionIndex] = 'blue';
-          renderPaletteUIOnly();
+        paletteColors[activeQuestionIndex] = 'blue';
+        renderPaletteUIOnly();
 
-          document.getElementById('modalScoreTypeLabel').innerText = "Nilai dari Guru / AI Gemini:";
-          document.getElementById('modalScoreDisplay').innerText = `${cleanSc} / 100`;
-          document.getElementById('modalFeedbackDisplay').innerText = res.feedback;
-          document.getElementById('resultModal').style.display = 'flex';
-        }
+        document.getElementById('modalQuestionLabel').innerText = `Soal No. ${activeQuestionIndex + 1}`;
+        document.getElementById('modalScoreTypeLabel').innerText = "Nilai Resmi Gemini AI:";
+        document.getElementById('modalScoreDisplay').innerText = `${cleanSc} / 100`;
+        document.getElementById('modalFeedbackDisplay').innerText = res.feedback;
+        document.getElementById('resultModal').style.display = 'flex';
+      } else {
+        // TAMPILKAN "Masih dalam Antrian Penilaian" SAAT KUOTA / AKSI GEMINI KENDALA
+        showNotif(false, "Antrian Penilaian ⏳", res ? res.error : "Masih dalam Antrian Penilaian");
       }
     });
   }
 
-  // REKAP AKUMULASI NILAI DIPISAH (NILAI LOKAL vs NILAI GURU)
   function calculateAccumulatedScores() {
     if (!currentQuestionsList || currentQuestionsList.length === 0) {
       return { avgLocal: 0, avgAI: "-" };
@@ -1140,7 +1170,6 @@
     else alert("🎉 Seluruh soal pada bab ini telah selesai!");
   }
 
-  // LOGIC AKHIRI UJIAN & HAPUS TOKEN SESI
   function openFinishExamModal() { document.getElementById('finishExamModal').style.display = 'flex'; }
   function closeFinishExamModal() { document.getElementById('finishExamModal').style.display = 'none'; }
 
@@ -1153,7 +1182,7 @@
     sessionStorage.removeItem("verifiedExamSession");
 
     if (!isAutoFinish) {
-      showNotif(true, "Ujian Selesai! 🎉", `Terima kasih! Seluruh jawaban Anda telah terkirim. Rata-rata Nilai AI: ${scores.avgLocal} | Rata-rata Nilai Guru: ${scores.avgAI}`);
+      showNotif(true, "Ujian Selesai! 🎉", `Terima kasih! Seluruh jawaban Anda telah terkirim. Rata-rata Nilai AI Sistem: ${scores.avgLocal} | Rata-rata Nilai Gemini AI: ${scores.avgAI}`);
     }
     
     resetQuestionViewDOM();
@@ -1187,6 +1216,34 @@
           showNotif(true, "Berhasil Tersimpan! ✅", res.message);
           currentAppToken = token;
           updateModeBadgeUI(mode);
+        } else showNotif(false, "Gagal! ❌", res ? res.error : "Error");
+      });
+    });
+  }
+
+  function onTimerRombelChange() {
+    const rombel = document.getElementById('timerRombelSelect').value;
+    const timerBabSel = document.getElementById('timerBabSelect');
+    timerBabSel.innerHTML = '<option value="">-- Pilih --</option>';
+
+    if (rombel) {
+      fetchAPI({ action: "getBabList", rombel: rombel }, res => {
+        if (res && res.babList) res.babList.forEach(bab => timerBabSel.innerHTML += `<option value="${bab}">${bab}</option>`);
+      });
+    }
+  }
+
+  function submitSaveBabTimer() {
+    const rombel = document.getElementById('timerRombelSelect').value;
+    const bab = document.getElementById('timerBabSelect').value;
+    const timerVal = document.getElementById('timerBabInput').value;
+
+    if (!rombel || !bab) return alert("Pilih Rombel dan Bab terlebih dahulu!");
+
+    requestPasswordAndExecute(password => {
+      fetchAPI({ action: "saveBabTimer", password: password, rombel: rombel, bab: bab, timer: timerVal }, res => {
+        if (res && res.success) {
+          showNotif(true, "Timer Disimpan! ⏱️", res.message);
         } else showNotif(false, "Gagal! ❌", res ? res.error : "Error");
       });
     });
@@ -1259,13 +1316,13 @@
         const recheckBadge = q.status === "RECHECK" ? `<span class="badge-recheck">⚠️ Perlu Check Ulang</span>` : ``;
         const cleanLoc = cleanScoreValue(q.scoreLocal);
         const cleanAI = cleanScoreValue(q.scoreAI);
-        const aiScoreDisplay = cleanAI > 0 ? `<b style="color:#15803d;">${cleanAI} (Nilai Guru)</b>` : `<span style="color:#d97706;">Belum Dinilai</span>`;
+        const aiScoreDisplay = cleanAI > 0 ? `<b style="color:#15803d;">${cleanAI} (Gemini AI)</b>` : `<span style="color:#d97706;">Belum Dinilai</span>`;
 
         qHtml += `<div style="margin-bottom:10px; border-bottom:1px dashed #cbd5e1; padding-bottom:8px;">
           <div><b>[${q.qId}] Pertanyaan:</b> ${q.pertanyaan} ${recheckBadge}</div>
           <div style="color:#0369a1; font-size:11px;"><b>Kunci Rubrik:</b> ${q.rubrik}</div>
           <div style="background:#f1f5f9; padding:6px; border-radius:6px; margin:4px 0; font-style:italic;">"${q.transcript || 'Belum ada jawaban'}"</div>
-          <div>Nilai AI Sistem: ${cleanLoc} | Nilai Resmi Guru: ${aiScoreDisplay}</div>
+          <div>Nilai AI Sistem: ${cleanLoc} | Nilai Gemini AI: ${aiScoreDisplay}</div>
           <div style="margin-top:6px; display:flex; gap:6px;">
             <button class="btn-warning" style="padding:4px 8px; font-size:10px; width:auto;" onclick="promptManualGrade('${q.qId}','${item.nama}','${item.rombel}','${item.bab}')">📝 Input Nilai Manual</button>
             <button class="btn-primary" style="padding:4px 8px; font-size:10px; width:auto; background:linear-gradient(135deg, #7c3aed, #4f46e5);" onclick="triggerTeacherAIGrade('${q.qId}','${item.nama}','${item.rombel}','${item.bab}', \`${escapeQuotes(q.transcript)}\`)">🤖 Penilaian AI Gemini</button>
@@ -1311,7 +1368,7 @@
         if (res && res.success) {
           showNotif(true, "Penilaian AI Berhasil! 🤖", `AI Gemini memberikan skor ${res.scoreAI}. Catatan: ${res.feedback}`);
           submitLoadReview();
-        } else showNotif(false, "Gagal Penilaian AI ❌", res ? res.error : "Error");
+        } else showNotif(false, "Antrian Penilaian ⏳", res ? res.error : "Masih dalam Antrian Penilaian");
       });
     });
   }
@@ -1360,6 +1417,8 @@
       </tr>`;
     });
   }
+
+  function escapeQuotes(str) { return (str || '').replace(/'/g, "\\'").replace(/"/g, '\\"'); }
 
   function filterSiswaTable() {
     const q = document.getElementById('siswaSearchInput').value.toLowerCase();
@@ -1448,8 +1507,6 @@
       </tr>`;
     });
   }
-
-  function escapeQuotes(str) { return (str || '').replace(/'/g, "\\'").replace(/"/g, '\\"'); }
 
   function filterSoalTable() {
     const q = document.getElementById('soalSearchInput').value.toLowerCase();
@@ -1564,7 +1621,7 @@
                   <th>Nama Lengkap Siswa</th>
                   <th style="width:50px;">JK</th>
                   <th style="width:90px;">Nilai AI Sistem</th>
-                  <th style="width:90px;">Nilai Guru</th>
+                  <th style="width:90px;">Nilai Gemini AI</th>
                 </tr>
               </thead>
               <tbody>${tableRows}</tbody>
