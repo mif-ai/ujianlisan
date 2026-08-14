@@ -151,20 +151,28 @@
 
     <!-- PALETTE & SOAL SECTION -->
     <div id="paletteSection" style="display:none; margin-top:20px;">
+      <!-- RINCIAN AKUMULASI NILAI DIPISAH -->
       <div id="babTotalCard" style="background:#e0e7ff; border:1px solid #c7d2fe; padding:14px; border-radius:14px; margin-bottom:14px;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div>
-            <span style="font-size:13px; font-weight:700; color:#3730a3; display:block;">📊 Akumulasi Nilai Bab:</span>
-            <small id="timerDisplayBox" style="font-size:12px; font-weight:700; color:#4338ca;">⏱️ Timer: 00:00</small>
+        <div style="margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:13px; font-weight:700; color:#3730a3;">📊 Akumulasi Nilai Bab</span>
+          <small id="timerDisplayBox" style="font-size:12px; font-weight:700; color:#4338ca;">⏱️ Timer: 00:00</small>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; text-align:center;">
+          <div style="background:white; padding:8px; border-radius:10px; border:1px solid #c7d2fe;">
+            <small style="font-size:11px; color:#475569; font-weight:600; display:block;">🤖 Rata-Rata Nilai AI (Lokal)</small>
+            <span id="accumulatedLocalScoreDisplay" style="font-size:20px; font-weight:800; color:#10b981;">0 / 100</span>
           </div>
-          <span id="accumulatedBabScoreDisplay" style="font-size:26px; font-weight:800; color:#4338ca;">0 / 100</span>
+          <div style="background:white; padding:8px; border-radius:10px; border:1px solid #c7d2fe;">
+            <small style="font-size:11px; color:#475569; font-weight:600; display:block;">🎓 Rata-Rata Nilai Guru (Gemini)</small>
+            <span id="accumulatedAIScoreDisplay" style="font-size:20px; font-weight:800; color:#1d4ed8;">- / 100</span>
+          </div>
         </div>
       </div>
 
       <label>Pilih Nomor Soal:</label>
       <div id="questionPalette" class="palette-grid"></div>
       <div style="margin-top:8px; font-size:11px; color:#64748b;">
-        ⚪ Putih: Belum | 🟡 Kuning: Ada Jawaban | 🟢 Hijau: Nilai AI | 🔵 Biru: Nilai Guru
+        ⚪ Putih: Belum | 🟡 Kuning: Ada Jawaban/Diubah | 🟢 Hijau: Nilai AI | 🔵 Biru: Nilai Guru
       </div>
     </div>
 
@@ -209,6 +217,21 @@
     <div style="display:flex; gap:10px; margin-top:10px;">
       <button class="btn-secondary" style="flex:1;" onclick="closeResultModal()">Tutup</button>
       <button id="btnNextQuestionModal" class="btn-primary" style="flex:1.5;" onclick="goToNextQuestionFromModal()">Soal Berikutnya ➡️</button>
+    </div>
+  </div>
+</div>
+
+<!-- FINISH EXAM CONFIRMATION MODAL -->
+<div id="finishExamModal" class="modal-overlay">
+  <div class="modal-content" style="text-align:center;">
+    <h2 style="font-size:48px; margin:0;">🏁</h2>
+    <h3 style="margin:0 0 8px 0; color:var(--primary);">Selesaikan Ujian Ini?</h3>
+    <p style="font-size:13px; color:#64748b; margin-bottom:15px;">
+      Seluruh jawaban dari Soal No. 1 sampai akhir akan dikirim ke server. Sesi ujian akan ditutup.
+    </p>
+    <div style="display:flex; gap:10px;">
+      <button class="btn-secondary" style="flex:1;" onclick="closeFinishExamModal()">Batal</button>
+      <button class="btn-primary" style="flex:1.5; background:linear-gradient(135deg, #10b981, #059669);" onclick="confirmFinishExam(false)">Ya, Akhiri Sekarang</button>
     </div>
   </div>
 </div>
@@ -421,7 +444,7 @@
 </div>
 
 <!-- ========================================================================= -->
-<!-- 3. JAVASCRIPT LOGIC (SINGLE PAGE APPLICATION - REVISED VOICE ENGINE) -->
+<!-- 3. JAVASCRIPT LOGIC (SINGLE PAGE APPLICATION - COMPLETE REVISED) -->
 <!-- ========================================================================= -->
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbzBMx-BvZfCT_w6yG2HJur8KUm2kqK0tfcZhFiD6J7dxH3AOOxXQg72fS4pLzAjNFM_kA/exec";
@@ -441,6 +464,16 @@
   window.onload = function() {
     initApp();
   };
+
+  function cleanScoreValue(val) {
+    if (val === null || val === undefined || val === "") return 0;
+    if (typeof val === 'string' && val.includes('T')) {
+      let d = new Date(val);
+      return isNaN(d.getDate()) ? 0 : d.getDate();
+    }
+    let n = Number(val);
+    return isNaN(n) ? 0 : n;
+  }
 
   function initApp() {
     fetchAPI({ action: "getAppConfig" }, res => {
@@ -485,13 +518,12 @@
     initSpeechToText();
   }
 
-  // 💡 ENGINE VOICE REVISI TOTAL (SANGAT STABIL & CEGAH KATA GANDA)
   function initSpeechToText() {
     const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (Speech) {
       speechRecognition = new Speech();
       speechRecognition.lang = 'id-ID';
-      speechRecognition.continuous = false; // Mode per-kalimat agar tidak pernah duplikasi
+      speechRecognition.continuous = false;
       speechRecognition.interimResults = false;
 
       speechRecognition.onresult = e => {
@@ -507,7 +539,6 @@
           const textarea = document.getElementById('transcriptTextarea');
           const currentText = textarea.value.trim();
           
-          // Filter Proteksi: Jangan menambahkan jika teks baru sama persis dengan yang baru saja diketik
           if (!currentText.toLowerCase().endsWith(newSnippet.toLowerCase())) {
             textarea.value = currentText ? currentText + ' ' + newSnippet : newSnippet;
             onTranscriptInput();
@@ -522,7 +553,6 @@
       };
 
       speechRecognition.onend = () => {
-        // Otomatis restart halus jika tombol rekam masih aktif
         if (isRecording) {
           try {
             speechRecognition.start();
@@ -537,9 +567,6 @@
   }
 
   function toggleDirectRecording() {
-    const btn = document.getElementById('btnRecordToggle');
-    const status = document.getElementById('statusText');
-
     if (!speechRecognition) return alert("Browser tidak mendukung Speech-to-Text. Silakan ketik langsung.");
 
     if (!isRecording) {
@@ -739,20 +766,35 @@
 
             currentQuestionsList.forEach((q, i) => {
               if (progress && progress[q.id]) {
-                questionState[q.id] = progress[q.id];
-                paletteColors[i] = progress[q.id].status === "GRADED" ? 'blue' : (progress[q.id].scoreLocal ? 'green' : 'yellow');
+                questionState[q.id] = {
+                  transcript: progress[q.id].transcript,
+                  scoreLocal: cleanScoreValue(progress[q.id].scoreLocal),
+                  scoreAI: cleanScoreValue(progress[q.id].scoreAI),
+                  feedback: progress[q.id].feedback,
+                  status: progress[q.id].status
+                };
+                
+                if (progress[q.id].status === "GRADED" && cleanScoreValue(progress[q.id].scoreAI) > 0) {
+                  paletteColors[i] = 'blue';
+                } else if (cleanScoreValue(progress[q.id].scoreLocal) > 0) {
+                  paletteColors[i] = 'green';
+                } else if (progress[q.id].transcript) {
+                  paletteColors[i] = 'yellow';
+                }
               }
             });
 
             renderPaletteUIOnly();
             renderActionButtons();
 
-            if (!sessionStorage.getItem("studentTokenVerified")) {
+            // Validasi Token Ujian untuk Akses Baru / Setelah Keluar
+            const hasVerifiedSession = sessionStorage.getItem("verifiedExamSession");
+            if (!hasVerifiedSession) {
+              document.getElementById("inputStudentToken").value = "";
               document.getElementById("tokenModal").style.display = "flex";
             } else {
               startTimerCountdown(extraTime);
               selectQuestion(0);
-              showNotif(true, "Ujian Dimuat! 🚀", "Soal berhasil dimuat.");
             }
           });
         }
@@ -766,9 +808,10 @@
 
     fetchAPI({ action: "verifyToken", token: token }, res => {
       if (res && res.success) {
-        sessionStorage.setItem("studentTokenVerified", "true");
+        sessionStorage.setItem("verifiedExamSession", "true");
         document.getElementById("tokenModal").style.display = "none";
         startTimerCountdown(0);
+        selectQuestion(0);
         showNotif(true, "Token Valid! ✅", "Selamat mengerjakan ujian!");
       } else {
         showNotif(false, "Token Salah! ❌", "Token Ujian tidak sesuai. Silakan tanyakan kepada Guru.");
@@ -791,7 +834,6 @@
       if (remainingExamSeconds <= 0) {
         clearInterval(examTimerInterval);
         box.innerText = "⏱️ WAKTU HABIS!";
-        alert("⏱️ Waktu Ujian telah habis!");
         autoSaveAllAnswersOnTimeUp();
       } else {
         const m = Math.floor(remainingExamSeconds / 60);
@@ -801,10 +843,43 @@
     }, 1000);
   }
 
+  // AUTO-SAVE SELURUH NOMOR SAAT TIMER HABIS
   function autoSaveAllAnswersOnTimeUp() {
-    const textVal = document.getElementById('transcriptTextarea').value.trim();
-    if (selectedQuestionObject && textVal) {
-      submitLocalAnswer(true);
+    stopRecordingIfActive();
+    
+    if (selectedQuestionObject) {
+      const textVal = document.getElementById('transcriptTextarea').value;
+      if (!questionState[selectedQuestionObject.id]) questionState[selectedQuestionObject.id] = {};
+      questionState[selectedQuestionObject.id].transcript = textVal;
+    }
+
+    let bulkAnswers = [];
+    currentQuestionsList.forEach(q => {
+      const tr = questionState[q.id] ? questionState[q.id].transcript : "";
+      if (tr && tr.trim() !== "") {
+        bulkAnswers.push({
+          qId: q.id,
+          questionText: q.pertanyaan,
+          transcript: tr
+        });
+      }
+    });
+
+    if (bulkAnswers.length > 0) {
+      fetchAPI({
+        action: "saveAllAnswersBulk",
+        studentName: document.getElementById('studentSelect').value,
+        rombel: document.getElementById('rombelSelect').value,
+        jenisKelamin: document.getElementById('jkDisplay').value,
+        bab: document.getElementById('babSelect').value,
+        answers: bulkAnswers
+      }, res => {
+        showNotif(true, "Waktu Habis! ⏱️", "Waktu pengerjaan telah habis. Seluruh jawaban Anda berhasil disimpan otomatis ke server.");
+        confirmFinishExam(true);
+      });
+    } else {
+      showNotif(false, "Waktu Habis! ⏱️", "Waktu pengerjaan telah habis.");
+      confirmFinishExam(true);
     }
   }
 
@@ -822,12 +897,13 @@
           <button class="btn-success" style="flex:1;" onclick="submitLocalAnswer(false)">🟢 Cek Nilai AI</button>
         </div>
         <button class="btn-primary" style="margin-top:10px; background:linear-gradient(135deg, #1e293b, #0f172a);" onclick="requestAIGrading()">🎓 Cek Nilai dari Guru</button>
+        <button class="btn-danger" style="margin-top:12px; font-weight:700;" onclick="openFinishExamModal()">🏁 AKHIRI UJIAN</button>
       `;
     }
   }
 
   function selectQuestion(i) {
-    stopRecordingIfActive(); // Hentikan rekam suara saat berpindah soal
+    stopRecordingIfActive();
 
     if (selectedQuestionObject) {
       const currentVal = document.getElementById('transcriptTextarea').value;
@@ -861,6 +937,7 @@
     document.getElementById('questionContainer').style.display = 'block';
   }
 
+  // INDIKATOR WARNA PALET BERUBAH KUNING SAAT DITULIS / DIUBAH
   function onTranscriptInput() {
     const val = document.getElementById('transcriptTextarea').value;
     if (selectedQuestionObject) {
@@ -872,9 +949,10 @@
         saveLocalStorageDraft(qId, val);
       }
 
-      const status = questionState[qId].status;
-      if (status !== "LOCAL_GRADED" && status !== "GRADED") {
-        paletteColors[activeQuestionIndex] = val.trim().length > 0 ? 'yellow' : '';
+      if (val.trim().length > 0) {
+        paletteColors[activeQuestionIndex] = 'yellow';
+      } else {
+        paletteColors[activeQuestionIndex] = '';
       }
       renderPaletteUIOnly();
     }
@@ -953,8 +1031,10 @@
     }, res => {
       if (res && res.success) {
         const qId = selectedQuestionObject.id;
+        const cleanSc = cleanScoreValue(res.scoreLocal);
+
         questionState[qId] = {
-          scoreLocal: res.scoreLocal,
+          scoreLocal: cleanSc,
           transcript: res.transcript,
           feedback: res.feedback,
           status: "LOCAL_GRADED"
@@ -965,8 +1045,8 @@
 
         if (!isAuto) {
           document.getElementById('modalQuestionLabel').innerText = `Soal No. ${activeQuestionIndex + 1}`;
-          document.getElementById('modalScoreTypeLabel').innerText = currentAppMode === "PRACTICE" ? "Evaluasi Latihan AI:" : "Nilai Mesin AI:";
-          document.getElementById('modalScoreDisplay').innerText = `${res.scoreLocal} / 100`;
+          document.getElementById('modalScoreTypeLabel').innerText = currentAppMode === "PRACTICE" ? "Evaluasi Latihan AI:" : "Nilai AI (Sistem):";
+          document.getElementById('modalScoreDisplay').innerText = `${cleanSc} / 100`;
           document.getElementById('modalFeedbackDisplay').innerText = res.feedback;
           document.getElementById('resultModal').style.display = 'flex';
         }
@@ -994,16 +1074,18 @@
           showNotif(false, "Antrean Penilaian ⏳", "Jawaban Anda sedang dalam antrean penilaian Guru.");
         } else {
           const qId = selectedQuestionObject.id;
+          const cleanSc = cleanScoreValue(res.scoreAI);
+
           if (!questionState[qId]) questionState[qId] = {};
-          questionState[qId].scoreAI = res.scoreAI;
+          questionState[qId].scoreAI = cleanSc;
           questionState[qId].feedback = res.feedback;
           questionState[qId].status = "GRADED";
 
           paletteColors[activeQuestionIndex] = 'blue';
           renderPaletteUIOnly();
 
-          document.getElementById('modalScoreTypeLabel').innerText = "Nilai Resmi Guru:";
-          document.getElementById('modalScoreDisplay').innerText = `${res.scoreAI} / 100`;
+          document.getElementById('modalScoreTypeLabel').innerText = "Nilai dari Guru / AI Gemini:";
+          document.getElementById('modalScoreDisplay').innerText = `${cleanSc} / 100`;
           document.getElementById('modalFeedbackDisplay').innerText = res.feedback;
           document.getElementById('resultModal').style.display = 'flex';
         }
@@ -1011,22 +1093,43 @@
     });
   }
 
-  function calculateAccumulatedScore() {
-    if (!currentQuestionsList || currentQuestionsList.length === 0) return 0;
-    let sum = 0;
+  // REKAP AKUMULASI NILAI DIPISAH (NILAI LOKAL vs NILAI GURU)
+  function calculateAccumulatedScores() {
+    if (!currentQuestionsList || currentQuestionsList.length === 0) {
+      return { avgLocal: 0, avgAI: "-" };
+    }
+    
+    let sumLocal = 0, countLocal = 0;
+    let sumAI = 0, countAI = 0;
+
     currentQuestionsList.forEach(q => {
       const data = questionState[q.id];
       if (data) {
-        let sc = data.scoreAI !== null && data.scoreAI !== undefined ? data.scoreAI : data.scoreLocal;
-        if (sc !== undefined) sum += Number(sc) || 0;
+        let scLoc = cleanScoreValue(data.scoreLocal);
+        let scAI = cleanScoreValue(data.scoreAI);
+
+        if (scLoc > 0) {
+          sumLocal += scLoc;
+          countLocal++;
+        }
+        if (scAI > 0) {
+          sumAI += scAI;
+          countAI++;
+        }
       }
     });
-    return Math.round(sum / currentQuestionsList.length);
+
+    const totalSoal = currentQuestionsList.length;
+    const avgLocal = totalSoal > 0 ? Math.round(sumLocal / totalSoal) : 0;
+    const avgAI = countAI > 0 ? Math.round(sumAI / countAI) : "-";
+
+    return { avgLocal: avgLocal, avgAI: avgAI };
   }
 
   function updateAccumulatedScoreUI() {
-    const accScore = calculateAccumulatedScore();
-    document.getElementById('accumulatedBabScoreDisplay').innerText = `${accScore} / 100`;
+    const scores = calculateAccumulatedScores();
+    document.getElementById('accumulatedLocalScoreDisplay').innerText = `${scores.avgLocal} / 100`;
+    document.getElementById('accumulatedAIScoreDisplay').innerText = scores.avgAI === "-" ? "- / 100" : `${scores.avgAI} / 100`;
   }
 
   function closeResultModal() { document.getElementById('resultModal').style.display = 'none'; }
@@ -1035,6 +1138,26 @@
     closeResultModal();
     if (activeQuestionIndex + 1 < currentQuestionsList.length) selectQuestion(activeQuestionIndex + 1);
     else alert("🎉 Seluruh soal pada bab ini telah selesai!");
+  }
+
+  // LOGIC AKHIRI UJIAN & HAPUS TOKEN SESI
+  function openFinishExamModal() { document.getElementById('finishExamModal').style.display = 'flex'; }
+  function closeFinishExamModal() { document.getElementById('finishExamModal').style.display = 'none'; }
+
+  function confirmFinishExam(isAutoFinish) {
+    closeFinishExamModal();
+    stopRecordingIfActive();
+    clearInterval(examTimerInterval);
+
+    const scores = calculateAccumulatedScores();
+    sessionStorage.removeItem("verifiedExamSession");
+
+    if (!isAutoFinish) {
+      showNotif(true, "Ujian Selesai! 🎉", `Terima kasih! Seluruh jawaban Anda telah terkirim. Rata-rata Nilai AI: ${scores.avgLocal} | Rata-rata Nilai Guru: ${scores.avgAI}`);
+    }
+    
+    resetQuestionViewDOM();
+    document.getElementById('btnStartExam').disabled = false;
   }
 
   // --- LOGIC ADMIN ---
@@ -1062,6 +1185,7 @@
       fetchAPI({ action: "switchAppMode", password: password, newMode: mode, newToken: token, newTimer: timer }, res => {
         if (res && res.success) {
           showNotif(true, "Berhasil Tersimpan! ✅", res.message);
+          currentAppToken = token;
           updateModeBadgeUI(mode);
         } else showNotif(false, "Gagal! ❌", res ? res.error : "Error");
       });
@@ -1133,13 +1257,15 @@
       let qHtml = "";
       item.questions.forEach(q => {
         const recheckBadge = q.status === "RECHECK" ? `<span class="badge-recheck">⚠️ Perlu Check Ulang</span>` : ``;
-        const aiScoreDisplay = q.scoreAI !== null && q.scoreAI !== undefined ? `<b style="color:#15803d;">${q.scoreAI} (Nilai Guru)</b>` : `<span style="color:#d97706;">Belum Dinilai</span>`;
+        const cleanLoc = cleanScoreValue(q.scoreLocal);
+        const cleanAI = cleanScoreValue(q.scoreAI);
+        const aiScoreDisplay = cleanAI > 0 ? `<b style="color:#15803d;">${cleanAI} (Nilai Guru)</b>` : `<span style="color:#d97706;">Belum Dinilai</span>`;
 
         qHtml += `<div style="margin-bottom:10px; border-bottom:1px dashed #cbd5e1; padding-bottom:8px;">
           <div><b>[${q.qId}] Pertanyaan:</b> ${q.pertanyaan} ${recheckBadge}</div>
           <div style="color:#0369a1; font-size:11px;"><b>Kunci Rubrik:</b> ${q.rubrik}</div>
           <div style="background:#f1f5f9; padding:6px; border-radius:6px; margin:4px 0; font-style:italic;">"${q.transcript || 'Belum ada jawaban'}"</div>
-          <div>Mesin AI: ${q.scoreLocal || 0} | Nilai Resmi Guru: ${aiScoreDisplay}</div>
+          <div>Nilai AI Sistem: ${cleanLoc} | Nilai Resmi Guru: ${aiScoreDisplay}</div>
           <div style="margin-top:6px; display:flex; gap:6px;">
             <button class="btn-warning" style="padding:4px 8px; font-size:10px; width:auto;" onclick="promptManualGrade('${q.qId}','${item.nama}','${item.rombel}','${item.bab}')">📝 Input Nilai Manual</button>
             <button class="btn-primary" style="padding:4px 8px; font-size:10px; width:auto; background:linear-gradient(135deg, #7c3aed, #4f46e5);" onclick="triggerTeacherAIGrade('${q.qId}','${item.nama}','${item.rombel}','${item.bab}', \`${escapeQuotes(q.transcript)}\`)">🤖 Penilaian AI Gemini</button>
@@ -1409,8 +1535,8 @@
           res.list.forEach((item, idx) => {
             let avgLocal = 0, avgAI = 0, count = item.questions.length;
             item.questions.forEach(q => {
-              avgLocal += Number(q.scoreLocal) || 0;
-              avgAI += Number(q.scoreAI) || 0;
+              avgLocal += cleanScoreValue(q.scoreLocal);
+              avgAI += cleanScoreValue(q.scoreAI);
             });
             avgLocal = count > 0 ? Math.round(avgLocal / count) : 0;
             avgAI = count > 0 ? Math.round(avgAI / count) : 0;
@@ -1437,7 +1563,7 @@
                   <th style="width:40px;">No</th>
                   <th>Nama Lengkap Siswa</th>
                   <th style="width:50px;">JK</th>
-                  <th style="width:90px;">Nilai AI</th>
+                  <th style="width:90px;">Nilai AI Sistem</th>
                   <th style="width:90px;">Nilai Guru</th>
                 </tr>
               </thead>
