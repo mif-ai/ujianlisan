@@ -485,7 +485,7 @@
   // STATE GLOBAL & SESI ADMIN
   let adminSessionPassword = null;
   let adminInactivityTimer = null;
-  const INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000; // 5 Menit Inaktivitas
+  const INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000;
 
   let studentDataCache = {}, currentQuestionsList = [], activeQuestionIndex = -1, selectedQuestionObject = null;
   let currentAppMode = "PRACTICE", currentAppToken = "", currentAppTimer = 0;
@@ -502,7 +502,6 @@
     setupInactivityTracker();
   };
 
-  // DETEKSI AKTIVITAS PENGGUNA DENGAN WAKTU KADALUARSA 5 MENIT
   function setupInactivityTracker() {
     const activityEvents = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
     activityEvents.forEach(evt => {
@@ -530,6 +529,10 @@
     }
     let n = Number(val);
     return isNaN(n) ? 0 : n;
+  }
+
+  function cleanStr(val) {
+    return String(val || "").trim().toUpperCase();
   }
 
   function initApp() {
@@ -680,7 +683,6 @@
     });
   }
 
-  // LOGIK AUTENTIKASI ADMIN & MODAL LOGIN
   function showAdminView() {
     stopRecordingIfActive();
     if (adminSessionPassword) {
@@ -813,6 +815,7 @@
     document.getElementById('btnStartExam').disabled = !document.getElementById('babSelect').value;
   }
 
+  // 🎯 PENARIKAN PROGRESS SISWA DI FRONTEND DENGAN PENCOCOKAN MULTI-KEY
   function startExamProcess() {
     stopRecordingIfActive();
     const rombel = document.getElementById('rombelSelect').value;
@@ -846,26 +849,29 @@
           showNotif(true, "Mode Latihan Siap! 🟢", "Seluruh jawaban dimulai murni dari 0. Selamat berlatih!");
         } else {
           fetchAPI({ action: "getStudentProgress", studentName: studentName, rombel: rombel, bab: bab }, progRes => {
-            const progress = progRes ? progRes.progress : {};
+            const progress = (progRes && progRes.progress) ? progRes.progress : {};
             const extraTime = progRes ? Number(progRes.extraTime) || 0 : 0;
             
             paletteColors = new Array(currentQuestionsList.length).fill('');
 
             currentQuestionsList.forEach((q, i) => {
-              if (progress && progress[q.id]) {
+              const qKey = cleanStr(q.id);
+              const progData = progress[qKey] || progress[q.id];
+
+              if (progData) {
                 questionState[q.id] = {
-                  transcript: progress[q.id].transcript,
-                  scoreLocal: cleanScoreValue(progress[q.id].scoreLocal),
-                  scoreAI: cleanScoreValue(progress[q.id].scoreAI),
-                  feedback: progress[q.id].feedback,
-                  status: progress[q.id].status
+                  transcript: progData.transcript || "",
+                  scoreLocal: cleanScoreValue(progData.scoreLocal),
+                  scoreAI: cleanScoreValue(progData.scoreAI),
+                  feedback: progData.feedback || "",
+                  status: progData.status || ""
                 };
                 
-                if (progress[q.id].status === "GRADED" && cleanScoreValue(progress[q.id].scoreAI) > 0) {
+                if (progData.status === "GRADED" && cleanScoreValue(progData.scoreAI) > 0) {
                   paletteColors[i] = 'blue';
-                } else if (cleanScoreValue(progress[q.id].scoreLocal) > 0) {
+                } else if (cleanScoreValue(progData.scoreLocal) > 0) {
                   paletteColors[i] = 'green';
-                } else if (progress[q.id].transcript) {
+                } else if (progData.transcript && progData.transcript.trim() !== "") {
                   paletteColors[i] = 'yellow';
                 }
               }
@@ -1220,7 +1226,7 @@
     document.getElementById('btnStartExam').disabled = false;
   }
 
-  // --- LOGIC AKSI ADMIN (MENGGUNAKAN SESI TANPA INPUT PASSWORD BERULANG) ---
+  // --- LOGIC AKSI ADMIN ---
   function loadDashboardStats() {
     if (!adminSessionPassword) return showAdminView();
     fetchAPI({ action: "getDashboardStats", password: adminSessionPassword }, res => {
