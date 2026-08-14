@@ -185,7 +185,7 @@
         </div>
       </div>
 
-      <!-- STATUS & CATATAN GURU PADA SOAL INI (JIKA SUDAH DINILAI) -->
+      <!-- STATUS & CATATAN GURU PADA SOAL INI -->
       <div id="teacherFeedbackBox" style="display:none; background:#eff6ff; border:1px solid #bfdbfe; padding:12px; border-radius:12px; margin-bottom:12px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
           <b style="color:#1d4ed8; font-size:13px;">🎓 Hasil Penilaian Guru:</b>
@@ -409,7 +409,7 @@
     </div>
   </div>
 
-  <!-- TAB 6: REVIEW JAWABAN & PENILAIAN GURU -->
+  <!-- TAB 6: REVIEW JAWABAN & PENILAIAN GURU (MURNI READ SHEET NilaiWawancara) -->
   <div id="tabReview" class="card tab-content" style="display:none;">
     <h3 style="margin-top:0; color:var(--primary); font-size:15px;">📝 Review Jawaban & Penilaian Guru</h3>
     <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
@@ -429,7 +429,7 @@
 
     <div id="reviewResultBox" style="display:none; margin-top:15px; max-height:400px; overflow-y:auto;">
       <table class="sub-table">
-        <thead><tr><th>Data Siswa</th><th>Detail Soal, Kunci & Jawaban</th></tr></thead>
+        <thead><tr><th style="width:220px;">Data Siswa</th><th>Detail Pertanyaan, Jawaban & Penilaian</th></tr></thead>
         <tbody id="reviewTbody"></tbody>
       </table>
     </div>
@@ -1281,6 +1281,7 @@
     });
   }
 
+  // MENAMPILKAN MURNI INFORMASI DARI NilaiWawancara
   function renderReviewTable(list) {
     const tbody = document.getElementById('reviewTbody');
     tbody.innerHTML = "";
@@ -1299,12 +1300,15 @@
         const cleanAI = cleanScoreValue(q.scoreAI);
         const aiScoreDisplay = cleanAI > 0 ? `<b style="color:#15803d;">${cleanAI} (Nilai Guru)</b>` : `<span style="color:#d97706;">Belum Dinilai</span>`;
 
-        qHtml += `<div style="margin-bottom:10px; border-bottom:1px dashed #cbd5e1; padding-bottom:8px;">
-          <div><b>[${q.qId}] Pertanyaan:</b> ${q.pertanyaan} ${recheckBadge}</div>
-          <div style="color:#0369a1; font-size:11px;"><b>Kunci Rubrik:</b> ${q.rubrik}</div>
-          <div style="background:#f1f5f9; padding:6px; border-radius:6px; margin:4px 0; font-style:italic;">"${q.transcript || 'Belum ada jawaban'}"</div>
-          <div>Nilai Robot: ${cleanLoc} | Nilai Guru: ${aiScoreDisplay}</div>
-          <div style="margin-top:6px; display:flex; gap:6px;">
+        qHtml += `<div style="margin-bottom:12px; border-bottom:1px dashed #cbd5e1; padding-bottom:10px;">
+          <div><b>[${q.qId}] Soal:</b> ${q.pertanyaan} ${recheckBadge}</div>
+          <div style="background:#f1f5f9; padding:8px; border-radius:6px; margin:6px 0; font-style:italic;">"${q.transcript || 'Belum ada jawaban'}"</div>
+          <div style="font-size:12px; margin-bottom:4px;">
+            <b>Nilai Robot:</b> ${cleanLoc} | <b>Nilai Guru:</b> ${aiScoreDisplay}
+          </div>
+          ${q.feedback ? `<div style="font-size:11px; color:#475569; margin-bottom:6px;"><b>Ulasan/Catatan:</b> ${q.feedback}</div>` : ''}
+          <div style="font-size:10px; color:#94a3b8; margin-bottom:6px;">🕒 Waktu Submit: ${q.waktu || '-'}</div>
+          <div style="display:flex; gap:6px;">
             <button class="btn-warning" style="padding:4px 8px; font-size:10px; width:auto;" onclick="promptManualGrade('${q.qId}','${item.nama}','${item.rombel}','${item.bab}')">📝 Input Nilai Manual</button>
             <button class="btn-primary" style="padding:4px 8px; font-size:10px; width:auto; background:linear-gradient(135deg, #7c3aed, #4f46e5);" onclick="triggerTeacherAIGrade('${q.qId}','${item.nama}','${item.rombel}','${item.bab}', \`${escapeQuotes(q.transcript)}\`)">🤖 Penilaian AI Gemini</button>
           </div>
@@ -1312,14 +1316,14 @@
       });
 
       tbody.innerHTML += `<tr>
-        <td>
+        <td style="width:220px; vertical-align:top;">
           <b>${item.nama}</b><br>
-          <small>${item.rombel} | ${item.bab}</small><br>
-          <div style="margin-top:6px;">
+          <small style="color:#64748b;">${item.rombel} | ${item.bab}</small><br>
+          <div style="margin-top:8px;">
             <button class="btn-primary" style="padding:4px 8px; font-size:10px; width:auto;" onclick="submitAddExtraTime('${item.nama}','${item.rombel}','${item.bab}')">⏱️ +10 Menit Waktu</button>
           </div>
         </td>
-        <td>${qHtml}</td>
+        <td style="vertical-align:top;">${qHtml}</td>
       </tr>`;
     });
 
