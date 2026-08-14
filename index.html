@@ -421,19 +421,18 @@
 </div>
 
 <!-- ========================================================================= -->
-<!-- 3. JAVASCRIPT LOGIC (SINGLE PAGE APPLICATION - REVISED) -->
+<!-- 3. JAVASCRIPT LOGIC (SINGLE PAGE APPLICATION - FIXES APPLIED) -->
 <!-- ========================================================================= -->
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbzBMx-BvZfCT_w6yG2HJur8KUm2kqK0tfcZhFiD6J7dxH3AOOxXQg72fS4pLzAjNFM_kA/exec";
 
-  // STATE GLOBAL SISI SISWA
+  // STATE GLOBAL
   let studentDataCache = {}, currentQuestionsList = [], activeQuestionIndex = -1, selectedQuestionObject = null;
   let currentAppMode = "PRACTICE", currentAppToken = "", currentAppTimer = 0;
   let speechRecognition = null, isRecording = false;
   
-  // 💡 PERBAIKAN STATE PENANGANAN JAWABAN & PALET
-  let questionState = {}; // Format: { [qId]: { transcript, scoreLocal, scoreAI, feedback, status } }
-  let paletteColors = []; // Format: ['yellow', 'green', ...] per indeks soal
+  let questionState = {}; 
+  let paletteColors = []; 
   
   let pendingActionCallback = null;
   let siswaDataGlobal = [], soalDataGlobal = [];
@@ -584,7 +583,16 @@
     }
   }
 
+  function resetQuestionViewDOM() {
+    selectedQuestionObject = null;
+    activeQuestionIndex = -1;
+    document.getElementById('transcriptTextarea').value = "";
+    document.getElementById('questionContainer').style.display = 'none';
+    document.getElementById('paletteSection').style.display = 'none';
+  }
+
   function onRombelChange() {
+    resetQuestionViewDOM();
     const rombel = document.getElementById('rombelSelect').value;
     const sSelect = document.getElementById('studentSelect');
     const bSelect = document.getElementById('babSelect');
@@ -604,6 +612,7 @@
   }
 
   function onStudentChange() {
+    resetQuestionViewDOM();
     const rombel = document.getElementById('rombelSelect').value;
     const studentName = document.getElementById('studentSelect').value;
     if (rombel && studentName && studentDataCache.studentsByRombel[rombel]) {
@@ -613,10 +622,11 @@
   }
 
   function onBabChange() {
+    resetQuestionViewDOM();
     document.getElementById('btnStartExam').disabled = !document.getElementById('babSelect').value;
   }
 
-  // 💡 PERBAIKAN UTAMA MODE LATIHAN & INITIALIZATION
+  // 💡 PERBAIKAN MEMORI SOAL & HARD-RESET PADA MODE LATIHAN
   function startExamProcess() {
     const rombel = document.getElementById('rombelSelect').value;
     const bab = document.getElementById('babSelect').value;
@@ -624,31 +634,34 @@
 
     if (!rombel || !studentName || !bab) return alert("Pilih Kelas, Nama Siswa, dan Bab!");
 
+    // Hard-reset seluruh memori sebelum memuat soal baru
+    selectedQuestionObject = null;
+    activeQuestionIndex = -1;
+    document.getElementById('transcriptTextarea').value = "";
+    questionState = {};
+    paletteColors = [];
+
     fetchAPI({ action: "getQuestions", rombel: rombel, bab: bab }, res => {
       if (res && res.questions && res.questions.length > 0) {
         currentQuestionsList = res.questions;
 
         if (currentAppMode === "PRACTICE") {
-          // Clean Local Storage Draf Khusus Mode Latihan
           currentQuestionsList.forEach(q => {
             localStorage.removeItem(`draft_${studentName}_${q.id}`);
           });
 
-          questionState = {};
           paletteColors = new Array(currentQuestionsList.length).fill('');
 
           renderPaletteUIOnly();
           renderActionButtons();
           startTimerCountdown(0);
           selectQuestion(0);
-          showNotif(true, "Mode Latihan Siap! 🟢", "Seluruh jawaban dimulai dari 0. Selamat berlatih!");
+          showNotif(true, "Mode Latihan Siap! 🟢", "Seluruh jawaban dimulai murni dari 0. Selamat berlatih!");
         } else {
-          // Mode Ujian
           fetchAPI({ action: "getStudentProgress", studentName: studentName, rombel: rombel, bab: bab }, progRes => {
             const progress = progRes ? progRes.progress : {};
             const extraTime = progRes ? Number(progRes.extraTime) || 0 : 0;
             
-            questionState = {};
             paletteColors = new Array(currentQuestionsList.length).fill('');
 
             currentQuestionsList.forEach((q, i) => {
@@ -740,7 +753,6 @@
     }
   }
 
-  // 💡 PERBAIKAN PERPINDAHAN SOAL & PENYIMPANAN MEMORI LOKAL
   function selectQuestion(i) {
     if (selectedQuestionObject) {
       const currentVal = document.getElementById('transcriptTextarea').value;
