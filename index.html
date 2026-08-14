@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Asesmen Wawancara dan Esai Berbasis AI</title>
+  <title>Asesmen Wawancara dan Esai</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -100,7 +100,7 @@
 <div id="studentView">
   <div class="header-card">
     <span id="badgeModeDisplay" class="badge-mode">Mode: Loading...</span>
-    <h1 style="margin:0 0 4px 0; font-size:20px;">🎙️ Asesmen Wawancara & Esai AI</h1>
+    <h1 style="margin:0 0 4px 0; font-size:20px;">🎙️ Asesmen Wawancara & Esai</h1>
     <div class="school-info">
       <span id="displayNamaSekolah">Memuat Nama Sekolah...</span> | 
       <span id="displayMataPelajaran">Memuat Mapel...</span> | 
@@ -151,7 +151,7 @@
 
     <!-- PALETTE & SOAL SECTION -->
     <div id="paletteSection" style="display:none; margin-top:20px;">
-      <!-- RINCIAN AKUMULASI NILAI DIPISAH -->
+      <!-- AKUMULASI NILAI RINGKAS -->
       <div id="babTotalCard" style="background:#e0e7ff; border:1px solid #c7d2fe; padding:14px; border-radius:14px; margin-bottom:14px;">
         <div style="margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
           <span style="font-size:13px; font-weight:700; color:#3730a3;">📊 Akumulasi Nilai Bab</span>
@@ -159,11 +159,11 @@
         </div>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; text-align:center;">
           <div style="background:white; padding:8px; border-radius:10px; border:1px solid #c7d2fe;">
-            <small style="font-size:11px; color:#475569; font-weight:600; display:block;">🤖 Rata-Rata Nilai AI (Lokal)</small>
+            <small style="font-size:11px; color:#475569; font-weight:600; display:block;">🤖 Rata-Rata Nilai Robot</small>
             <span id="accumulatedLocalScoreDisplay" style="font-size:20px; font-weight:800; color:#10b981;">0 / 100</span>
           </div>
           <div style="background:white; padding:8px; border-radius:10px; border:1px solid #c7d2fe;">
-            <small style="font-size:11px; color:#475569; font-weight:600; display:block;">🎓 Rata-Rata Nilai Gemini AI</small>
+            <small style="font-size:11px; color:#475569; font-weight:600; display:block;">🎓 Rata-Rata Nilai dari Guru</small>
             <span id="accumulatedAIScoreDisplay" style="font-size:20px; font-weight:800; color:#1d4ed8;">- / 100</span>
           </div>
         </div>
@@ -172,7 +172,7 @@
       <label>Pilih Nomor Soal:</label>
       <div id="questionPalette" class="palette-grid"></div>
       <div style="margin-top:8px; font-size:11px; color:#64748b;">
-        ⚪ Putih: Belum | 🟡 Kuning: Ada Jawaban/Diubah | 🟢 Hijau: Nilai AI Sistem | 🔵 Biru: Nilai Gemini AI
+        ⚪ Putih: Belum | 🟡 Kuning: Ada Jawaban/Diubah | 🟢 Hijau: Nilai Robot | 🔵 Biru: Nilai dari Guru
       </div>
     </div>
 
@@ -183,6 +183,15 @@
         <div id="gambarSoalBox" style="display:none; text-align:center;">
           <img id="gambarSoalImg" src="" class="img-soal" alt="Gambar Soal">
         </div>
+      </div>
+
+      <!-- STATUS & CATATAN GURU PADA SOAL INI (JIKA SUDAH DINILAI) -->
+      <div id="teacherFeedbackBox" style="display:none; background:#eff6ff; border:1px solid #bfdbfe; padding:12px; border-radius:12px; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+          <b style="color:#1d4ed8; font-size:13px;">🎓 Hasil Penilaian Guru:</b>
+          <span id="teacherScoreBadge" style="background:#1d4ed8; color:white; font-weight:800; padding:2px 8px; border-radius:6px; font-size:14px;">0 / 100</span>
+        </div>
+        <p id="teacherFeedbackText" style="margin:4px 0 0 0; font-size:12px; color:#1e3a8a;"></p>
       </div>
 
       <div class="form-group">
@@ -198,14 +207,14 @@
   </div>
 </div>
 
-<!-- RESULT MODAL SISWA -->
+<!-- RESULT MODAL SISWA (LOKAL ROBOT) -->
 <div id="resultModal" class="modal-overlay">
   <div class="modal-content" style="text-align:center;">
-    <h3 style="margin-top:0; color:var(--primary);">✨ Hasil Evaluasi Jawaban</h3>
+    <h3 style="margin-top:0; color:var(--primary);">✨ Hasil Evaluasi Robot</h3>
     <h5 id="modalQuestionLabel" style="margin:0 0 10px 0; color:#64748b;">Soal No. 1</h5>
     
     <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:14px; border-radius:14px; margin-bottom:12px;">
-      <div id="modalScoreTypeLabel" style="font-size:12px; color:#166534; font-weight:600;">Skor Evaluasi:</div>
+      <div id="modalScoreTypeLabel" style="font-size:12px; color:#166534; font-weight:600;">Nilai Robot:</div>
       <div id="modalScoreDisplay" style="font-size:38px; font-weight:800; color:#15803d;">0 / 100</div>
     </div>
     
@@ -268,11 +277,11 @@
       <div class="stat-card"><div id="statTotalSoal" class="stat-val">0</div><div class="stat-lbl">Total Soal</div></div>
       <div class="stat-card"><div id="statPartisipasi" class="stat-val">0%</div><div class="stat-lbl">Partisipasi</div></div>
       <div class="stat-card" style="border-color:#fde68a;"><div id="statRecheck" class="stat-val" style="color:#d97706;">0</div><div class="stat-lbl">Re-check Alert</div></div>
-      <div class="stat-card"><div id="statAvgAI" class="stat-val" style="color:#10b981;">0</div><div class="stat-lbl">Rata Nilai Guru/AI</div></div>
+      <div class="stat-card"><div id="statAvgAI" class="stat-val" style="color:#10b981;">0</div><div class="stat-lbl">Rata Nilai Guru</div></div>
     </div>
   </div>
 
-  <!-- TAB 2: MODE, TOKEN & TIMER BEBAS / SPESIFIK BAB -->
+  <!-- TAB 2: MODE & TOKEN -->
   <div id="tabSettings" class="card tab-content" style="display:none;">
     <h3 style="margin-top:0; color:var(--primary); font-size:15px;">⚙️ Mode Aplikasi & Token Ujian</h3>
     
@@ -400,7 +409,7 @@
     </div>
   </div>
 
-  <!-- TAB 6: REVIEW JAWABAN & PENILAIAN -->
+  <!-- TAB 6: REVIEW JAWABAN & PENILAIAN GURU -->
   <div id="tabReview" class="card tab-content" style="display:none;">
     <h3 style="margin-top:0; color:var(--primary); font-size:15px;">📝 Review Jawaban & Penilaian Guru</h3>
     <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
@@ -438,7 +447,7 @@
   </div>
 </div>
 
-<!-- PRINT AREA (ONLY VISIBLE ON PRINTING) -->
+<!-- PRINT AREA -->
 <div id="printArea" style="display:none;"></div>
 
 <!-- PASSWORD CONFIRMATION MODAL -->
@@ -465,7 +474,7 @@
 </div>
 
 <!-- ========================================================================= -->
-<!-- 3. JAVASCRIPT LOGIC (SINGLE PAGE APPLICATION - COMPLETE REVISED) -->
+<!-- 3. JAVASCRIPT LOGIC (CLIENT SIDE) -->
 <!-- ========================================================================= -->
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbzBMx-BvZfCT_w6yG2HJur8KUm2kqK0tfcZhFiD6J7dxH3AOOxXQg72fS4pLzAjNFM_kA/exec";
@@ -914,16 +923,14 @@
     const btnBox = document.getElementById('studentActionButtons');
     if (currentAppMode === "PRACTICE") {
       btnBox.innerHTML = `
-        <button class="btn-primary" style="background:linear-gradient(135deg, #10b981, #059669);" onclick="submitLocalAnswer(false)">🟢 Kirim Jawaban & Cek Nilai AI</button>
-        <button class="btn-secondary" disabled style="margin-top:8px;">🔴 Cek Nilai Gemini AI (OFF di Mode Latihan)</button>
+        <button class="btn-primary" style="background:linear-gradient(135deg, #10b981, #059669);" onclick="submitLocalAnswer(false)">🟢 Cek Nilai Robot</button>
       `;
     } else {
       btnBox.innerHTML = `
         <div style="display:flex; gap:10px; margin-top:10px;">
-          <button class="btn-primary" style="flex:1;" onclick="submitSaveAnswerOnly()">🔵 Kirim Jawaban</button>
-          <button class="btn-success" style="flex:1;" onclick="submitLocalAnswer(false)">🟢 Cek Nilai AI Sistem</button>
+          <button class="btn-success" style="flex:1;" onclick="submitLocalAnswer(false)">🟢 Cek Nilai Robot</button>
+          <button class="btn-primary" style="flex:1; background:linear-gradient(135deg, #2563eb, #1d4ed8);" onclick="submitSaveAnswerOnly()">🔵 Ajukan Penilaian ke Guru</button>
         </div>
-        <button class="btn-primary" style="margin-top:10px; background:linear-gradient(135deg, #1e293b, #0f172a);" onclick="requestAIGrading()">🎓 Cek Nilai dari Guru / Gemini AI</button>
         <button class="btn-danger" style="margin-top:12px; font-weight:700;" onclick="openFinishExamModal()">🏁 AKHIRI UJIAN</button>
       `;
     }
@@ -960,6 +967,21 @@
     }
 
     document.getElementById('transcriptTextarea').value = loadedText;
+
+    // TAMPILKAN HASIL PENILAIAN GURU JIKA SOAL INI SUDAH DINILAI GURU
+    const feedbackBox = document.getElementById('teacherFeedbackBox');
+    if (questionState[qId] && questionState[qId].status === "GRADED" && questionState[qId].scoreAI !== null) {
+      document.getElementById('teacherScoreBadge').innerText = `${questionState[qId].scoreAI} / 100`;
+      document.getElementById('teacherFeedbackText').innerText = questionState[qId].feedback || "Telah dinilai resmi oleh Guru.";
+      feedbackBox.style.display = 'block';
+    } else if (questionState[qId] && questionState[qId].status === "QUEUED") {
+      document.getElementById('teacherScoreBadge').innerText = `- / 100`;
+      document.getElementById('teacherFeedbackText').innerText = "⏳ Masih dalam Antrian Penilaian Guru.";
+      feedbackBox.style.display = 'block';
+    } else {
+      feedbackBox.style.display = 'none';
+    }
+
     renderPaletteUIOnly();
     document.getElementById('questionContainer').style.display = 'block';
   }
@@ -976,7 +998,9 @@
       }
 
       if (val.trim().length > 0) {
-        paletteColors[activeQuestionIndex] = 'yellow';
+        if (paletteColors[activeQuestionIndex] !== 'blue' && paletteColors[activeQuestionIndex] !== 'green') {
+          paletteColors[activeQuestionIndex] = 'yellow';
+        }
       } else {
         paletteColors[activeQuestionIndex] = '';
       }
@@ -1031,10 +1055,12 @@
       studentTranscriptText: textVal
     }, res => {
       if (res && res.success) {
-        paletteColors[activeQuestionIndex] = 'yellow';
+        if (paletteColors[activeQuestionIndex] !== 'blue') {
+          paletteColors[activeQuestionIndex] = 'yellow';
+        }
         renderPaletteUIOnly();
-        showNotif(true, "Jawaban Disimpan! 🔵", "Jawaban berhasil disimpan. Guru/AI dapat mereview hasil Anda.");
-      } else alert("Gagal menyimpan.");
+        showNotif(true, "Jawaban Berhasil Terkirim! 🔵", "Jawaban Anda telah tersimpan dan diajukan ke Guru untuk dinilai.");
+      } else alert("Gagal mengirim jawaban.");
     });
   }
 
@@ -1059,67 +1085,22 @@
         const qId = selectedQuestionObject.id;
         const cleanSc = cleanScoreValue(res.scoreLocal);
 
-        questionState[qId] = {
-          scoreLocal: cleanSc,
-          transcript: res.transcript,
-          feedback: res.feedback,
-          status: "LOCAL_GRADED"
-        };
+        if (!questionState[qId]) questionState[qId] = {};
+        questionState[qId].scoreLocal = cleanSc;
+        questionState[qId].transcript = res.transcript;
 
-        paletteColors[activeQuestionIndex] = 'green';
+        if (paletteColors[activeQuestionIndex] !== 'blue') {
+          paletteColors[activeQuestionIndex] = 'green';
+        }
         renderPaletteUIOnly();
 
         if (!isAuto) {
           document.getElementById('modalQuestionLabel').innerText = `Soal No. ${activeQuestionIndex + 1}`;
-          document.getElementById('modalScoreTypeLabel').innerText = currentAppMode === "PRACTICE" ? "Evaluasi Latihan AI:" : "Nilai AI (Sistem):";
+          document.getElementById('modalScoreTypeLabel').innerText = "Nilai Robot (Sistem):";
           document.getElementById('modalScoreDisplay').innerText = `${cleanSc} / 100`;
           document.getElementById('modalFeedbackDisplay').innerText = res.feedback;
           document.getElementById('resultModal').style.display = 'flex';
         }
-      }
-    });
-  }
-
-  // MEMANGGIL GEMINI AI API KEY (PENANGANAN NOTIFIKASI ANTRIAN SAAT KUOTA HABIS)
-  function requestAIGrading() {
-    stopRecordingIfActive();
-    if (!selectedQuestionObject) return;
-    const textVal = document.getElementById('transcriptTextarea').value.trim();
-    if (!textVal) return alert("Jawaban Anda masih kosong! Silakan rekam atau ketik terlebih dahulu.");
-
-    showNotif(true, "Memproses AI Gemini... 🤖", "Sedang mengevaluasi jawaban Anda menggunakan AI Gemini...");
-
-    fetchAPI({
-      action: "processAIGrade",
-      questionId: selectedQuestionObject.id,
-      studentName: document.getElementById('studentSelect').value,
-      rombel: document.getElementById('rombelSelect').value,
-      jenisKelamin: document.getElementById('jkDisplay').value,
-      bab: document.getElementById('babSelect').value,
-      questionText: selectedQuestionObject.pertanyaan,
-      studentTranscriptText: textVal
-    }, res => {
-      closeNotifModal();
-      if (res && res.success) {
-        const qId = selectedQuestionObject.id;
-        const cleanSc = cleanScoreValue(res.scoreAI);
-
-        if (!questionState[qId]) questionState[qId] = {};
-        questionState[qId].scoreAI = cleanSc;
-        questionState[qId].feedback = res.feedback;
-        questionState[qId].status = "GRADED";
-
-        paletteColors[activeQuestionIndex] = 'blue';
-        renderPaletteUIOnly();
-
-        document.getElementById('modalQuestionLabel').innerText = `Soal No. ${activeQuestionIndex + 1}`;
-        document.getElementById('modalScoreTypeLabel').innerText = "Nilai Resmi Gemini AI:";
-        document.getElementById('modalScoreDisplay').innerText = `${cleanSc} / 100`;
-        document.getElementById('modalFeedbackDisplay').innerText = res.feedback;
-        document.getElementById('resultModal').style.display = 'flex';
-      } else {
-        // TAMPILKAN "Masih dalam Antrian Penilaian" SAAT KUOTA / AKSI GEMINI KENDALA
-        showNotif(false, "Antrian Penilaian ⏳", res ? res.error : "Masih dalam Antrian Penilaian");
       }
     });
   }
@@ -1182,7 +1163,7 @@
     sessionStorage.removeItem("verifiedExamSession");
 
     if (!isAutoFinish) {
-      showNotif(true, "Ujian Selesai! 🎉", `Terima kasih! Seluruh jawaban Anda telah terkirim. Rata-rata Nilai AI Sistem: ${scores.avgLocal} | Rata-rata Nilai Gemini AI: ${scores.avgAI}`);
+      showNotif(true, "Ujian Selesai! 🎉", `Terima kasih! Seluruh jawaban Anda telah terkirim. Rata-rata Nilai Robot: ${scores.avgLocal} | Rata-rata Nilai dari Guru: ${scores.avgAI}`);
     }
     
     resetQuestionViewDOM();
@@ -1316,13 +1297,13 @@
         const recheckBadge = q.status === "RECHECK" ? `<span class="badge-recheck">⚠️ Perlu Check Ulang</span>` : ``;
         const cleanLoc = cleanScoreValue(q.scoreLocal);
         const cleanAI = cleanScoreValue(q.scoreAI);
-        const aiScoreDisplay = cleanAI > 0 ? `<b style="color:#15803d;">${cleanAI} (Gemini AI)</b>` : `<span style="color:#d97706;">Belum Dinilai</span>`;
+        const aiScoreDisplay = cleanAI > 0 ? `<b style="color:#15803d;">${cleanAI} (Nilai Guru)</b>` : `<span style="color:#d97706;">Belum Dinilai</span>`;
 
         qHtml += `<div style="margin-bottom:10px; border-bottom:1px dashed #cbd5e1; padding-bottom:8px;">
           <div><b>[${q.qId}] Pertanyaan:</b> ${q.pertanyaan} ${recheckBadge}</div>
           <div style="color:#0369a1; font-size:11px;"><b>Kunci Rubrik:</b> ${q.rubrik}</div>
           <div style="background:#f1f5f9; padding:6px; border-radius:6px; margin:4px 0; font-style:italic;">"${q.transcript || 'Belum ada jawaban'}"</div>
-          <div>Nilai AI Sistem: ${cleanLoc} | Nilai Gemini AI: ${aiScoreDisplay}</div>
+          <div>Nilai Robot: ${cleanLoc} | Nilai Guru: ${aiScoreDisplay}</div>
           <div style="margin-top:6px; display:flex; gap:6px;">
             <button class="btn-warning" style="padding:4px 8px; font-size:10px; width:auto;" onclick="promptManualGrade('${q.qId}','${item.nama}','${item.rombel}','${item.bab}')">📝 Input Nilai Manual</button>
             <button class="btn-primary" style="padding:4px 8px; font-size:10px; width:auto; background:linear-gradient(135deg, #7c3aed, #4f46e5);" onclick="triggerTeacherAIGrade('${q.qId}','${item.nama}','${item.rombel}','${item.bab}', \`${escapeQuotes(q.transcript)}\`)">🤖 Penilaian AI Gemini</button>
@@ -1361,7 +1342,7 @@
   }
 
   function triggerTeacherAIGrade(qId, nama, rombel, bab, transcript) {
-    if (!transcript || transcript.trim() === "") return alert("Jawaban siswa masih kosong, AI tidak dapat menilai.");
+    if (!transcript || transcript.trim() === "") return alert("Jawaban siswa masih kosong, tidak dapat dinilai.");
 
     requestPasswordAndExecute(password => {
       fetchAPI({ action: "triggerGeminiGradingTeacher", password: password, questionId: qId, studentName: nama, rombel: rombel, bab: bab, studentTranscriptText: transcript }, res => {
@@ -1609,7 +1590,7 @@
 
           printArea.innerHTML = `
             <div class="print-header">
-              <h2 style="margin:0;">REKAPITULASI ASESMEN WAWANCARA & ESAI AI</h2>
+              <h2 style="margin:0;">REKAPITULASI ASESMEN WAWANCARA & ESAI</h2>
               <h3 style="margin:4px 0;">${document.getElementById('displayNamaSekolah').innerText}</h3>
               <p style="margin:0; font-size:10pt;">Mata Pelajaran: ${document.getElementById('displayMataPelajaran').innerText} | Rombel: ${rombel} | Bab: ${bab}</p>
             </div>
@@ -1620,8 +1601,8 @@
                   <th style="width:40px;">No</th>
                   <th>Nama Lengkap Siswa</th>
                   <th style="width:50px;">JK</th>
-                  <th style="width:90px;">Nilai AI Sistem</th>
-                  <th style="width:90px;">Nilai Gemini AI</th>
+                  <th style="width:90px;">Nilai Robot</th>
+                  <th style="width:90px;">Nilai Guru</th>
                 </tr>
               </thead>
               <tbody>${tableRows}</tbody>
