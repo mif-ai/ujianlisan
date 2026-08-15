@@ -17,9 +17,8 @@
     * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
     body { background-color: var(--bg); padding: 15px; max-width: 960px; margin: auto; color: var(--text); }
     
-    .header-card { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; padding: 22px; border-radius: 20px; text-align: center; margin-bottom: 20px; position: relative; box-shadow: 0 10px 25px rgba(79, 70, 229, 0.25); }
+    .header-card { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; padding: 22px; border-radius: 20px; text-align: center; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(79, 70, 229, 0.25); }
     .header-card-admin { background: linear-gradient(135deg, #0f172a, #334155); }
-    .badge-mode { position: absolute; top: 14px; right: 14px; background: rgba(0,0,0,0.35); padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 700; border: 1px solid rgba(255,255,255,0.4); backdrop-filter: blur(4px); }
     
     .card { background: var(--card); padding: 22px; border-radius: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); margin-bottom: 20px; border: 1px solid #e2e8f0; }
     .form-group { margin-bottom: 14px; }
@@ -96,12 +95,14 @@
 <!-- ========================================================================= -->
 <div id="studentView">
   <div class="header-card">
-    <span id="badgeModeDisplay" class="badge-mode">Buka Sesi...</span>
     <h1 style="margin:0 0 4px 0; font-size:20px;">🎙️ Asesmen Wawancara & Esai</h1>
     <div class="school-info">
       <span id="displayNamaSekolah">Memuat...</span> | <span id="displayMataPelajaran">Memuat...</span>
     </div>
   </div>
+
+  <!-- BANNER INFORMASI MODE (RESPONSIF DI BAWAH HEADER) -->
+  <div id="modeBannerCard" style="display:none; padding:14px; border-radius:14px; margin-bottom:20px; font-size:12px; border:1px solid; line-height: 1.5;"></div>
 
   <button class="btn-guru" onclick="showAdminView()">⚙️ Buka Panel Kendali Guru / Admin</button>
 
@@ -137,14 +138,15 @@
         </div>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; text-align:center;">
           <div style="background:white; padding:8px; border-radius:10px; border:1px solid #c7d2fe;">
-            <small style="font-size:11px; color:#475569; font-weight:600; display:block;">🤖 Rata-Rata Nilai Robot</small>
+            <small style="font-size:11px; color:#475569; font-weight:600; display:block;">🤖 Nilai Robot (Instan)</small>
             <span id="accumulatedLocalScoreDisplay" style="font-size:20px; font-weight:800; color:#10b981;">0 / 100</span>
           </div>
           <div style="background:white; padding:8px; border-radius:10px; border:1px solid #c7d2fe;">
-            <small style="font-size:11px; color:#475569; font-weight:600; display:block;">🎓 Rata-Rata Nilai dari Guru</small>
-            <span id="accumulatedAIScoreDisplay" style="font-size:20px; font-weight:800; color:#1d4ed8;">- / 100</span>
+            <small style="font-size:11px; color:#475569; font-weight:600; display:block;">🎓 Nilai Resmi Guru</small>
+            <span id="accumulatedAIScoreDisplay" style="font-size:15px; font-weight:700; color:#1d4ed8; padding-top:4px; display:block;">⏳ Menunggu Antrian</span>
           </div>
         </div>
+        <small style="font-size:10px; color:#475569; display:block; margin-top:8px; text-align:center;">*Nilai robot bersifat instan. Nilai resmi akan diperbarui setelah melalui antrian penilaian Guru.</small>
       </div>
 
       <label>Pilih Nomor Soal:</label>
@@ -178,23 +180,24 @@
   </div>
 </div>
 
-<!-- MODAL 1: SINGLE RESULT (Untuk soal yang baru pertama kali dikerjakan / Mode Practice) -->
+<!-- MODAL 1: SINGLE RESULT -->
 <div id="resultModal" class="modal-overlay">
   <div class="modal-content" style="text-align:center;">
     <h3 style="margin-top:0; color:var(--primary);">✨ Hasil Evaluasi Robot</h3>
     <h5 id="modalQuestionLabel" style="margin:0 0 10px 0; color:#64748b;">Soal No. X</h5>
     <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:14px; border-radius:14px; margin-bottom:12px;">
-      <div style="font-size:12px; color:#166534; font-weight:600;">Nilai Robot:</div>
+      <div style="font-size:12px; color:#166534; font-weight:600;">Nilai Robot (Instan):</div>
       <div id="modalScoreDisplay" style="font-size:38px; font-weight:800; color:#15803d;">0 / 100</div>
     </div>
     <div style="text-align:left; background:#f8fafc; padding:12px; border-radius:10px; font-size:12px; margin-bottom:12px; border:1px solid #e2e8f0;">
       <b>Catatan Ulasan:</b> <p id="modalFeedbackDisplay" style="margin:4px 0 0 0; color:#334155;"></p>
     </div>
+    <p style="font-size:11px; color:#64748b; margin-bottom:15px;">⏳ Skor robot berhasil disimpan. Jawaban Anda kini masuk dalam antrian penilaian resmi oleh Guru.</p>
     <button class="btn-primary" onclick="closeResultModal()">Tutup & Lanjutkan</button>
   </div>
 </div>
 
-<!-- 🎯 MODAL 2: KOMPARASI SIDE-BY-SIDE (Khusus Mode Ujian/Submission) -->
+<!-- 🎯 MODAL 2: KOMPARASI SIDE-BY-SIDE -->
 <div id="comparisonModal" class="modal-overlay">
   <div class="modal-content" style="max-width: 650px;">
     <h3 style="margin-top:0; color:var(--primary); text-align:center;">⚖️ Komparasi Revisi Jawaban</h3>
@@ -213,7 +216,7 @@
         <b style="color:#059669;">✨ JAWABAN BARU</b>
         <div class="comp-text-box" id="compNewText">...</div>
         <div class="comp-score-row"><span>🤖 Nilai Robot:</span> <span id="compNewScoreLoc" style="color:#15803d; font-size:14px;">0</span></div>
-        <div class="comp-score-row"><span>🎓 Nilai Guru:</span> <span style="color:#64748b; font-style:italic;">- (Akan Diulas)</span></div>
+        <div class="comp-score-row"><span>🎓 Nilai Guru:</span> <span style="color:#64748b; font-style:italic;">⏳ Menunggu Antrian</span></div>
       </div>
     </div>
 
@@ -317,7 +320,7 @@
     <button class="btn-success" onclick="submitSaveSchoolSettings()">💾 Simpan Info</button>
   </div>
 
-  <!-- TAB 4: CRUD SISWA -->
+  <!-- TAB 4: CRUD SISWA (DENGAN TOMBOL EDIT) -->
   <div id="tabSiswa" class="card tab-content" style="display:none;">
     <h3 style="margin-top:0; color:var(--primary); font-size:15px;">👥 Kelola Data Siswa</h3>
     <div style="background:#f8fafc; padding:14px; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:15px;">
@@ -329,20 +332,20 @@
       </div>
       <div class="form-group"><label>Rombel:</label><input type="text" id="siswaRombelInput"></div>
       <div style="display:flex; gap:10px;">
-        <button class="btn-success" style="flex:2;" onclick="submitSaveSiswa()">💾 Simpan Siswa</button>
-        <button class="btn-secondary" style="flex:1;" onclick="resetSiswaForm()">Reset</button>
+        <button id="btnSaveSiswa" class="btn-success" style="flex:2;" onclick="submitSaveSiswa()">💾 Simpan Siswa Baru</button>
+        <button class="btn-secondary" style="flex:1;" onclick="resetSiswaForm()">Reset / Batal</button>
       </div>
     </div>
     <button class="btn-primary" style="width:auto; margin-bottom:10px;" onclick="loadSiswaList()">🔄 Refresh</button>
     <div style="max-height:300px; overflow-y:auto;">
       <table class="sub-table" id="siswaTable">
-        <thead><tr><th>No</th><th>Nama Siswa</th><th>Rombel</th><th>JK</th><th>Aksi</th></tr></thead>
+        <thead><tr><th>No</th><th>Nama Siswa</th><th>Rombel</th><th>JK</th><th style="width:110px;">Aksi</th></tr></thead>
         <tbody id="siswaTbody"></tbody>
       </table>
     </div>
   </div>
 
-  <!-- TAB 5: CRUD BANK SOAL -->
+  <!-- TAB 5: CRUD BANK SOAL (DENGAN TOMBOL EDIT) -->
   <div id="tabSoal" class="card tab-content" style="display:none;">
     <h3 style="margin-top:0; color:var(--primary); font-size:15px;">📚 Kelola Bank Soal</h3>
     <div style="background:#f8fafc; padding:14px; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:15px;">
@@ -355,14 +358,14 @@
       <div class="form-group"><label>Rubrik Kunci:</label><textarea id="soalRubrikInput" rows="2"></textarea></div>
       <div class="form-group"><label>Gambar (Opsional):</label><input type="file" id="soalGambarInput" accept="image/*"></div>
       <div style="display:flex; gap:10px;">
-        <button class="btn-success" style="flex:2;" onclick="submitSaveSoal()">💾 Simpan Soal</button>
-        <button class="btn-secondary" style="flex:1;" onclick="resetSoalForm()">Reset</button>
+        <button id="btnSaveSoal" class="btn-success" style="flex:2;" onclick="submitSaveSoal()">💾 Simpan Soal Baru</button>
+        <button class="btn-secondary" style="flex:1;" onclick="resetSoalForm()">Reset / Batal</button>
       </div>
     </div>
     <button class="btn-primary" style="width:auto; margin-bottom:10px;" onclick="loadSoalList()">🔄 Refresh</button>
     <div style="max-height:300px; overflow-y:auto;">
       <table class="sub-table" id="soalTable">
-        <thead><tr><th>ID</th><th>Target</th><th>Bab</th><th>Pertanyaan</th><th>Aksi</th></tr></thead>
+        <thead><tr><th>ID</th><th>Target</th><th>Bab</th><th>Pertanyaan</th><th style="width:110px;">Aksi</th></tr></thead>
         <tbody id="soalTbody"></tbody>
       </table>
     </div>
@@ -436,7 +439,7 @@
   const INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000;
 
   let studentDataCache = {}, currentQuestionsList = [], activeQuestionIndex = -1, selectedQuestionObject = null;
-  let currentAppMode = "", activeBabTimer = 0; // Mode akan diset lewat Token ("PRACTICE" atau "SUBMISSION")
+  let currentAppMode = "", activeBabTimer = 0; 
   let speechRecognition = null, isRecording = false;
   
   let questionState = {}; 
@@ -550,11 +553,27 @@
 
   function showNotif(isSuccess, title, message) { document.getElementById('notifIcon').innerText = isSuccess ? "✅" : "❌"; document.getElementById('notifTitle').innerText = title; document.getElementById('notifTitle').style.color = isSuccess ? "#10b981" : "#ef4444"; document.getElementById('notifMessage').innerText = message; document.getElementById('notifModal').style.display = 'flex'; }
   function closeNotifModal() { document.getElementById('notifModal').style.display = 'none'; }
-  function updateModeBadgeUI(mode) {
-    const badge = document.getElementById('badgeModeDisplay');
-    if (mode === "PRACTICE") { badge.innerHTML = "🟢 MODE LATIHAN"; badge.style.background = "#10b981"; } 
-    else if (mode === "SUBMISSION") { badge.innerHTML = "🔴 MODE UJIAN"; badge.style.background = "#ef4444"; }
-    else { badge.innerHTML = "Buka Sesi..."; badge.style.background = "rgba(0,0,0,0.35)"; }
+  
+  // === UPDATE BANNER MODE & DISCLAIMER DI BAWAH HEADER ===
+  function updateModeBannerUI(mode) {
+    const banner = document.getElementById('modeBannerCard');
+    if (mode === "PRACTICE") {
+      banner.style.display = "block";
+      banner.style.background = "#f0fdf4";
+      banner.style.borderColor = "#bbf7d0";
+      banner.style.color = "#166534";
+      banner.innerHTML = `<b>🟢 MODE LATIHAN MANDIRI</b><br>
+      <i>Catatan: Penilaian robot di mode ini menggunakan sistem dasar gratis yang terbatas dan kurang akurat. Skor hanya simulasi kasar untuk latihan mandiri dan tidak masuk ke rekap nilai resmi.</i>`;
+    } else if (mode === "SUBMISSION") {
+      banner.style.display = "block";
+      banner.style.background = "#fef2f2";
+      banner.style.borderColor = "#fecaca";
+      banner.style.color = "#991b1b";
+      banner.innerHTML = `<b>🔴 MODE UJIAN RESMI</b><br>
+      <i>Catatan: Jawaban Anda direkam ke server. Penilaian robot bersifat instan, sedangkan nilai resmi dari Guru akan masuk ke dalam antrian ulasan.</i>`;
+    } else {
+      banner.style.display = "none";
+    }
   }
 
   function resetQuestionViewDOM() { 
@@ -595,7 +614,7 @@
       if (res && res.success) {
         currentAppMode = res.mode; // PRACTICE atau SUBMISSION
         closeTokenModal();
-        updateModeBadgeUI(currentAppMode);
+        updateModeBannerUI(currentAppMode);
         startExamDataFetch();
       } else {
         showNotif(false, "Token Salah! ❌", "Token tidak sesuai. Silakan hubungi Guru.");
@@ -618,7 +637,7 @@
         if (currentAppMode === "PRACTICE") {
           currentQuestionsList.forEach(q => questionState[q.id] = { oldTranscript: "", oldScoreLocal: 0, oldScoreAI: null });
           paletteColors = new Array(currentQuestionsList.length).fill('');
-          renderPaletteUIOnly(); startTimerCountdown(0, 0); // Timer = 0 (Tanpa Batas)
+          renderPaletteUIOnly(); startTimerCountdown(0, 0); 
           doSelectQuestion(0);
           showNotif(true, "Mode Latihan Siap! 🟢", "Jawaban tidak disimpan permanen ke server.");
         } else {
@@ -721,11 +740,10 @@
 
     document.getElementById('transcriptTextarea').value = oldData.oldTranscript || "";
     
-    // Tampilkan Banner Info Jawaban Lama (jika ada)
     const banner = document.getElementById('oldDataBanner');
     if (currentAppMode === "SUBMISSION" && oldData.oldTranscript && oldData.oldTranscript.trim() !== "") {
       document.getElementById('bannerLoc').innerText = oldData.oldScoreLocal;
-      document.getElementById('bannerAI').innerText = (oldData.oldScoreAI !== null && oldData.oldScoreAI !== "") ? oldData.oldScoreAI : "-";
+      document.getElementById('bannerAI').innerText = (oldData.oldScoreAI !== null && oldData.oldScoreAI !== "") ? oldData.oldScoreAI : "⏳ Menunggu Antrian";
       banner.style.display = 'block';
     } else { banner.style.display = 'none'; }
 
@@ -733,7 +751,6 @@
     document.getElementById('questionContainer').style.display = 'block';
   }
 
-  // Mencegah perpindahan soal sebelum jawaban baru di-evaluasi
   function interceptNavigation(targetIndex, isTimeout = false) {
     if (!selectedQuestionObject) return;
     const qId = selectedQuestionObject.id;
@@ -758,7 +775,6 @@
 
       const newScore = cleanScoreValue(res.scoreLocal);
 
-      // JIKA PRAKTIK (LATIHAN) - Simpan di memori lokal saja
       if (currentAppMode === "PRACTICE") {
          saveAnswerAndState(qId, currentText, newScore, res.feedback, null, () => {
              if (targetIndex === activeQuestionIndex) { showSingleResultModal(newScore, res.feedback); } 
@@ -767,16 +783,13 @@
          return;
       }
 
-      // JIKA UJIAN (SUBMISSION) & TIMEOUT
       if (isTimeout) {
         if (isNewEntry || newScore > oldData.oldScoreLocal) {
           saveAnswerAndState(qId, currentText, newScore, res.feedback, oldData.oldScoreAI, () => finishExamDirectly("⏱️ Waktu Habis! Redaksi terakhir otomatis DISIMPAN karena Nilai Robotnya tinggi."));
         } else {
           finishExamDirectly("⏱️ Waktu Habis! Redaksi terakhir DIABAIKAN karena Nilai Robot barunya lebih rendah.");
         }
-      } 
-      // JIKA UJIAN (SUBMISSION) & KLIK MANUAL
-      else {
+      } else {
         if (isNewEntry) {
            saveAnswerAndState(qId, currentText, newScore, res.feedback, oldData.oldScoreAI, () => {
               if (targetIndex === activeQuestionIndex) { showSingleResultModal(newScore, res.feedback); } 
@@ -798,7 +811,6 @@
       return;
     }
     
-    // SUBMISSION: Save to Server
     fetchAPI({
       action: "saveConfirmedAnswer", questionId: qId, studentName: document.getElementById('studentSelect').value,
       rombel: document.getElementById('rombelSelect').value, jenisKelamin: document.getElementById('jkDisplay').value, bab: document.getElementById('babSelect').value,
@@ -816,7 +828,7 @@
   function showComparisonModal(targetIndex, oldData, newText, newScore, newFeedback) {
     document.getElementById('compOldText').innerText = oldData.oldTranscript;
     document.getElementById('compOldScoreLoc').innerText = oldData.oldScoreLocal;
-    document.getElementById('compOldScoreAI').innerText = (oldData.oldScoreAI !== null && oldData.oldScoreAI !== "") ? oldData.oldScoreAI : "- (Belum)";
+    document.getElementById('compOldScoreAI').innerText = (oldData.oldScoreAI !== null && oldData.oldScoreAI !== "") ? oldData.oldScoreAI : "⏳ Menunggu Antrian";
     
     document.getElementById('compNewText').innerText = newText;
     document.getElementById('compNewScoreLoc').innerText = newScore;
@@ -839,7 +851,7 @@
 
     btnKeep.onclick = () => {
       document.getElementById('comparisonModal').style.display = 'none';
-      document.getElementById('transcriptTextarea').value = oldData.oldTranscript; // Restore text
+      document.getElementById('transcriptTextarea').value = oldData.oldTranscript;
       if (targetIndex !== activeQuestionIndex) doSelectQuestion(targetIndex); else renderActionButtons();
     };
 
@@ -867,7 +879,7 @@
   }
 
   function calculateAccumulatedScores() {
-    if (!currentQuestionsList || currentQuestionsList.length === 0) return { avgLocal: 0, avgAI: "-" };
+    if (!currentQuestionsList || currentQuestionsList.length === 0) return { avgLocal: 0, avgAI: "⏳ Menunggu" };
     let sumLocal = 0, countLocal = 0, sumAI = 0, countAI = 0;
     currentQuestionsList.forEach(q => {
       const data = questionState[q.id];
@@ -877,21 +889,21 @@
       }
     });
     const avgLocal = countLocal > 0 ? Math.round(sumLocal / currentQuestionsList.length) : 0;
-    const avgAI = countAI > 0 ? Math.round(sumAI / countAI) : "-";
+    const avgAI = countAI > 0 ? Math.round(sumAI / countAI) : "⏳ Menunggu Antrian";
     return { avgLocal: avgLocal, avgAI: avgAI };
   }
   function updateAccumulatedScoreUI() {
     const scores = calculateAccumulatedScores();
     document.getElementById('accumulatedLocalScoreDisplay').innerText = `${scores.avgLocal} / 100`;
-    document.getElementById('accumulatedAIScoreDisplay').innerText = scores.avgAI === "-" ? "- / 100" : `${scores.avgAI} / 100`;
+    document.getElementById('accumulatedAIScoreDisplay').innerText = scores.avgAI === "⏳ Menunggu Antrian" ? "⏳ Menunggu" : `${scores.avgAI} / 100`;
   }
 
   function openFinishExamModal() { document.getElementById('finishExamModal').style.display = 'flex'; }
   function closeFinishExamModal() { document.getElementById('finishExamModal').style.display = 'none'; }
   function finishExamDirectly(customMsg) {
-    closeFinishExamModal(); clearInterval(examTimerInterval); currentAppMode = ""; updateModeBadgeUI("");
+    closeFinishExamModal(); clearInterval(examTimerInterval); currentAppMode = ""; updateModeBannerUI("");
     const scores = calculateAccumulatedScores();
-    const finalMsg = customMsg || `Terima kasih! Rata-rata Nilai Robot: ${scores.avgLocal} | Nilai Guru: ${scores.avgAI}`;
+    const finalMsg = customMsg || `Terima kasih! Nilai Robot: ${scores.avgLocal} | Nilai Resmi Guru: ${scores.avgAI}`;
     showNotif(true, "Sesi Selesai! 🎉", finalMsg);
     resetQuestionViewDOM(); 
     document.getElementById('btnStartExam').disabled = false;
@@ -969,15 +981,10 @@
     if (!adminSessionPassword) return showAdminView(); const score = prompt(`Masukkan Nilai (0-100) untuk ${nama}:`, "85"); if (score === null) return;
     fetchAPI({ action: "forceAIGrade", password: adminSessionPassword, questionId: qId, studentName: nama, rombel: rombel, bab: bab, customScore: score, customFeedback: "Telah dinilai Guru." }, res => { if (res && res.success) { showNotif(true, "BERHASIL ✅", "Disimpan"); submitLoadReview(); } });
   }
-  
-  // === FUNGSI YANG DIPERBARUI UNTUK PENILAIAN AI ===
   function triggerTeacherAIGrade(qId, nama, rombel, bab, transcript) {
     if (!adminSessionPassword) return showAdminView(); 
     if (!transcript) return alert("Jawaban kosong");
-
-    // Menampilkan indikator loading saat AI bekerja
     showLoader(); 
-
     fetchAPI({ 
       action: "triggerGeminiGradingTeacher", 
       password: adminSessionPassword, 
@@ -987,34 +994,147 @@
       bab: bab, 
       studentTranscriptText: transcript 
     }, res => { 
-      // Menyembunyikan indikator loading
       hideLoader(); 
-      
       if (res && res.success) { 
         showNotif(true, "BERHASIL 🤖", "AI berhasil memberikan penilaian."); 
         submitLoadReview(); 
       } else {
-        // Menampilkan pesan error jika gagal terhubung atau kuota API limit
         showNotif(false, "GAGAL ❌", res ? res.error : "Gagal memproses Penilaian AI."); 
       }
     });
   }
-
   function submitAddExtraTime(nama, rombel, bab) { fetchAPI({ action: "addExtraTime", password: adminSessionPassword, studentName: nama, rombel: rombel, bab: bab }, res => { if (res && res.success) submitLoadReview(); }); }
   function escapeQuotes(str) { return (str || '').replace(/'/g, "\\'").replace(/"/g, '\\"'); }
 
-  // CRUD SISWA & SOAL...
-  function loadSiswaList() { fetchAPI({ action: "getStudentListAdmin", password: adminSessionPassword }, res => { if(res.success) { siswaDataGlobal = res.list; const tbody = document.getElementById('siswaTbody'); tbody.innerHTML=""; res.list.forEach(item => tbody.innerHTML += `<tr><td>${item.no}</td><td>${item.nama}</td><td>${item.rombel}</td><td>${item.jk}</td><td><button class="btn-danger" style="padding:4px;" onclick="deleteSiswa(${item.rowIndex},'${item.nama}')">Hapus</button></td></tr>`); } }); }
-  function submitSaveSiswa() { fetchAPI({ action: "saveStudent", password: adminSessionPassword, rowIndex: document.getElementById('siswaRowIndexInput').value, no: document.getElementById('siswaNoInput').value, nama: document.getElementById('siswaNamaInput').value, rombel: document.getElementById('siswaRombelInput').value, jk: document.getElementById('siswaJkInput').value }, res => { if(res.success) loadSiswaList(); }); }
-  function deleteSiswa(rIdx, n) { if(confirm("Hapus "+n+"?")) fetchAPI({action:"deleteStudent", password:adminSessionPassword, rowIndex:rIdx}, res=>{ if(res.success) loadSiswaList();}); }
-
-  function loadSoalList() { fetchAPI({ action: "getAllQuestionsAdmin", password: adminSessionPassword }, res => { if(res.success) { soalDataGlobal = res.list; const tbody = document.getElementById('soalTbody'); tbody.innerHTML=""; res.list.forEach(item => tbody.innerHTML += `<tr><td>${item.id}</td><td>${item.kelas}</td><td>${item.bab}</td><td>${item.pertanyaan}</td><td><button class="btn-danger" style="padding:4px;" onclick="deleteSoal('${item.id}')">Hapus</button></td></tr>`); } }); }
-  function submitSaveSoal() { 
-    const file = document.getElementById('soalGambarInput').files[0];
-    const doSave = (b64, name, mime) => fetchAPI({action:"saveQuestion", password:adminSessionPassword, questionId:document.getElementById('soalIdInput').value, kelas:document.getElementById('soalKelasInput').value, bab:document.getElementById('soalBabInput').value, pertanyaan:document.getElementById('soalPertanyaanInput').value, rubrik:document.getElementById('soalRubrikInput').value, imageBase64:b64, imageFileName:name, imageMimeType:mime}, res=>{ if(res.success) loadSoalList(); });
-    if(file){ const r = new FileReader(); r.onload=e=>doSave(e.target.result, file.name, file.type); r.readAsDataURL(file); } else doSave("","","");
+  // === CRUD SISWA (DENGAN FITUR EDIT) ===
+  function loadSiswaList() {
+    fetchAPI({ action: "getStudentListAdmin", password: adminSessionPassword }, res => {
+      if(res.success) {
+        siswaDataGlobal = res.list; const tbody = document.getElementById('siswaTbody'); tbody.innerHTML="";
+        res.list.forEach(item => {
+          tbody.innerHTML += `<tr><td>${item.no}</td><td>${item.nama}</td><td>${item.rombel}</td><td>${item.jk}</td>
+            <td>
+              <div style="display:flex; gap:4px;">
+                <button class="btn-warning" style="padding:4px 8px; font-size:11px;" onclick="editSiswa(${item.rowIndex}, '${item.no}', '${item.nama}', '${item.rombel}', '${item.jk}')">Edit</button>
+                <button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteSiswa(${item.rowIndex}, '${item.nama}')">Hapus</button>
+              </div>
+            </td></tr>`;
+        });
+      }
+    });
   }
-  function deleteSoal(id) { if(confirm("Hapus "+id+"?")) fetchAPI({action:"deleteQuestion", password:adminSessionPassword, questionId:id}, res=>{ if(res.success) loadSoalList(); }); }
+  function editSiswa(rowIndex, no, nama, rombel, jk) {
+    document.getElementById('siswaRowIndexInput').value = rowIndex;
+    document.getElementById('siswaNoInput').value = no;
+    document.getElementById('siswaNamaInput').value = nama;
+    document.getElementById('siswaRombelInput').value = rombel;
+    document.getElementById('siswaJkInput').value = jk;
+    document.getElementById('btnSaveSiswa').innerText = "🔄 Perbarui Data Siswa";
+    document.getElementById('tabSiswa').scrollIntoView({ behavior: 'smooth' });
+  }
+  function resetSiswaForm() {
+    document.getElementById('siswaRowIndexInput').value = "";
+    document.getElementById('siswaNoInput').value = "";
+    document.getElementById('siswaNamaInput').value = "";
+    document.getElementById('siswaRombelInput').value = "";
+    document.getElementById('siswaJkInput').value = "L";
+    document.getElementById('btnSaveSiswa').innerText = "💾 Simpan Siswa Baru";
+  }
+  function submitSaveSiswa() {
+    if (!adminSessionPassword) return showAdminView();
+    fetchAPI({ 
+      action: "saveStudent", password: adminSessionPassword, 
+      rowIndex: document.getElementById('siswaRowIndexInput').value, 
+      no: document.getElementById('siswaNoInput').value, 
+      nama: document.getElementById('siswaNamaInput').value, 
+      rombel: document.getElementById('siswaRombelInput').value, 
+      jk: document.getElementById('siswaJkInput').value 
+    }, res => { 
+      if(res.success) { showNotif(true, "BERHASIL ✅", res.message); resetSiswaForm(); loadSiswaList(); } 
+      else showNotif(false, "GAGAL", res.error); 
+    });
+  }
+  function deleteSiswa(rIdx, n) { 
+    if(confirm("Hapus data "+n+"?")) {
+      fetchAPI({ action: "deleteStudent", password: adminSessionPassword, rowIndex: rIdx }, res => { 
+        if(res.success) { showNotif(true, "TERHAPUS", "Data siswa dihapus."); loadSiswaList(); } 
+      });
+    }
+  }
+
+  // === CRUD BANK SOAL (DENGAN FITUR EDIT) ===
+  function loadSoalList() {
+    fetchAPI({ action: "getAllQuestionsAdmin", password: adminSessionPassword }, res => {
+      if(res.success) {
+        soalDataGlobal = res.list; const tbody = document.getElementById('soalTbody'); tbody.innerHTML="";
+        res.list.forEach(item => {
+          let escapedPertanyaan = (item.pertanyaan || "").replace(/"/g, '&quot;');
+          let escapedRubrik = (item.rubrik || "").replace(/"/g, '&quot;');
+          tbody.innerHTML += `<tr><td>${item.id}</td><td>${item.kelas}</td><td>${item.bab}</td><td>${item.pertanyaan}</td>
+            <td>
+              <div style="display:flex; gap:4px;">
+                <button class="btn-warning" style="padding:4px 8px; font-size:11px;" onclick="editSoal('${item.id}', '${item.kelas}', '${item.bab}', \`${escapedPertanyaan}\`, \`${escapedRubrik}\`)">Edit</button>
+                <button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteSoal('${item.id}')">Hapus</button>
+              </div>
+            </td></tr>`;
+        });
+      }
+    });
+  }
+  function editSoal(id, kelas, bab, pertanyaan, rubrik) {
+    document.getElementById('soalIdInput').value = id;
+    document.getElementById('soalKelasInput').value = kelas;
+    document.getElementById('soalBabInput').value = bab;
+    document.getElementById('soalPertanyaanInput').value = pertanyaan;
+    document.getElementById('soalRubrikInput').value = rubrik;
+    document.getElementById('soalGambarInput').value = "";
+    document.getElementById('btnSaveSoal').innerText = "🔄 Perbarui Soal (" + id + ")";
+    document.getElementById('tabSoal').scrollIntoView({ behavior: 'smooth' });
+  }
+  function resetSoalForm() {
+    document.getElementById('soalIdInput').value = "";
+    document.getElementById('soalKelasInput').value = "";
+    document.getElementById('soalBabInput').value = "";
+    document.getElementById('soalPertanyaanInput').value = "";
+    document.getElementById('soalRubrikInput').value = "";
+    document.getElementById('soalGambarInput').value = "";
+    document.getElementById('btnSaveSoal').innerText = "💾 Simpan Soal Baru";
+  }
+  function submitSaveSoal() { 
+    if (!adminSessionPassword) return showAdminView();
+    const file = document.getElementById('soalGambarInput').files[0];
+    const doSave = (b64, name, mime) => {
+      showLoader();
+      fetchAPI({
+        action: "saveQuestion", password: adminSessionPassword, 
+        questionId: document.getElementById('soalIdInput').value, 
+        kelas: document.getElementById('soalKelasInput').value, 
+        bab: document.getElementById('soalBabInput').value, 
+        pertanyaan: document.getElementById('soalPertanyaanInput').value, 
+        rubrik: document.getElementById('soalRubrikInput').value, 
+        imageBase64: b64, imageFileName: name, imageMimeType: mime
+      }, res => { 
+        hideLoader();
+        if(res.success) { showNotif(true, "BERHASIL ✅", res.message); resetSoalForm(); loadSoalList(); } 
+        else showNotif(false, "GAGAL", res.error); 
+      });
+    };
+    if(file){ 
+      const r = new FileReader(); 
+      r.onload = e => doSave(e.target.result, file.name, file.type); 
+      r.readAsDataURL(file); 
+    } else { 
+      doSave("", "", ""); 
+    }
+  }
+  function deleteSoal(id) { 
+    if(confirm("Hapus soal "+id+"?")) {
+      fetchAPI({ action: "deleteQuestion", password: adminSessionPassword, questionId: id }, res => { 
+        if(res.success) { showNotif(true, "TERHAPUS", "Soal berhasil dihapus."); loadSoalList(); } 
+        else showNotif(false, "GAGAL", res.error);
+      });
+    }
+  }
 
   function generatePrintPreview() {
     const rombel = document.getElementById('cetakRombelSelect').value, bab = document.getElementById('cetakBabSelect').value; if (!rombel || !bab) return alert("Pilih Rombel & Bab!");
