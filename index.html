@@ -969,10 +969,37 @@
     if (!adminSessionPassword) return showAdminView(); const score = prompt(`Masukkan Nilai (0-100) untuk ${nama}:`, "85"); if (score === null) return;
     fetchAPI({ action: "forceAIGrade", password: adminSessionPassword, questionId: qId, studentName: nama, rombel: rombel, bab: bab, customScore: score, customFeedback: "Telah dinilai Guru." }, res => { if (res && res.success) { showNotif(true, "BERHASIL ✅", "Disimpan"); submitLoadReview(); } });
   }
+  
+  // === FUNGSI YANG DIPERBARUI UNTUK PENILAIAN AI ===
   function triggerTeacherAIGrade(qId, nama, rombel, bab, transcript) {
-    if (!adminSessionPassword) return showAdminView(); if (!transcript) return alert("Jawaban kosong");
-    fetchAPI({ action: "triggerGeminiGradingTeacher", password: adminSessionPassword, questionId: qId, studentName: nama, rombel: rombel, bab: bab, studentTranscriptText: transcript }, res => { if (res && res.success) { showNotif(true, "BERHASIL 🤖", "AI berhasil menilai"); submitLoadReview(); } });
+    if (!adminSessionPassword) return showAdminView(); 
+    if (!transcript) return alert("Jawaban kosong");
+
+    // Menampilkan indikator loading saat AI bekerja
+    showLoader(); 
+
+    fetchAPI({ 
+      action: "triggerGeminiGradingTeacher", 
+      password: adminSessionPassword, 
+      questionId: qId, 
+      studentName: nama, 
+      rombel: rombel, 
+      bab: bab, 
+      studentTranscriptText: transcript 
+    }, res => { 
+      // Menyembunyikan indikator loading
+      hideLoader(); 
+      
+      if (res && res.success) { 
+        showNotif(true, "BERHASIL 🤖", "AI berhasil memberikan penilaian."); 
+        submitLoadReview(); 
+      } else {
+        // Menampilkan pesan error jika gagal terhubung atau kuota API limit
+        showNotif(false, "GAGAL ❌", res ? res.error : "Gagal memproses Penilaian AI."); 
+      }
+    });
   }
+
   function submitAddExtraTime(nama, rombel, bab) { fetchAPI({ action: "addExtraTime", password: adminSessionPassword, studentName: nama, rombel: rombel, bab: bab }, res => { if (res && res.success) submitLoadReview(); }); }
   function escapeQuotes(str) { return (str || '').replace(/'/g, "\\'").replace(/"/g, '\\"'); }
 
