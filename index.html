@@ -17,14 +17,12 @@
     * { 
       box-sizing: border-box; 
       font-family: 'Poppins', sans-serif;
-      /* PROTEKSI ANTI-SELECT TEKS KESELURUHAN */
       -webkit-user-select: none;
       -moz-user-select: none;
       -ms-user-select: none;
       user-select: none;
     }
     
-    /* PENGECUALIAN: Area pengetikan siswa tetap boleh diisi */
     textarea, input[type="text"], input[type="password"], input[type="number"] {
       -webkit-user-select: text !important;
       -moz-user-select: text !important;
@@ -32,18 +30,25 @@
       user-select: text !important;
     }
 
-    body { background-color: var(--bg); padding: 15px; max-width: 960px; margin: auto; color: var(--text); }
+    body { 
+      background-color: var(--bg); 
+      padding: 10px; 
+      width: 100%; 
+      max-width: 100%; 
+      margin: 0; 
+      color: var(--text); 
+    }
     
-    .header-card { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; padding: 22px; border-radius: 20px; text-align: center; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(79, 70, 229, 0.25); }
+    .header-card { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; padding: 18px; border-radius: 16px; text-align: center; margin-bottom: 15px; box-shadow: 0 10px 25px rgba(79, 70, 229, 0.25); }
     .header-card-admin { background: linear-gradient(135deg, #0f172a, #334155); }
     
-    .card { background: var(--card); padding: 22px; border-radius: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); margin-bottom: 20px; border: 1px solid #e2e8f0; }
-    .form-group { margin-bottom: 14px; }
+    .card { background: var(--card); padding: 16px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); margin-bottom: 15px; border: 1px solid #e2e8f0; width: 100%; }
+    .form-group { margin-bottom: 12px; }
     label { font-weight: 600; display: block; margin-bottom: 6px; font-size: 13px; color: #334155; }
     select, input[type="text"], input[type="password"], input[type="number"], textarea { width: 100%; padding: 12px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 13px; background-color: #f8fafc; transition: all 0.2s; }
     select:focus, input:focus, textarea:focus { border-color: var(--primary); outline: none; background-color: #fff; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); }
     
-    button { padding: 12px 18px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s; width: 100%; }
+    button { padding: 12px 16px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s; width: 100%; }
     button:active { transform: scale(0.98); }
     button:disabled { background: #cbd5e1 !important; color: #64748b !important; cursor: not-allowed; }
     .btn-primary { background: linear-gradient(135deg, #4f46e5, #4338ca); color: white; }
@@ -51,67 +56,54 @@
     .btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
     .btn-warning { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
     .btn-secondary { background: #64748b; color: white; }
-    .btn-guru { background: linear-gradient(135deg, #1e293b, #0f172a); color: white; margin-bottom: 16px; }
+    .btn-guru { background: linear-gradient(135deg, #1e293b, #0f172a); color: white; margin-bottom: 14px; }
     
     .btn-record-start { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; margin: 12px 0; }
     .btn-record-stop { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; margin: 12px 0; animation: pulse 1.5s infinite; }
     @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
 
-    .palette-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
-    .q-num-btn { width: 44px; height: 44px; border-radius: 12px; border: 2px solid #cbd5e1; background: #fff; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #334155; }
+    .palette-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .q-num-btn { width: 40px; height: 40px; border-radius: 10px; border: 2px solid #cbd5e1; background: #fff; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #334155; }
     .q-num-btn.active { border-color: var(--primary) !important; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3); }
     .q-num-btn.yellow { background: #fef08a; color: #854d0e; border-color: #eab308; }
     .q-num-btn.green { background: #10b981; color: white; border-color: #059669; }
     .q-num-btn.blue { background: #3b82f6; color: white; border-color: #1d4ed8; }
-    .question-box { background: #f0f9ff; padding: 18px; border-left: 5px solid var(--secondary); margin: 15px 0; border-radius: 12px; position: relative; }
+    .question-box { background: #f0f9ff; padding: 16px; border-left: 5px solid var(--secondary); margin: 15px 0; border-radius: 12px; position: relative; }
     .img-soal { max-width: 100%; max-height: 250px; border-radius: 12px; margin-top: 12px; border: 1px solid #cbd5e1; pointer-events: none; }
 
-    /* EFEK BLUR SAAT SISWA PINDAH TAB / SCREENSHOT */
-    .content-blurred {
-      filter: blur(12px) !important;
-      opacity: 0.1 !important;
-      pointer-events: none !important;
-      transition: filter 0.1s ease;
-    }
+    .content-blurred { filter: blur(12px) !important; opacity: 0.1 !important; pointer-events: none !important; transition: filter 0.1s ease; }
+    .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; text-align: left; }
+    .comp-card { background: #f8fafc; border: 1px solid #cbd5e1; padding: 12px; border-radius: 10px; font-size: 12px; }
+    .comp-text-box { background: white; padding: 8px; border-radius: 8px; border: 1px dashed #94a3b8; font-style: italic; max-height: 120px; overflow-y: auto; margin: 6px 0; }
+    .comp-score-row { display: flex; justify-content: space-between; margin-top: 4px; font-weight: 700; }
 
-    .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; text-align: left; }
-    .comp-card { background: #f8fafc; border: 1px solid #cbd5e1; padding: 14px; border-radius: 12px; font-size: 12px; }
-    .comp-text-box { background: white; padding: 10px; border-radius: 8px; border: 1px dashed #94a3b8; font-style: italic; max-height: 120px; overflow-y: auto; margin: 8px 0; }
-    .comp-score-row { display: flex; justify-content: space-between; margin-top: 6px; font-weight: 700; }
-
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 20px; }
-    .stat-card { background: white; padding: 14px; border-radius: 14px; border: 1px solid #e2e8f0; text-align: center; }
-    .nav-tabs { display: flex; gap: 8px; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; overflow-x: auto; }
-    .tab-btn { background: #e2e8f0; color: #475569; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; white-space: nowrap; width: auto; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 15px; }
+    .stat-card { background: white; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; text-align: center; }
+    .nav-tabs { display: flex; gap: 6px; margin-bottom: 12px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .tab-btn { background: #e2e8f0; color: #475569; border: none; padding: 8px 12px; border-radius: 8px; font-weight: 600; white-space: nowrap; width: auto; font-size: 12px; }
     .tab-btn.active { background: var(--primary); color: white; }
-    .sub-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
-    .sub-table th, .sub-table td { border: 1px solid #cbd5e1; padding: 10px; text-align: left; }
-    .sub-table th { background: #f1f5f9; }
+    
+    /* PENYESUAIAN RESPOSIF TABEL FULL SCREEN */
+    .table-container { width: 100%; overflow-x: auto; margin-top: 10px; border-radius: 8px; border: 1px solid #cbd5e1; }
+    .sub-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .sub-table th, .sub-table td { border: 1px solid #e2e8f0; padding: 8px 10px; text-align: left; }
+    .sub-table th { background: #f1f5f9; white-space: nowrap; }
 
     .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 15px; }
-    .modal-content { background: white; padding: 24px; border-radius: 20px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.25); }
+    .modal-content { background: white; padding: 20px; border-radius: 18px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.25); }
 
     .loader-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.7); display: none; align-items: center; justify-content: center; z-index: 3000; flex-direction: column; }
     .spinner { border: 4px solid rgba(0, 0, 0, 0.1); width: 40px; height: 40px; border-radius: 50%; border-left-color: var(--primary); animation: spin 1s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-    /* PROTEKSI MULTIMEDIA CETAK & SCREENSHOT PRINTER */
-    @media print {
-      body * { display: none !important; }
-      #printArea, #printArea * { display: block !important; }
-      .print-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-      .print-table th, .print-table td { border: 1px solid #000; padding: 6px 8px; font-size: 10pt; }
-    }
   </style>
 </head>
 <body>
 
-<!-- OVERLAY PERINGATAN INTEGRITAS -->
 <div id="securityWarningOverlay" class="modal-overlay" style="z-index:9999;">
   <div class="modal-content" style="text-align:center; max-width:400px; background:#fff1f2; border:2px solid #f87171;">
-    <h2 style="font-size:40px; margin:0;">⚠️</h2>
+    <h2 style="font-size:36px; margin:0;">⚠️</h2>
     <h3 style="margin:8px 0; color:#991b1b;">Tampilan Terkunci!</h3>
-    <p style="font-size:12px; color:#7f1d1d; margin-bottom:15px;">Anda terdeteksi meninggalkan layar ujian atau menggunakan fitur tangkapan layar. Kembalilah fokus ke jendela ujian ini.</p>
+    <p style="font-size:12px; color:#7f1d1d; margin-bottom:15px;">Anda terdeteksi meninggalkan layar ujian atau mengambil tangkapan layar. Harap fokus pada ujian.</p>
     <button class="btn-primary" style="background:#dc2626;" onclick="unlockSecurityWarning()">Saya Mengerti & Kembali</button>
   </div>
 </div>
@@ -121,18 +113,16 @@
   <b style="margin-top:10px; color:#3730a3;">Sedang memproses...</b>
 </div>
 
-<!-- ========================================================================= -->
-<!-- 1. TAMPILAN SISWA (STUDENT VIEW) -->
-<!-- ========================================================================= -->
+<!-- STUDENT VIEW -->
 <div id="studentView">
   <div class="header-card">
-    <h1 style="margin:0 0 4px 0; font-size:20px;">🎙️ Asesmen Wawancara & Esai</h1>
-    <div class="school-info">
+    <h1 style="margin:0 0 4px 0; font-size:18px;">🎙️ Asesmen Wawancara & Esai</h1>
+    <div class="school-info" style="font-size:12px;">
       <span id="displayNamaSekolah">Memuat...</span> | <span id="displayMataPelajaran">Memuat...</span>
     </div>
   </div>
 
-  <div id="modeBannerCard" style="display:none; padding:14px; border-radius:14px; margin-bottom:20px; font-size:12px; border:1px solid; line-height: 1.5;"></div>
+  <div id="modeBannerCard" style="display:none; padding:12px; border-radius:12px; margin-bottom:15px; font-size:12px; border:1px solid; line-height:1.4;"></div>
 
   <button class="btn-guru" onclick="showAdminView()">⚙️ Buka Panel Kendali Guru / Admin</button>
 
@@ -142,7 +132,7 @@
     <div class="form-group"><label>Jenis Kelamin:</label><input type="text" id="jkDisplay" readonly placeholder="Otomatis terisi..."></div>
     <div class="form-group"><label>Pilih Bab / Topik Soal:</label><select id="babSelect" onchange="onBabChange()" disabled><option value="">-- Pilih Nama Terlebih Dahulu --</option></select></div>
 
-    <button id="btnStartExam" class="btn-primary" style="margin-top:10px; padding:12px; font-size:15px;" onclick="triggerTokenModal()" disabled>🚀 MULAI KERJAKAN</button>
+    <button id="btnStartExam" class="btn-primary" style="margin-top:10px; padding:12px; font-size:14px;" onclick="triggerTokenModal()" disabled>🚀 MULAI KERJAKAN</button>
   </div>
 
   <div id="tokenModal" class="modal-overlay">
@@ -158,68 +148,63 @@
   </div>
 
   <div class="card" id="examWorkspaceCard" style="display:none;">
-    <div id="paletteSection" style="margin-bottom:20px;">
-      <div id="babTotalCard" style="background:#e0e7ff; border:1px solid #c7d2fe; padding:14px; border-radius:14px; margin-bottom:14px;">
+    <div id="paletteSection" style="margin-bottom:15px;">
+      <div id="babTotalCard" style="background:#e0e7ff; border:1px solid #c7d2fe; padding:12px; border-radius:12px; margin-bottom:12px;">
         <div style="margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-size:13px; font-weight:700; color:#3730a3;">📊 Akumulasi Nilai Bab</span>
-          <small id="timerDisplayBox" style="font-size:12px; font-weight:700; color:#4338ca;">⏱️ Timer: -</small>
+          <span style="font-size:12px; font-weight:700; color:#3730a3;">📊 Akumulasi Nilai Bab</span>
+          <small id="timerDisplayBox" style="font-size:11px; font-weight:700; color:#4338ca;">⏱️ Timer: -</small>
         </div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; text-align:center;">
-          <div style="background:white; padding:8px; border-radius:10px; border:1px solid #c7d2fe;">
-            <small style="font-size:11px; color:#475569; font-weight:600; display:block;">🤖 Nilai Robot (Instan)</small>
-            <span id="accumulatedLocalScoreDisplay" style="font-size:20px; font-weight:800; color:#10b981;">0 / 100</span>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; text-align:center;">
+          <div style="background:white; padding:6px; border-radius:8px; border:1px solid #c7d2fe;">
+            <small style="font-size:10px; color:#475569; font-weight:600; display:block;">🤖 Nilai Robot</small>
+            <span id="accumulatedLocalScoreDisplay" style="font-size:18px; font-weight:800; color:#10b981;">0 / 100</span>
           </div>
-          <div style="background:white; padding:8px; border-radius:10px; border:1px solid #c7d2fe;">
-            <small style="font-size:11px; color:#475569; font-weight:600; display:block;">🎓 Nilai Resmi Guru</small>
-            <span id="accumulatedAIScoreDisplay" style="font-size:15px; font-weight:700; color:#1d4ed8; padding-top:4px; display:block;">⏳ Menunggu Antrian</span>
+          <div style="background:white; padding:6px; border-radius:8px; border:1px solid #c7d2fe;">
+            <small style="font-size:10px; color:#475569; font-weight:600; display:block;">🎓 Nilai Guru</small>
+            <span id="accumulatedAIScoreDisplay" style="font-size:13px; font-weight:700; color:#1d4ed8; padding-top:4px; display:block;">⏳ Menunggu</span>
           </div>
         </div>
-        <small style="font-size:10px; color:#475569; display:block; margin-top:8px; text-align:center;">*Nilai robot bersifat instan. Nilai resmi akan diperbarui setelah melalui antrian penilaian Guru.</small>
       </div>
 
       <label>Pilih Nomor Soal:</label>
       <div id="questionPalette" class="palette-grid"></div>
-      <div style="margin-top:8px; font-size:11px; color:#64748b;">⚪ Putih: Belum | 🟡 Kuning: Mengetik | 🟢 Hijau: Nilai Robot | 🔵 Biru: Dinilai Guru</div>
     </div>
 
     <div id="questionContainer" style="display:none;">
       <div class="question-box" id="questionBoxElement">
         <b id="questionNumberLabel">Soal No. 1</b>
-        <p id="questionText" style="margin:8px 0 0 0; font-weight:600; font-size:15px;"></p>
+        <p id="questionText" style="margin:8px 0 0 0; font-weight:600; font-size:14px;"></p>
         <div id="gambarSoalBox" style="display:none; text-align:center;"><img id="gambarSoalImg" src="" class="img-soal"></div>
       </div>
 
       <div id="oldDataBanner" style="display:none; background:#fef3c7; border:1px solid #fcd34d; padding:10px; border-radius:10px; margin-bottom:12px; font-size:12px; color:#b45309;">
-        <b>📌 Jawaban Telah Tersimpan Sebelumnya.</b><br>
-        Nilai Robot: <span id="bannerLoc">0</span> | Nilai Guru: <span id="bannerAI">-</span>
+        <b>📌 Jawaban Telah Tersimpan.</b> Nilai Robot: <span id="bannerLoc">0</span> | Nilai Guru: <span id="bannerAI">-</span>
       </div>
 
       <div class="form-group">
-        <label>Jawaban Lisan Siswa (Ketik atau Rekam):</label>
-        <textarea id="transcriptTextarea" rows="4" placeholder="Tekan tombol rekam untuk bicara, atau ketik langsung di sini..." oninput="onTranscriptInput()"></textarea>
+        <label>Jawaban Lisan Siswa:</label>
+        <textarea id="transcriptTextarea" rows="4" placeholder="Tekan rekam atau ketik jawaban di sini..." oninput="onTranscriptInput()"></textarea>
       </div>
 
       <button type="button" class="btn-record-start" id="btnRecordToggle" onclick="toggleDirectRecording()">🎤 Klik untuk Merekam Suara</button>
-      <div id="statusText" style="text-align:center; font-size:12px; font-weight:600; color:#4f46e5; margin-bottom:10px;">Status: Siap Merekam</div>
+      <div id="statusText" style="text-align:center; font-size:11px; font-weight:600; color:#4f46e5; margin-bottom:10px;">Status: Siap Merekam</div>
 
       <div id="studentActionButtons"></div>
     </div>
   </div>
 </div>
 
-<!-- MODAL RESULT & COMPARISON -->
 <div id="resultModal" class="modal-overlay">
   <div class="modal-content" style="text-align:center;">
     <h3 style="margin-top:0; color:var(--primary);">✨ Hasil Evaluasi Robot</h3>
     <h5 id="modalQuestionLabel" style="margin:0 0 10px 0; color:#64748b;">Soal No. X</h5>
-    <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:14px; border-radius:14px; margin-bottom:12px;">
-      <div style="font-size:12px; color:#166534; font-weight:600;">Nilai Robot (Instan):</div>
-      <div id="modalScoreDisplay" style="font-size:38px; font-weight:800; color:#15803d;">0 / 100</div>
+    <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:12px; border-radius:12px; margin-bottom:12px;">
+      <div style="font-size:12px; color:#166534; font-weight:600;">Nilai Robot:</div>
+      <div id="modalScoreDisplay" style="font-size:32px; font-weight:800; color:#15803d;">0 / 100</div>
     </div>
-    <div style="text-align:left; background:#f8fafc; padding:12px; border-radius:10px; font-size:12px; margin-bottom:12px; border:1px solid #e2e8f0;">
-      <b>Catatan Ulasan:</b> <p id="modalFeedbackDisplay" style="margin:4px 0 0 0; color:#334155;"></p>
+    <div style="text-align:left; background:#f8fafc; padding:10px; border-radius:10px; font-size:12px; margin-bottom:12px; border:1px solid #e2e8f0;">
+      <b>Ulasan:</b> <p id="modalFeedbackDisplay" style="margin:4px 0 0 0; color:#334155;"></p>
     </div>
-    <p style="font-size:11px; color:#64748b; margin-bottom:15px;">⏳ Skor robot berhasil disimpan. Jawaban Anda kini masuk dalam antrian penilaian resmi oleh Guru.</p>
     <button class="btn-primary" onclick="closeResultModal()">Tutup & Lanjutkan</button>
   </div>
 </div>
@@ -227,8 +212,6 @@
 <div id="comparisonModal" class="modal-overlay">
   <div class="modal-content" style="max-width: 650px;">
     <h3 style="margin-top:0; color:var(--primary); text-align:center;">⚖️ Komparasi Revisi Jawaban</h3>
-    <p style="font-size:12px; text-align:center; color:#64748b; margin-top:-5px;">Pilih jawaban mana yang ingin Anda pertahankan di server.</p>
-    
     <div class="compare-grid">
       <div class="comp-card" style="border-top: 4px solid #f59e0b;">
         <b style="color:#b45309;">📌 JAWABAN LAMA</b>
@@ -239,43 +222,38 @@
       <div class="comp-card" style="border-top: 4px solid #10b981;">
         <b style="color:#059669;">✨ JAWABAN BARU</b>
         <div class="comp-text-box" id="compNewText">...</div>
-        <div class="comp-score-row"><span>🤖 Nilai Robot:</span> <span id="compNewScoreLoc" style="color:#15803d; font-size:14px;">0</span></div>
-        <div class="comp-score-row"><span>🎓 Nilai Guru:</span> <span style="color:#64748b; font-style:italic;">⏳ Menunggu Antrian</span></div>
+        <div class="comp-score-row"><span>🤖 Nilai Robot:</span> <span id="compNewScoreLoc" style="color:#15803d;">0</span></div>
+        <div class="comp-score-row"><span>🎓 Nilai Guru:</span> <span style="color:#64748b; font-style:italic;">⏳ Menunggu</span></div>
       </div>
     </div>
-
-    <div id="compRecommendationBox" style="margin-top:15px; padding:12px; border-radius:10px; border:1px solid; text-align:center; font-size:13px;">
+    <div id="compRecommendationBox" style="margin-top:12px; padding:10px; border-radius:8px; border:1px solid; text-align:center; font-size:12px;">
       <span id="compRecommendationText">...</span>
     </div>
-
-    <div style="display:flex; gap:10px; margin-top:20px;">
-      <button id="btnKeepOld" class="btn-secondary" style="flex:1; background:#ef4444;">🔴 Batal, Pakai Lama</button>
-      <button id="btnUseNew" class="btn-primary" style="flex:1.5; background:#10b981;">🟢 Ya, Timpa dg Baru</button>
+    <div style="display:flex; gap:10px; margin-top:15px;">
+      <button id="btnKeepOld" class="btn-secondary" style="flex:1; background:#ef4444;">🔴 Pakai Lama</button>
+      <button id="btnUseNew" class="btn-primary" style="flex:1.5; background:#10b981;">🟢 Timpa Baru</button>
     </div>
   </div>
 </div>
 
 <div id="finishExamModal" class="modal-overlay">
   <div class="modal-content" style="text-align:center;">
-    <h2 style="font-size:48px; margin:0;">🏁</h2>
+    <h2 style="font-size:40px; margin:0;">🏁</h2>
     <h3 style="margin:0 0 8px 0; color:var(--primary);">Akhiri Sesi Ini?</h3>
-    <p style="font-size:13px; color:#64748b; margin-bottom:15px;">Sesi akan ditutup. Anda akan diarahkan kembali ke layar awal.</p>
     <div style="display:flex; gap:10px;">
       <button class="btn-secondary" style="flex:1;" onclick="closeFinishExamModal()">Batal</button>
-      <button class="btn-primary" style="flex:1.5; background:linear-gradient(135deg, #10b981, #059669);" onclick="finishExamDirectly()">Ya, Akhiri Sekarang</button>
+      <button class="btn-primary" style="flex:1.5; background:#10b981;" onclick="finishExamDirectly()">Ya, Akhiri</button>
     </div>
   </div>
 </div>
 
-<!-- ========================================================================= -->
-<!-- 2. TAMPILAN ADMIN / GURU (ADMIN VIEW) -->
-<!-- ========================================================================= -->
+<!-- ADMIN VIEW -->
 <div id="adminView" style="display:none;">
   <div class="header-card header-card-admin" style="display:flex; justify-content:space-between; align-items:center;">
-    <div style="text-align:left;"><h2 style="margin:0; font-size:18px;">⚙️ Panel Guru & Admin</h2></div>
-    <div style="display:flex; gap:8px;">
-      <button class="btn-danger" style="width:auto; font-size:11px; padding:6px 12px;" onclick="userClickLogout()">🚪 Logout Admin</button>
-      <button class="btn-secondary" style="width:auto; font-size:11px; padding:6px 12px; background:#475569;" onclick="showStudentView()">⬅️ Tampilan Siswa</button>
+    <div style="text-align:left;"><h2 style="margin:0; font-size:16px;">⚙️ Panel Guru & Admin</h2></div>
+    <div style="display:flex; gap:6px;">
+      <button class="btn-danger" style="width:auto; font-size:10px; padding:6px 10px;" onclick="userClickLogout()">Logout</button>
+      <button class="btn-secondary" style="width:auto; font-size:10px; padding:6px 10px; background:#475569;" onclick="showStudentView()">Siswa</button>
     </div>
   </div>
 
@@ -290,49 +268,42 @@
   </div>
 
   <div id="tabDashboard" class="card tab-content">
-    <h3 style="margin-top:0; color:var(--primary); font-size:15px;">📊 Dashboard Statistik</h3>
-    <button class="btn-primary" style="margin-bottom:15px; width:auto;" onclick="loadDashboardStats()">🔄 Muat Data Statistik</button>
+    <h3 style="margin-top:0; color:var(--primary); font-size:14px;">📊 Dashboard Statistik</h3>
+    <button class="btn-primary" style="margin-bottom:12px; width:auto;" onclick="loadDashboardStats()">🔄 Refresh Data</button>
     <div class="stats-grid">
-      <div class="stat-card"><div id="statTotalSiswa" class="stat-val">0</div><div class="stat-lbl">Siswa</div></div>
-      <div class="stat-card"><div id="statTotalSoal" class="stat-val">0</div><div class="stat-lbl">Soal</div></div>
-      <div class="stat-card"><div id="statPartisipasi" class="stat-val">0%</div><div class="stat-lbl">Partisipasi</div></div>
-      <div class="stat-card" style="border-color:#fde68a;"><div id="statRecheck" class="stat-val" style="color:#d97706;">0</div><div class="stat-lbl">Re-check (Revisi Baru)</div></div>
-      <div class="stat-card"><div id="statAvgAI" class="stat-val" style="color:#10b981;">0</div><div class="stat-lbl">Rata Nilai Guru</div></div>
+      <div class="stat-card"><div id="statTotalSiswa" class="stat-val" style="font-size:20px; font-weight:700;">0</div><div class="stat-lbl" style="font-size:11px;">Siswa</div></div>
+      <div class="stat-card"><div id="statTotalSoal" class="stat-val" style="font-size:20px; font-weight:700;">0</div><div class="stat-lbl" style="font-size:11px;">Soal</div></div>
+      <div class="stat-card"><div id="statPartisipasi" class="stat-val" style="font-size:20px; font-weight:700;">0%</div><div class="stat-lbl" style="font-size:11px;">Partisipasi</div></div>
+      <div class="stat-card" style="border-color:#fde68a;"><div id="statRecheck" class="stat-val" style="font-size:20px; font-weight:700; color:#d97706;">0</div><div class="stat-lbl" style="font-size:11px;">Revisian</div></div>
+      <div class="stat-card"><div id="statAvgAI" class="stat-val" style="font-size:20px; font-weight:700; color:#10b981;">0</div><div class="stat-lbl" style="font-size:11px;">Rata Nilai</div></div>
     </div>
   </div>
 
   <div id="tabSettings" class="card tab-content" style="display:none;">
-    <h3 style="margin-top:0; color:var(--primary); font-size:15px;">🔑 Pengaturan Token & Timer Ujian</h3>
-    <div style="background:#f0fdf4; padding:14px; border-radius:12px; border:1px solid #bbf7d0; margin-bottom:15px;">
-      <div class="form-group"><label>Token Latihan (Practice Mode):</label>
-      <input type="text" id="tokenLatihInput" placeholder="Contoh: LATIH2026">
-      <small style="color:#166534; font-size:11px;">*Jawaban siswa tidak akan disimpan permanen ke server.</small></div>
+    <h3 style="margin-top:0; color:var(--primary); font-size:14px;">🔑 Pengaturan Token & Timer</h3>
+    <div style="background:#f0fdf4; padding:12px; border-radius:10px; border:1px solid #bbf7d0; margin-bottom:12px;">
+      <div class="form-group"><label>Token Latihan:</label><input type="text" id="tokenLatihInput"></div>
     </div>
-    <div style="background:#fef2f2; padding:14px; border-radius:12px; border:1px solid #fecaca; margin-bottom:15px;">
-      <div class="form-group"><label>Token Ujian (Submission Mode):</label>
-      <input type="text" id="tokenUjianInput" placeholder="Contoh: UJIAN2026">
-      <small style="color:#991b1b; font-size:11px;">*Jawaban siswa disimpan ke database, timer berjalan, & dikomparasi.</small></div>
+    <div style="background:#fef2f2; padding:12px; border-radius:10px; border:1px solid #fecaca; margin-bottom:12px;">
+      <div class="form-group"><label>Token Ujian:</label><input type="text" id="tokenUjianInput"></div>
     </div>
-    
-    <div class="form-group"><label>Durasi Timer Default Aplikasi (Menit):</label><input type="number" id="timerInput" min="0"></div>
-    <div style="display:flex; gap:10px; margin-bottom:20px;">
-      <button class="btn-primary" style="flex:2;" onclick="submitSaveTokens()">💾 Simpan Token Utama</button>
-      <button class="btn-secondary" style="flex:1;" onclick="openGoogleSheetDirect()">🔗 Buka Sheet</button>
+    <div class="form-group"><label>Durasi Timer Default (Menit):</label><input type="number" id="timerInput" min="0"></div>
+    <div style="display:flex; gap:10px; margin-bottom:15px;">
+      <button class="btn-primary" style="flex:2;" onclick="submitSaveTokens()">💾 Simpan Token</button>
+      <button class="btn-secondary" style="flex:1;" onclick="openGoogleSheetDirect()">🔗 Sheet</button>
     </div>
-    <hr style="border-top:1px dashed #cbd5e1; margin:20px 0;">
-    <h4 style="margin-top:0; color:var(--primary); font-size:14px;">⏱️ Timer Khusus Per Bab (Opsional)</h4>
-    <div style="background:#f8fafc; padding:14px; border-radius:12px; border:1px solid #e2e8f0;">
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-        <div class="form-group"><label>Pilih Rombel:</label><select id="timerRombelSelect" onchange="onTimerRombelChange()"><option value="">-- Pilih --</option></select></div>
-        <div class="form-group"><label>Pilih Bab:</label><select id="timerBabSelect"><option value="">-- Pilih Rombel --</option></select></div>
-      </div>
-      <div class="form-group"><label>Durasi (Menit):</label><input type="number" id="timerBabInput" min="0"></div>
-      <button class="btn-success" onclick="submitSaveBabTimer()">💾 Simpan Timer Bab</button>
+    <hr style="border-top:1px dashed #cbd5e1; margin:15px 0;">
+    <h4 style="margin-top:0; color:var(--primary); font-size:13px;">⏱️ Timer Per Bab (Opsional)</h4>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+      <div class="form-group"><label>Rombel:</label><select id="timerRombelSelect" onchange="onTimerRombelChange()"><option value="">-- Pilih --</option></select></div>
+      <div class="form-group"><label>Bab:</label><select id="timerBabSelect"><option value="">-- Pilih Rombel --</option></select></div>
     </div>
+    <div class="form-group"><label>Durasi (Menit):</label><input type="number" id="timerBabInput" min="0"></div>
+    <button class="btn-success" onclick="submitSaveBabTimer()">💾 Simpan Timer Bab</button>
   </div>
 
   <div id="tabSekolah" class="card tab-content" style="display:none;">
-    <h3 style="margin-top:0; color:var(--primary); font-size:15px;">🏛️ Info Sekolah & Admin</h3>
+    <h3 style="margin-top:0; color:var(--primary); font-size:14px;">🏛️ Info Sekolah & Admin</h3>
     <div class="form-group"><label>Nama Sekolah:</label><input type="text" id="inputNamaSekolah"></div>
     <div class="form-group"><label>Mata Pelajaran:</label><input type="text" id="inputMataPelajaran"></div>
     <div class="form-group"><label>Nama Guru:</label><input type="text" id="inputNamaGuru"></div>
@@ -341,88 +312,80 @@
   </div>
 
   <div id="tabSiswa" class="card tab-content" style="display:none;">
-    <h3 style="margin-top:0; color:var(--primary); font-size:15px;">👥 Kelola Data Siswa</h3>
-    <div style="background:#f8fafc; padding:14px; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:15px;">
+    <h3 style="margin-top:0; color:var(--primary); font-size:14px;">👥 Kelola Data Siswa</h3>
+    <div style="background:#f8fafc; padding:12px; border-radius:10px; border:1px solid #e2e8f0; margin-bottom:12px;">
       <input type="hidden" id="siswaRowIndexInput">
-      <div style="display:grid; grid-template-columns: 1fr 2fr 1fr; gap:10px;">
+      <div style="display:grid; grid-template-columns: 1fr 2fr 1fr; gap:8px;">
         <div class="form-group"><label>No:</label><input type="text" id="siswaNoInput"></div>
         <div class="form-group"><label>Nama Lengkap:</label><input type="text" id="siswaNamaInput"></div>
         <div class="form-group"><label>JK:</label><select id="siswaJkInput"><option value="L">L</option><option value="P">P</option></select></div>
       </div>
       <div class="form-group"><label>Rombel:</label><input type="text" id="siswaRombelInput"></div>
-      <div style="display:flex; gap:10px;">
-        <button id="btnSaveSiswa" class="btn-success" style="flex:2;" onclick="submitSaveSiswa()">💾 Simpan Siswa Baru</button>
-        <button class="btn-secondary" style="flex:1;" onclick="resetSiswaForm()">Reset / Batal</button>
+      <div style="display:flex; gap:8px;">
+        <button id="btnSaveSiswa" class="btn-success" style="flex:2;" onclick="submitSaveSiswa()">💾 Simpan Siswa</button>
+        <button class="btn-secondary" style="flex:1;" onclick="resetSiswaForm()">Batal</button>
       </div>
     </div>
     <button class="btn-primary" style="width:auto; margin-bottom:10px;" onclick="loadSiswaList()">🔄 Refresh</button>
-    <div style="max-height:300px; overflow-y:auto;">
+    <div class="table-container">
       <table class="sub-table" id="siswaTable">
-        <thead><tr><th>No</th><th>Nama Siswa</th><th>Rombel</th><th>JK</th><th style="width:110px;">Aksi</th></tr></thead>
+        <thead><tr><th>No</th><th>Nama Siswa</th><th>Rombel</th><th>JK</th><th style="width:90px;">Aksi</th></tr></thead>
         <tbody id="siswaTbody"></tbody>
       </table>
     </div>
   </div>
 
   <div id="tabSoal" class="card tab-content" style="display:none;">
-    <h3 style="margin-top:0; color:var(--primary); font-size:15px;">📚 Kelola Bank Soal</h3>
-    <div style="background:#f8fafc; padding:14px; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:15px;">
+    <h3 style="margin-top:0; color:var(--primary); font-size:14px;">📚 Kelola Bank Soal</h3>
+    <div style="background:#f8fafc; padding:12px; border-radius:10px; border:1px solid #e2e8f0; margin-bottom:12px;">
       <input type="hidden" id="soalIdInput">
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
         <div class="form-group"><label>Kelas:</label><input type="text" id="soalKelasInput"></div>
         <div class="form-group"><label>Bab:</label><input type="text" id="soalBabInput"></div>
       </div>
       <div class="form-group"><label>Pertanyaan:</label><textarea id="soalPertanyaanInput" rows="2"></textarea></div>
       <div class="form-group"><label>Rubrik Kunci:</label><textarea id="soalRubrikInput" rows="2"></textarea></div>
       <div class="form-group"><label>Gambar (Opsional):</label><input type="file" id="soalGambarInput" accept="image/*"></div>
-      <div style="display:flex; gap:10px;">
-        <button id="btnSaveSoal" class="btn-success" style="flex:2;" onclick="submitSaveSoal()">💾 Simpan Soal Baru</button>
-        <button class="btn-secondary" style="flex:1;" onclick="resetSoalForm()">Reset / Batal</button>
+      <div style="display:flex; gap:8px;">
+        <button id="btnSaveSoal" class="btn-success" style="flex:2;" onclick="submitSaveSoal()">💾 Simpan Soal</button>
+        <button class="btn-secondary" style="flex:1;" onclick="resetSoalForm()">Batal</button>
       </div>
     </div>
     <button class="btn-primary" style="width:auto; margin-bottom:10px;" onclick="loadSoalList()">🔄 Refresh</button>
-    <div style="max-height:300px; overflow-y:auto;">
+    <div class="table-container">
       <table class="sub-table" id="soalTable">
-        <thead><tr><th>ID</th><th>Target</th><th>Bab</th><th>Pertanyaan</th><th style="width:110px;">Aksi</th></tr></thead>
+        <thead><tr><th>ID</th><th>Target</th><th>Bab</th><th>Pertanyaan</th><th style="width:90px;">Aksi</th></tr></thead>
         <tbody id="soalTbody"></tbody>
       </table>
     </div>
   </div>
 
   <div id="tabReview" class="card tab-content" style="display:none;">
-    <h3 style="margin-top:0; color:var(--primary); font-size:15px;">📝 Review Jawaban & Penilaian Guru</h3>
-    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+    <h3 style="margin-top:0; color:var(--primary); font-size:14px;">📝 Review Jawaban & Penilaian Guru</h3>
+    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px;">
       <div class="form-group"><label>Filter Rombel:</label><select id="reviewRombelSelect" onchange="onReviewRombelChange()"><option value="">-- Semua --</option></select></div>
       <div class="form-group"><label>Filter Bab:</label><select id="reviewBabSelect"><option value="">-- Semua --</option></select></div>
-      <div class="form-group">
-        <label>Status Review:</label>
-        <select id="reviewStatusSelect">
-          <option value="">Semua Status</option>
-          <option value="RECHECK">⚠️ Ada Revisi / Cek Ulang</option>
-          <option value="UNGRADED">Belum Dinilai Guru</option>
-        </select>
-      </div>
+      <div class="form-group"><label>Status:</label><select id="reviewStatusSelect"><option value="">Semua</option><option value="RECHECK">⚠️ Revisi Baru</option><option value="UNGRADED">Belum Dinilai</option></select></div>
     </div>
-    <button class="btn-primary" style="background:#7c3aed;" onclick="submitLoadReview()">🔍 Muat Data Hasil Siswa</button>
-    <div id="reviewResultBox" style="display:none; margin-top:15px; max-height:450px; overflow-y:auto;">
+    <button class="btn-primary" style="background:#7c3aed;" onclick="submitLoadReview()">🔍 Muat Data Siswa</button>
+    <div id="reviewResultBox" class="table-container" style="display:none; margin-top:12px;">
       <table class="sub-table">
-        <thead><tr><th style="width:200px;">Data Siswa</th><th>Detail Pertanyaan & Penilaian</th></tr></thead>
+        <thead><tr><th style="width:160px;">Data Siswa</th><th>Detail Pertanyaan & Penilaian</th></tr></thead>
         <tbody id="reviewTbody"></tbody>
       </table>
     </div>
   </div>
 
   <div id="tabCetak" class="card tab-content" style="display:none;">
-    <h3 style="margin-top:0; color:var(--primary); font-size:15px;">🖨️ Cetak Rekap Nilai</h3>
+    <h3 style="margin-top:0; color:var(--primary); font-size:14px;">🖨️ Cetak Rekap Nilai</h3>
     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-      <div class="form-group"><label>Rombel:</label><select id="cetakRombelSelect"><option value="">-- Pilih --</option></select></div>
-      <div class="form-group"><label>Bab:</label><select id="cetakBabSelect"><option value="">-- Pilih --</option></select></div>
+      <!-- FILTER CETAK ROMBEL & BAB -->
+      <div class="form-group"><label>Rombel:</label><select id="cetakRombelSelect" onchange="onCetakRombelChange()"><option value="">-- Pilih Rombel --</option></select></div>
+      <div class="form-group"><label>Bab:</label><select id="cetakBabSelect"><option value="">-- Semua Bab --</option></select></div>
     </div>
     <button class="btn-success" onclick="generatePrintPreview()">🖨️ Cetak Rekap A4</button>
   </div>
 </div>
-
-<div id="printArea" style="display:none;"></div>
 
 <div id="adminLoginModal" class="modal-overlay">
   <div class="modal-content" style="text-align:center;">
@@ -437,16 +400,13 @@
 
 <div id="notifModal" class="modal-overlay">
   <div class="modal-content" style="text-align:center;">
-    <div id="notifIcon" style="font-size:48px; margin-bottom:8px;">✅</div>
-    <h3 id="notifTitle" style="margin:0 0 8px 0;">Notifikasi</h3>
-    <p id="notifMessage" style="font-size:13px; color:#475569; margin-bottom:15px;"></p>
+    <div id="notifIcon" style="font-size:40px; margin-bottom:6px;">✅</div>
+    <h3 id="notifTitle" style="margin:0 0 6px 0;">Notifikasi</h3>
+    <p id="notifMessage" style="font-size:12px; color:#475569; margin-bottom:15px;"></p>
     <button class="btn-primary" onclick="closeNotifModal()">Tutup</button>
   </div>
 </div>
 
-<!-- ========================================================================= -->
-<!-- 3. JAVASCRIPT LOGIC (CLIENT SIDE & SECURITY ENFORCEMENT) -->
-<!-- ========================================================================= -->
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbzBMx-BvZfCT_w6yG2HJur8KUm2kqK0tfcZhFiD6J7dxH3AOOxXQg72fS4pLzAjNFM_kA/exec";
 
@@ -468,41 +428,23 @@
     setupSecurityEnforcements();
   };
 
-  // === SYSTEM ENGINE PROTEKSI SOAL & FITUR INTEGRITAS ===
   function setupSecurityEnforcements() {
-    // 1. BLOKIR KLIK KANAN (CONTEXT MENU)
     document.addEventListener('contextmenu', e => e.preventDefault());
-
-    // 2. BLOKIR SHORTCUT COPY, INSPECT ELEMENT & PRINT SCREEN
     document.addEventListener('keydown', e => {
-      // Blokir Ctrl+C, Ctrl+U, Ctrl+S, Ctrl+P, Ctrl+Shift+I (DevTools)
       if (e.ctrlKey || e.metaKey) {
         const k = e.key.toLowerCase();
-        if (k === 'c' || k === 'u' || k === 's' || k === 'p' || k === 'i') {
-          e.preventDefault();
-          return false;
-        }
+        if (k === 'c' || k === 'u' || k === 's' || k === 'p' || k === 'i') { e.preventDefault(); return false; }
       }
-      // Blokir Tombol F12 & PrintScreen
-      if (e.key === 'F12' || e.key === 'PrintScreen') {
-        e.preventDefault();
-        triggerSecurityWarning();
-        return false;
-      }
+      if (e.key === 'F12' || e.key === 'PrintScreen') { e.preventDefault(); triggerSecurityWarning(); return false; }
     });
-
-    // 3. BLOKIR EVENT COPY & CUT
     document.addEventListener('copy', e => e.preventDefault());
     document.addEventListener('cut', e => e.preventDefault());
-
-    // 4. DETEKSI PINDAH TAB / MINIMIZE WINDOW (BLUR OTOMATIS)
     window.addEventListener('blur', () => {
       if (currentAppMode !== "") {
         document.getElementById('questionBoxElement').classList.add('content-blurred');
         triggerSecurityWarning();
       }
     });
-
     window.addEventListener('focus', () => {
       if (document.getElementById('securityWarningOverlay').style.display !== 'flex') {
         document.getElementById('questionBoxElement').classList.remove('content-blurred');
@@ -529,7 +471,7 @@
   }
   function resetInactivityTimer() {
     if (adminInactivityTimer) clearTimeout(adminInactivityTimer);
-    adminInactivityTimer = setTimeout(() => { logoutAdmin(); showNotif(false, "Sesi Kadaluarsa ⏳", "Sesi Admin telah berakhir."); }, INACTIVITY_TIMEOUT_MS);
+    adminInactivityTimer = setTimeout(() => { logoutAdmin(); showNotif(false, "Sesi Kadaluarsa ⏳", "Sesi Admin berakhir."); }, INACTIVITY_TIMEOUT_MS);
   }
 
   function cleanScoreValue(val) {
@@ -596,8 +538,8 @@
   function updateRecordButtonUI(recording) {
     const btn = document.getElementById('btnRecordToggle'), status = document.getElementById('statusText');
     if (!btn || !status) return;
-    if (recording) { btn.innerText = "⏹️ Hentikan Perekaman"; btn.className = "btn-record-stop"; status.innerText = "Status: 🔴 Merekam Suara Anda..."; } 
-    else { btn.innerText = "🎤 Klik untuk Merekam Suara"; btn.className = "btn-record-start"; status.innerText = "Status: Perekaman Selesai/Siap"; }
+    if (recording) { btn.innerText = "⏹️ Hentikan Perekaman"; btn.className = "btn-record-stop"; status.innerText = "Status: 🔴 Merekam..."; } 
+    else { btn.innerText = "🎤 Klik untuk Merekam Suara"; btn.className = "btn-record-start"; status.innerText = "Status: Siap Merekam"; }
   }
 
   function fetchAPI(payload, callback) {
@@ -629,22 +571,12 @@
   function updateModeBannerUI(mode) {
     const banner = document.getElementById('modeBannerCard');
     if (mode === "PRACTICE") {
-      banner.style.display = "block";
-      banner.style.background = "#f0fdf4";
-      banner.style.borderColor = "#bbf7d0";
-      banner.style.color = "#166534";
-      banner.innerHTML = `<b>🟢 MODE LATIHAN MANDIRI</b><br>
-      <i>Catatan: Penilaian robot di mode ini menggunakan sistem dasar gratis yang terbatas dan kurang akurat. Skor hanya simulasi kasar untuk latihan mandiri dan tidak masuk ke rekap nilai resmi.</i>`;
+      banner.style.display = "block"; banner.style.background = "#f0fdf4"; banner.style.borderColor = "#bbf7d0"; banner.style.color = "#166534";
+      banner.innerHTML = `<b>🟢 MODE LATIHAN MANDIRI</b><br>Skor simulasi tidak masuk rekap nilai resmi.`;
     } else if (mode === "SUBMISSION") {
-      banner.style.display = "block";
-      banner.style.background = "#fef2f2";
-      banner.style.borderColor = "#fecaca";
-      banner.style.color = "#991b1b";
-      banner.innerHTML = `<b>🔴 MODE UJIAN RESMI</b><br>
-      <i>Catatan: Jawaban Anda direkam ke server. Penilaian robot bersifat instan, sedangkan nilai resmi dari Guru akan masuk ke dalam antrian ulasan.</i>`;
-    } else {
-      banner.style.display = "none";
-    }
+      banner.style.display = "block"; banner.style.background = "#fef2f2"; banner.style.borderColor = "#fecaca"; banner.style.color = "#991b1b";
+      banner.innerHTML = `<b>🔴 MODE UJIAN RESMI</b><br>Jawaban Anda direkam ke database server.`;
+    } else { banner.style.display = "none"; }
   }
 
   function resetQuestionViewDOM() { 
@@ -670,8 +602,7 @@
   function triggerTokenModal() {
     const rombel = document.getElementById('rombelSelect').value, bab = document.getElementById('babSelect').value, studentName = document.getElementById('studentSelect').value;
     if (!rombel || !studentName || !bab) return alert("Lengkapi data pilihan di atas!");
-    document.getElementById("inputStudentToken").value = "";
-    document.getElementById("tokenModal").style.display = "flex";
+    document.getElementById("inputStudentToken").value = ""; document.getElementById("tokenModal").style.display = "flex";
     setTimeout(() => document.getElementById("inputStudentToken").focus(), 200);
   }
   function closeTokenModal() { document.getElementById("tokenModal").style.display = "none"; }
@@ -681,14 +612,8 @@
     showLoader();
     fetchAPI({ action: "verifyToken", token: token }, res => {
       hideLoader();
-      if (res && res.success) {
-        currentAppMode = res.mode;
-        closeTokenModal();
-        updateModeBannerUI(currentAppMode);
-        startExamDataFetch();
-      } else {
-        showNotif(false, "Token Salah! ❌", "Token tidak sesuai. Silakan hubungi Guru.");
-      }
+      if (res && res.success) { currentAppMode = res.mode; closeTokenModal(); updateModeBannerUI(currentAppMode); startExamDataFetch(); } 
+      else { showNotif(false, "Token Salah! ❌", "Token tidak sesuai."); }
     });
   }
 
@@ -703,13 +628,11 @@
       hideLoader();
       if (res && res.questions && res.questions.length > 0) {
         currentQuestionsList = res.questions; activeBabTimer = Number(res.babTimer) || 0;
-        
         if (currentAppMode === "PRACTICE") {
           currentQuestionsList.forEach(q => questionState[q.id] = { oldTranscript: "", oldScoreLocal: 0, oldScoreAI: null });
           paletteColors = new Array(currentQuestionsList.length).fill('');
-          renderPaletteUIOnly(); startTimerCountdown(0, 0); 
-          doSelectQuestion(0);
-          showNotif(true, "Mode Latihan Siap! 🟢", "Jawaban tidak disimpan permanen ke server.");
+          renderPaletteUIOnly(); startTimerCountdown(0, 0); doSelectQuestion(0);
+          showNotif(true, "Mode Latihan Siap! 🟢", "Jawaban simulasi mandiri.");
         } else {
           showLoader();
           fetchAPI({ action: "getStudentProgress", studentName: studentName, rombel: rombel, bab: bab }, progRes => {
@@ -717,7 +640,6 @@
             const progress = (progRes && progRes.progress) ? progRes.progress : {};
             const extraTime = progRes ? Number(progRes.extraTime) || 0 : 0;
             paletteColors = new Array(currentQuestionsList.length).fill('');
-
             currentQuestionsList.forEach((q, i) => {
               const qKey = q.id; const progData = progress[qKey];
               questionState[q.id] = {
@@ -733,9 +655,8 @@
                 else if (progData.transcript && progData.transcript.trim() !== "") paletteColors[i] = 'yellow';
               }
             });
-
             renderPaletteUIOnly(); startTimerCountdown(extraTime, activeBabTimer); doSelectQuestion(0);
-            showNotif(true, "Mode Ujian Aktif! 🔴", "Jawaban akan direkam ke database.");
+            showNotif(true, "Mode Ujian Aktif! 🔴", "Jawaban direkam ke server.");
           });
         }
       } else { alert("Belum ada soal."); finishExamDirectly(); }
@@ -756,7 +677,7 @@
         else finishExamDirectly("Waktu Habis! Sesi otomatis ditutup.");
       } else {
         const m = Math.floor(remainingExamSeconds / 60), s = remainingExamSeconds % 60;
-        box.innerText = `⏱️ Sisa Waktu: ${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`;
+        box.innerText = `⏱️ ${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`;
       }
     }, 1000);
   }
@@ -787,13 +708,12 @@
   function renderActionButtons() {
     const btnBox = document.getElementById('studentActionButtons');
     const oldData = questionState[selectedQuestionObject.id];
-    
     if (currentAppMode === "PRACTICE" || !oldData.oldTranscript || oldData.oldTranscript.trim() === "") {
-      btnBox.innerHTML = `<button class="btn-primary" style="background:linear-gradient(135deg, #10b981, #059669);" onclick="interceptNavigation(${activeQuestionIndex})">🟢 Cek Nilai & Simpan Jawaban Pertama</button>
-      <button class="btn-danger" style="margin-top:12px; font-weight:700;" onclick="openFinishExamModal()">🏁 AKHIRI SESI</button>`;
+      btnBox.innerHTML = `<button class="btn-primary" style="background:linear-gradient(135deg, #10b981, #059669);" onclick="interceptNavigation(${activeQuestionIndex})">🟢 Cek Nilai & Simpan Jawaban</button>
+      <button class="btn-danger" style="margin-top:10px; font-weight:700;" onclick="openFinishExamModal()">🏁 AKHIRI SESI</button>`;
     } else {
-      btnBox.innerHTML = `<button class="btn-warning" style="background:linear-gradient(135deg, #f59e0b, #d97706); color:white;" onclick="interceptNavigation(${activeQuestionIndex})">🔄 Cek Nilai & Bandingkan dengan Jawaban Lama</button>
-      <button class="btn-danger" style="margin-top:12px; font-weight:700;" onclick="openFinishExamModal()">🏁 AKHIRI SESI</button>`;
+      btnBox.innerHTML = `<button class="btn-warning" style="background:linear-gradient(135deg, #f59e0b, #d97706); color:white;" onclick="interceptNavigation(${activeQuestionIndex})">🔄 Cek Nilai & Bandingkan Jawaban</button>
+      <button class="btn-danger" style="margin-top:10px; font-weight:700;" onclick="openFinishExamModal()">🏁 AKHIRI SESI</button>`;
     }
   }
 
@@ -812,7 +732,7 @@
     const banner = document.getElementById('oldDataBanner');
     if (currentAppMode === "SUBMISSION" && oldData.oldTranscript && oldData.oldTranscript.trim() !== "") {
       document.getElementById('bannerLoc').innerText = oldData.oldScoreLocal;
-      document.getElementById('bannerAI').innerText = (oldData.oldScoreAI !== null && oldData.oldScoreAI !== "") ? oldData.oldScoreAI : "⏳ Menunggu Antrian";
+      document.getElementById('bannerAI').innerText = (oldData.oldScoreAI !== null && oldData.oldScoreAI !== "") ? oldData.oldScoreAI : "⏳ Menunggu";
       banner.style.display = 'block';
     } else { banner.style.display = 'none'; }
 
@@ -828,7 +748,7 @@
     const isNewEntry = !oldData.oldTranscript || oldData.oldTranscript.trim() === "";
 
     if (currentText === oldData.oldTranscript || currentText === "") {
-      if (isTimeout) return finishExamDirectly("Waktu Habis! Sesi ujian ditutup otomatis.");
+      if (isTimeout) return finishExamDirectly("Waktu Habis! Sesi ditutup.");
       if (targetIndex !== activeQuestionIndex) doSelectQuestion(targetIndex);
       return;
     }
@@ -840,7 +760,7 @@
       questionText: selectedQuestionObject.pertanyaan, studentTranscriptText: currentText, skipSave: true
     }, res => {
       hideLoader();
-      if (!res || !res.success) { alert("Gagal memproses nilai robot."); if (isTimeout) finishExamDirectly(); return; }
+      if (!res || !res.success) { alert("Gagal memproses nilai."); if (isTimeout) finishExamDirectly(); return; }
 
       const newScore = cleanScoreValue(res.scoreLocal);
 
@@ -854,9 +774,9 @@
 
       if (isTimeout) {
         if (isNewEntry || newScore > oldData.oldScoreLocal) {
-          saveAnswerAndState(qId, currentText, newScore, res.feedback, oldData.oldScoreAI, () => finishExamDirectly("⏱️ Waktu Habis! Redaksi terakhir otomatis DISIMPAN karena Nilai Robotnya tinggi."));
+          saveAnswerAndState(qId, currentText, newScore, res.feedback, oldData.oldScoreAI, () => finishExamDirectly("⏱️ Waktu Habis! Jawaban terakhir disimpan."));
         } else {
-          finishExamDirectly("⏱️ Waktu Habis! Redaksi terakhir DIABAIKAN karena Nilai Robot barunya lebih rendah.");
+          finishExamDirectly("⏱️ Waktu Habis!");
         }
       } else {
         if (isNewEntry) {
@@ -890,14 +810,14 @@
         if (paletteColors[activeQuestionIndex] !== 'blue') paletteColors[activeQuestionIndex] = 'green';
         renderPaletteUIOnly(); renderActionButtons();
         if (callback) callback();
-      } else alert("Gagal menyimpan ke server.");
+      } else alert("Gagal menyimpan.");
     });
   }
 
   function showComparisonModal(targetIndex, oldData, newText, newScore, newFeedback) {
     document.getElementById('compOldText').innerText = oldData.oldTranscript;
     document.getElementById('compOldScoreLoc').innerText = oldData.oldScoreLocal;
-    document.getElementById('compOldScoreAI').innerText = (oldData.oldScoreAI !== null && oldData.oldScoreAI !== "") ? oldData.oldScoreAI : "⏳ Menunggu Antrian";
+    document.getElementById('compOldScoreAI').innerText = (oldData.oldScoreAI !== null && oldData.oldScoreAI !== "") ? oldData.oldScoreAI : "⏳ Menunggu";
     
     document.getElementById('compNewText').innerText = newText;
     document.getElementById('compNewScoreLoc').innerText = newScore;
@@ -907,13 +827,13 @@
 
     if (diff > 0) {
       recBox.style.background = "#dcfce7"; recBox.style.borderColor = "#86efac";
-      recText.innerHTML = `<span style="color:#166534;">📈 <b>Nilai Robot Baru LEBIH TINGGI (+${diff} Poin).</b> Sangat disarankan memakai jawaban baru!</span>`;
+      recText.innerHTML = `<span style="color:#166534;">📈 <b>Nilai Robot Baru LEBIH TINGGI (+${diff} Poin).</b></span>`;
     } else if (diff < 0) {
       recBox.style.background = "#fee2e2"; recBox.style.borderColor = "#fca5a5";
-      recText.innerHTML = `<span style="color:#991b1b;">📉 <b>Nilai Robot Baru LEBIH RENDAH (${diff} Poin).</b> Disarankan mempertahankan jawaban lama.</span>`;
+      recText.innerHTML = `<span style="color:#991b1b;">📉 <b>Nilai Robot Baru LEBIH RENDAH (${diff} Poin).</b></span>`;
     } else {
       recBox.style.background = "#e0e7ff"; recBox.style.borderColor = "#a5b4fc";
-      recText.innerHTML = `<span style="color:#3730a3;">⚖️ <b>Nilai Robot SAMA.</b> Silakan pilih redaksi teks yang menurut Anda lebih lengkap.</span>`;
+      recText.innerHTML = `<span style="color:#3730a3;">⚖️ <b>Nilai Robot SAMA.</b></span>`;
     }
 
     const btnKeep = document.getElementById('btnKeepOld'), btnUse = document.getElementById('btnUseNew');
@@ -944,7 +864,6 @@
   function closeResultModal() {
     document.getElementById('resultModal').style.display = 'none';
     if (activeQuestionIndex + 1 < currentQuestionsList.length) interceptNavigation(activeQuestionIndex + 1);
-    else alert("🎉 Anda telah sampai di soal terakhir!");
   }
 
   function calculateAccumulatedScores() {
@@ -958,13 +877,13 @@
       }
     });
     const avgLocal = countLocal > 0 ? Math.round(sumLocal / currentQuestionsList.length) : 0;
-    const avgAI = countAI > 0 ? Math.round(sumAI / countAI) : "⏳ Menunggu Antrian";
+    const avgAI = countAI > 0 ? Math.round(sumAI / currentQuestionsList.length) : "⏳ Menunggu";
     return { avgLocal: avgLocal, avgAI: avgAI };
   }
   function updateAccumulatedScoreUI() {
     const scores = calculateAccumulatedScores();
     document.getElementById('accumulatedLocalScoreDisplay').innerText = `${scores.avgLocal} / 100`;
-    document.getElementById('accumulatedAIScoreDisplay').innerText = scores.avgAI === "⏳ Menunggu Antrian" ? "⏳ Menunggu" : `${scores.avgAI} / 100`;
+    document.getElementById('accumulatedAIScoreDisplay').innerText = scores.avgAI === "⏳ Menunggu" ? "⏳ Menunggu" : `${scores.avgAI} / 100`;
   }
 
   function openFinishExamModal() { document.getElementById('finishExamModal').style.display = 'flex'; }
@@ -972,7 +891,7 @@
   function finishExamDirectly(customMsg) {
     closeFinishExamModal(); clearInterval(examTimerInterval); currentAppMode = ""; updateModeBannerUI("");
     const scores = calculateAccumulatedScores();
-    const finalMsg = customMsg || `Terima kasih! Nilai Robot: ${scores.avgLocal} | Nilai Resmi Guru: ${scores.avgAI}`;
+    const finalMsg = customMsg || `Nilai Robot: ${scores.avgLocal} | Nilai Guru: ${scores.avgAI}`;
     showNotif(true, "Sesi Selesai! 🎉", finalMsg);
     resetQuestionViewDOM(); 
     document.getElementById('btnStartExam').disabled = false;
@@ -1029,19 +948,19 @@
     list.forEach(item => {
       let qHtml = "";
       item.questions.forEach(q => {
-        const recheckBadge = q.status === "RECHECK" ? `<span class="badge-recheck" style="background:#fef3c7; color:#b45309; padding:2px 6px; border-radius:4px; font-size:10px;">⚠️ Cek Revisi</span>` : ``;
+        const recheckBadge = q.status === "RECHECK" ? `<span class="badge-recheck" style="background:#fef3c7; color:#b45309; padding:2px 6px; border-radius:4px; font-size:10px;">⚠️ Revisi</span>` : ``;
         const aiScoreDisplay = cleanScoreValue(q.scoreAI) > 0 ? `<b style="color:#15803d;">${cleanScoreValue(q.scoreAI)} (Guru)</b>` : `<span style="color:#d97706;">Belum Dinilai</span>`;
         qHtml += `<div style="margin-bottom:12px; border-bottom:1px dashed #cbd5e1; padding-bottom:10px;">
-          <div style="font-size:13px; font-weight:600;">[${q.qId}] ${q.pertanyaan} ${recheckBadge}</div>
-          <div style="background:#f1f5f9; padding:8px 12px; border-radius:8px; margin:6px 0; font-style:italic; font-size:12px;">"${q.transcript || 'Kosong'}"</div>
-          <div style="font-size:12px; margin-bottom:4px;"><b>Nilai Robot:</b> ${cleanScoreValue(q.scoreLocal)} | <b>Nilai Guru:</b> ${aiScoreDisplay}</div>
+          <div style="font-size:12px; font-weight:600;">[${q.qId}] ${q.pertanyaan} ${recheckBadge}</div>
+          <div style="background:#f1f5f9; padding:6px 10px; border-radius:6px; margin:4px 0; font-style:italic; font-size:11px;">"${q.transcript || 'Kosong'}"</div>
+          <div style="font-size:11px; margin-bottom:4px;"><b>Nilai Robot:</b> ${cleanScoreValue(q.scoreLocal)} | <b>Nilai Guru:</b> ${aiScoreDisplay}</div>
           <div style="display:flex; gap:6px;">
-            <button class="btn-warning" style="padding:5px 10px; font-size:11px; width:auto;" onclick="promptManualGrade('${q.qId}','${item.nama}','${item.rombel}','${item.bab}')">📝 Nilai Manual</button>
-            <button class="btn-primary" style="padding:5px 10px; font-size:11px; width:auto;" onclick="triggerTeacherAIGrade('${q.qId}','${item.nama}','${item.rombel}','${item.bab}', \`${escapeQuotes(q.transcript)}\`)">🤖 Penilaian AI</button>
+            <button class="btn-warning" style="padding:4px 8px; font-size:10px; width:auto;" onclick="promptManualGrade('${q.qId}','${item.nama}','${item.rombel}','${item.bab}')">📝 Manual</button>
+            <button class="btn-primary" style="padding:4px 8px; font-size:10px; width:auto;" onclick="triggerTeacherAIGrade('${q.qId}','${item.nama}','${item.rombel}','${item.bab}', \`${escapeQuotes(q.transcript)}\`)">🤖 AI</button>
           </div>
         </div>`;
       });
-      tbody.innerHTML += `<tr><td style="width:200px; vertical-align:top; padding:12px; background:#fafafa;"><b style="font-size:13px;">${item.nama}</b><small style="color:#64748b; display:block; margin-bottom:10px;">${item.rombel} | ${item.bab}</small><button class="btn-primary" style="padding:6px 10px; font-size:11px; width:100%;" onclick="submitAddExtraTime('${item.nama}','${item.rombel}','${item.bab}')">⏱️ +10 Menit Waktu</button></td><td style="vertical-align:top; padding:12px;">${qHtml}</td></tr>`;
+      tbody.innerHTML += `<tr><td style="width:160px; vertical-align:top; padding:8px; background:#fafafa;"><b style="font-size:12px;">${item.nama}</b><small style="color:#64748b; display:block; margin-bottom:6px;">${item.rombel} | ${item.bab}</small><button class="btn-primary" style="padding:4px 8px; font-size:10px; width:100%;" onclick="submitAddExtraTime('${item.nama}','${item.rombel}','${item.bab}')">⏱️ +10 Min</button></td><td style="vertical-align:top; padding:8px;">${qHtml}</td></tr>`;
     });
     document.getElementById('reviewResultBox').style.display = 'block';
   }
@@ -1063,12 +982,8 @@
       studentTranscriptText: transcript 
     }, res => { 
       hideLoader(); 
-      if (res && res.success) { 
-        showNotif(true, "BERHASIL 🤖", "AI berhasil memberikan penilaian."); 
-        submitLoadReview(); 
-      } else {
-        showNotif(false, "GAGAL ❌", res ? res.error : "Gagal memproses Penilaian AI."); 
-      }
+      if (res && res.success) { showNotif(true, "BERHASIL 🤖", "AI selesai menilai."); submitLoadReview(); } 
+      else { showNotif(false, "GAGAL ❌", res ? res.error : "Gagal memproses AI."); }
     });
   }
   function submitAddExtraTime(nama, rombel, bab) { fetchAPI({ action: "addExtraTime", password: adminSessionPassword, studentName: nama, rombel: rombel, bab: bab }, res => { if (res && res.success) submitLoadReview(); }); }
@@ -1082,8 +997,8 @@
           tbody.innerHTML += `<tr><td>${item.no}</td><td>${item.nama}</td><td>${item.rombel}</td><td>${item.jk}</td>
             <td>
               <div style="display:flex; gap:4px;">
-                <button class="btn-warning" style="padding:4px 8px; font-size:11px;" onclick="editSiswa(${item.rowIndex}, '${item.no}', '${item.nama}', '${item.rombel}', '${item.jk}')">Edit</button>
-                <button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteSiswa(${item.rowIndex}, '${item.nama}')">Hapus</button>
+                <button class="btn-warning" style="padding:4px 6px; font-size:10px;" onclick="editSiswa(${item.rowIndex}, '${item.no}', '${item.nama}', '${item.rombel}', '${item.jk}')">Edit</button>
+                <button class="btn-danger" style="padding:4px 6px; font-size:10px;" onclick="deleteSiswa(${item.rowIndex}, '${item.nama}')">Hapus</button>
               </div>
             </td></tr>`;
         });
@@ -1091,41 +1006,22 @@
     });
   }
   function editSiswa(rowIndex, no, nama, rombel, jk) {
-    document.getElementById('siswaRowIndexInput').value = rowIndex;
-    document.getElementById('siswaNoInput').value = no;
-    document.getElementById('siswaNamaInput').value = nama;
-    document.getElementById('siswaRombelInput').value = rombel;
-    document.getElementById('siswaJkInput').value = jk;
-    document.getElementById('btnSaveSiswa').innerText = "🔄 Perbarui Data Siswa";
-    document.getElementById('tabSiswa').scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('siswaRowIndexInput').value = rowIndex; document.getElementById('siswaNoInput').value = no; document.getElementById('siswaNamaInput').value = nama; document.getElementById('siswaRombelInput').value = rombel; document.getElementById('siswaJkInput').value = jk;
+    document.getElementById('btnSaveSiswa').innerText = "🔄 Perbarui Siswa"; document.getElementById('tabSiswa').scrollIntoView({ behavior: 'smooth' });
   }
   function resetSiswaForm() {
-    document.getElementById('siswaRowIndexInput').value = "";
-    document.getElementById('siswaNoInput').value = "";
-    document.getElementById('siswaNamaInput').value = "";
-    document.getElementById('siswaRombelInput').value = "";
-    document.getElementById('siswaJkInput').value = "L";
+    document.getElementById('siswaRowIndexInput').value = ""; document.getElementById('siswaNoInput').value = ""; document.getElementById('siswaNamaInput').value = ""; document.getElementById('siswaRombelInput').value = ""; document.getElementById('siswaJkInput').value = "L";
     document.getElementById('btnSaveSiswa').innerText = "💾 Simpan Siswa Baru";
   }
   function submitSaveSiswa() {
     if (!adminSessionPassword) return showAdminView();
-    fetchAPI({ 
-      action: "saveStudent", password: adminSessionPassword, 
-      rowIndex: document.getElementById('siswaRowIndexInput').value, 
-      no: document.getElementById('siswaNoInput').value, 
-      nama: document.getElementById('siswaNamaInput').value, 
-      rombel: document.getElementById('siswaRombelInput').value, 
-      jk: document.getElementById('siswaJkInput').value 
-    }, res => { 
-      if(res.success) { showNotif(true, "BERHASIL ✅", res.message); resetSiswaForm(); loadSiswaList(); } 
-      else showNotif(false, "GAGAL", res.error); 
+    fetchAPI({ action: "saveStudent", password: adminSessionPassword, rowIndex: document.getElementById('siswaRowIndexInput').value, no: document.getElementById('siswaNoInput').value, nama: document.getElementById('siswaNamaInput').value, rombel: document.getElementById('siswaRombelInput').value, jk: document.getElementById('siswaJkInput').value }, res => { 
+      if(res.success) { showNotif(true, "BERHASIL ✅", res.message); resetSiswaForm(); loadSiswaList(); } else showNotif(false, "GAGAL", res.error); 
     });
   }
   function deleteSiswa(rIdx, n) { 
     if(confirm("Hapus data "+n+"?")) {
-      fetchAPI({ action: "deleteStudent", password: adminSessionPassword, rowIndex: rIdx }, res => { 
-        if(res.success) { showNotif(true, "TERHAPUS", "Data siswa dihapus."); loadSiswaList(); } 
-      });
+      fetchAPI({ action: "deleteStudent", password: adminSessionPassword, rowIndex: rIdx }, res => { if(res.success) { showNotif(true, "TERHAPUS", "Data dihapus."); loadSiswaList(); } });
     }
   }
 
@@ -1139,8 +1035,8 @@
           tbody.innerHTML += `<tr><td>${item.id}</td><td>${item.kelas}</td><td>${item.bab}</td><td>${item.pertanyaan}</td>
             <td>
               <div style="display:flex; gap:4px;">
-                <button class="btn-warning" style="padding:4px 8px; font-size:11px;" onclick="editSoal('${item.id}', '${item.kelas}', '${item.bab}', \`${escapedPertanyaan}\`, \`${escapedRubrik}\`)">Edit</button>
-                <button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteSoal('${item.id}')">Hapus</button>
+                <button class="btn-warning" style="padding:4px 6px; font-size:10px;" onclick="editSoal('${item.id}', '${item.kelas}', '${item.bab}', \`${escapedPertanyaan}\`, \`${escapedRubrik}\`)">Edit</button>
+                <button class="btn-danger" style="padding:4px 6px; font-size:10px;" onclick="deleteSoal('${item.id}')">Hapus</button>
               </div>
             </td></tr>`;
         });
@@ -1148,22 +1044,11 @@
     });
   }
   function editSoal(id, kelas, bab, pertanyaan, rubrik) {
-    document.getElementById('soalIdInput').value = id;
-    document.getElementById('soalKelasInput').value = kelas;
-    document.getElementById('soalBabInput').value = bab;
-    document.getElementById('soalPertanyaanInput').value = pertanyaan;
-    document.getElementById('soalRubrikInput').value = rubrik;
-    document.getElementById('soalGambarInput').value = "";
-    document.getElementById('btnSaveSoal').innerText = "🔄 Perbarui Soal (" + id + ")";
-    document.getElementById('tabSoal').scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('soalIdInput').value = id; document.getElementById('soalKelasInput').value = kelas; document.getElementById('soalBabInput').value = bab; document.getElementById('soalPertanyaanInput').value = pertanyaan; document.getElementById('soalRubrikInput').value = rubrik; document.getElementById('soalGambarInput').value = "";
+    document.getElementById('btnSaveSoal').innerText = "🔄 Perbarui Soal (" + id + ")"; document.getElementById('tabSoal').scrollIntoView({ behavior: 'smooth' });
   }
   function resetSoalForm() {
-    document.getElementById('soalIdInput').value = "";
-    document.getElementById('soalKelasInput').value = "";
-    document.getElementById('soalBabInput').value = "";
-    document.getElementById('soalPertanyaanInput').value = "";
-    document.getElementById('soalRubrikInput').value = "";
-    document.getElementById('soalGambarInput').value = "";
+    document.getElementById('soalIdInput').value = ""; document.getElementById('soalKelasInput').value = ""; document.getElementById('soalBabInput').value = ""; document.getElementById('soalPertanyaanInput').value = ""; document.getElementById('soalRubrikInput').value = ""; document.getElementById('soalGambarInput').value = "";
     document.getElementById('btnSaveSoal').innerText = "💾 Simpan Soal Baru";
   }
   function submitSaveSoal() { 
@@ -1171,49 +1056,101 @@
     const file = document.getElementById('soalGambarInput').files[0];
     const doSave = (b64, name, mime) => {
       showLoader();
-      fetchAPI({
-        action: "saveQuestion", password: adminSessionPassword, 
-        questionId: document.getElementById('soalIdInput').value, 
-        kelas: document.getElementById('soalKelasInput').value, 
-        bab: document.getElementById('soalBabInput').value, 
-        pertanyaan: document.getElementById('soalPertanyaanInput').value, 
-        rubrik: document.getElementById('soalRubrikInput').value, 
-        imageBase64: b64, imageFileName: name, imageMimeType: mime
-      }, res => { 
-        hideLoader();
-        if(res.success) { showNotif(true, "BERHASIL ✅", res.message); resetSoalForm(); loadSoalList(); } 
-        else showNotif(false, "GAGAL", res.error); 
+      fetchAPI({ action: "saveQuestion", password: adminSessionPassword, questionId: document.getElementById('soalIdInput').value, kelas: document.getElementById('soalKelasInput').value, bab: document.getElementById('soalBabInput').value, pertanyaan: document.getElementById('soalPertanyaanInput').value, rubrik: document.getElementById('soalRubrikInput').value, imageBase64: b64, imageFileName: name, imageMimeType: mime }, res => { 
+        hideLoader(); if(res.success) { showNotif(true, "BERHASIL ✅", res.message); resetSoalForm(); loadSoalList(); } else showNotif(false, "GAGAL", res.error); 
       });
     };
-    if(file){ 
-      const r = new FileReader(); 
-      r.onload = e => doSave(e.target.result, file.name, file.type); 
-      r.readAsDataURL(file); 
-    } else { 
-      doSave("", "", ""); 
-    }
+    if(file){ const r = new FileReader(); r.onload = e => doSave(e.target.result, file.name, file.type); r.readAsDataURL(file); } 
+    else { doSave("", "", ""); }
   }
   function deleteSoal(id) { 
     if(confirm("Hapus soal "+id+"?")) {
-      fetchAPI({ action: "deleteQuestion", password: adminSessionPassword, questionId: id }, res => { 
-        if(res.success) { showNotif(true, "TERHAPUS", "Soal berhasil dihapus."); loadSoalList(); } 
-        else showNotif(false, "GAGAL", res.error);
+      fetchAPI({ action: "deleteQuestion", password: adminSessionPassword, questionId: id }, res => { if(res.success) { showNotif(true, "TERHAPUS", "Soal dihapus."); loadSoalList(); } else showNotif(false, "GAGAL", res.error); });
+    }
+  }
+
+  /* KODE BARU: PEMICU FILTER BAB MENU CETAK */
+  function onCetakRombelChange() {
+    const rombel = document.getElementById('cetakRombelSelect').value;
+    const bSelect = document.getElementById('cetakBabSelect');
+    bSelect.innerHTML = '<option value="">-- Semua Bab --</option>';
+    if (rombel) {
+      fetchAPI({ action: "getBabList", rombel: rombel }, res => {
+        if (res && res.babList) {
+          res.babList.forEach(bab => bSelect.innerHTML += `<option value="${bab}">${bab}</option>`);
+        }
       });
     }
   }
 
+  /* KODE BARU: PENETAPAN CETAK DENGAN JENDELA BARU (BEBAS KENDALA MOBILE) */
   function generatePrintPreview() {
-    const rombel = document.getElementById('cetakRombelSelect').value, bab = document.getElementById('cetakBabSelect').value; if (!rombel || !bab) return alert("Pilih Rombel & Bab!");
+    const rombel = document.getElementById('cetakRombelSelect').value;
+    const bab = document.getElementById('cetakBabSelect').value;
+    if (!rombel) return alert("Pilih Rombel terlebih dahulu!");
+
+    showLoader();
     fetchAPI({ action: "getTeacherSubmissions", password: adminSessionPassword, rombel: rombel, bab: bab }, res => {
-      if (res && res.success && res.list) {
+      hideLoader();
+      if (res && res.success && res.list && res.list.length > 0) {
         let tableRows = "";
         res.list.forEach((item, idx) => {
           let aL = 0, aA = 0, c = item.questions.length;
           item.questions.forEach(q => { aL += cleanScoreValue(q.scoreLocal); aA += cleanScoreValue(q.scoreAI); });
-          tableRows += `<tr><td style="text-align:center;">${idx+1}</td><td><b>${item.nama}</b></td><td style="text-align:center;">${item.jk}</td><td style="text-align:center;">${c>0?Math.round(aL/c):0}</td><td style="text-align:center; font-weight:bold;">${c>0&&aA>0?Math.round(aA/c):'-'}</td></tr>`;
+          tableRows += `<tr>
+            <td style="text-align:center;">${idx+1}</td>
+            <td><b>${item.nama}</b></td>
+            <td style="text-align:center;">${item.jk}</td>
+            <td style="text-align:center;">${c>0 ? Math.round(aL/c) : 0}</td>
+            <td style="text-align:center; font-weight:bold;">${c>0 && aA>0 ? Math.round(aA/c) : '-'}</td>
+          </tr>`;
         });
-        document.getElementById('printArea').innerHTML = `<div style="text-align:center; border-bottom:2px solid #000; margin-bottom:15px;"><h2 style="margin:0;">REKAPITULASI ASESMEN</h2><h3 style="margin:4px 0;">${document.getElementById('displayNamaSekolah').innerText}</h3><p style="margin:0; font-size:10pt;">Mapel: ${document.getElementById('displayMataPelajaran').innerText} | Rombel: ${rombel} | Bab: ${bab}</p></div><table class="print-table" style="width:100%; border-collapse:collapse;" border="1"><thead><tr><th style="width:40px;">No</th><th>Nama Siswa</th><th style="width:50px;">JK</th><th style="width:90px;">Nilai Robot</th><th style="width:90px;">Nilai Guru</th></tr></thead><tbody>${tableRows}</tbody></table><div style="margin-top:30px; display:flex; justify-content:flex-end;"><div style="text-align:center;"><p style="margin:0;">Guru Pengampu,</p><br><br><b><u>${document.getElementById('inputNamaGuru').value}</u></b></div></div>`;
-        window.print();
+
+        const printHTML = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Rekap Nilai - ${rombel}</title>
+            <style>
+              body { font-family: sans-serif; padding: 15px; color: #000; }
+              table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+              th, td { border: 1px solid #000; padding: 6px 8px; font-size: 11px; text-align: left; }
+              th { background: #f0f0f0; text-align: center; }
+            </style>
+          </head>
+          <body>
+            <div style="text-align:center; border-bottom:2px solid #000; padding-bottom:10px; margin-bottom:15px;">
+              <h2 style="margin:0; font-size:16px;">REKAPITULASI ASESMEN</h2>
+              <h3 style="margin:4px 0; font-size:14px;">${document.getElementById('displayNamaSekolah').innerText}</h3>
+              <p style="margin:0; font-size:11px;">Mapel: ${document.getElementById('displayMataPelajaran').innerText} | Rombel: ${rombel} | Bab: ${bab || 'Semua Bab'}</p>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:30px;">No</th>
+                  <th>Nama Siswa</th>
+                  <th style="width:40px;">JK</th>
+                  <th style="width:80px;">Nilai Robot</th>
+                  <th style="width:80px;">Nilai Guru</th>
+                </tr>
+              </thead>
+              <tbody>${tableRows}</tbody>
+            </table>
+            <div style="margin-top:30px; float:right; text-align:center; font-size:12px;">
+              <p style="margin:0;">Guru Pengampu,</p><br><br><br>
+              <b><u>${document.getElementById('inputNamaGuru').value}</u></b>
+            </div>
+          </body>
+          </html>
+        `;
+
+        const win = window.open('', '_blank');
+        win.document.write(printHTML);
+        win.document.close();
+        win.focus();
+        setTimeout(() => { win.print(); }, 500);
+      } else {
+        alert("Data pengerjaan tidak ditemukan untuk Rombel/Bab tersebut.");
       }
     });
   }
