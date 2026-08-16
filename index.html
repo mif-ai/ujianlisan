@@ -447,6 +447,8 @@
     localStorage.setItem('app_device_id', deviceId);
   }
 
+  let remainingAiQuota = 2; 
+
   let adminSessionPassword = null, adminInactivityTimer = null;
   const INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000;
 
@@ -532,6 +534,8 @@
         document.getElementById('timerInput').value = res.timer;
         document.getElementById('aiPracticeLimitInput').value = res.aiPracticeLimit;
         document.getElementById('aiPracticeCooldownInput').value = res.aiPracticeCooldownMin;
+        
+        remainingAiQuota = Number(res.aiPracticeLimit) || 2;
       }
     });
 
@@ -752,10 +756,13 @@
     const oldData = questionState[selectedQuestionObject.id];
 
     if (currentAppMode === "PRACTICE") {
+      const aiBtnText = remainingAiQuota > 0 ? `✨ Evaluasi AI Gemini (Sisa Kuota: ${remainingAiQuota}x)` : `⏳ Evaluasi AI Terkunci (Kuota Habis)`;
+      const aiDisabled = remainingAiQuota <= 0 ? 'disabled' : '';
+
       btnBox.innerHTML = `
         <div style="display:flex; flex-direction:column; gap:8px;">
           <button class="btn-primary" style="background:linear-gradient(135deg, #10b981, #059669);" onclick="executePracticeGrading('LOKAL')">⚡ Cek Kata Kunci (Lokal - Free Unlimited)</button>
-          <button class="btn-primary" style="background:linear-gradient(135deg, #7c3aed, #6d28d9);" onclick="executePracticeGrading('GEMINI')">✨ Evaluasi AI Gemini (Jatah Terbatas)</button>
+          <button class="btn-primary" style="background:linear-gradient(135deg, #7c3aed, #6d28d9);" onclick="executePracticeGrading('GEMINI')" ${aiDisabled}>${aiBtnText}</button>
           <button class="btn-danger" style="margin-top:6px; font-weight:700;" onclick="openFinishExamModal()">🏁 AKHIRI SESI LATIHAN</button>
         </div>
       `;
@@ -792,11 +799,18 @@
     }, res => {
       hideLoader();
       if (res && res.success) {
+        if (type === 'GEMINI' && res.usedQuota !== undefined && res.maxQuota !== undefined) {
+          remainingAiQuota = Math.max(0, res.maxQuota - res.usedQuota);
+        }
         const newScore = cleanScoreValue(res.scoreLocal);
         saveAnswerAndState(selectedQuestionObject.id, currentText, newScore, res.feedback, null, () => {
           showSingleResultModal(newScore, res.feedback);
         });
       } else {
+        if (type === 'GEMINI' && res && res.error && res.error.includes("Kuota")) {
+          remainingAiQuota = 0;
+          renderActionButtons();
+        }
         showNotif(false, "Penilaian AI Ditolak ⚠️", res ? res.error : "Gagal mengevaluasi.");
       }
     });
@@ -954,7 +968,7 @@
       }
     });
     const avgLocal = countLocal > 0 ? Math.round(sumLocal / currentQuestionsList.length) : 0;
-    const avgAI = countAI > 0 ? Math.round(sumAI / countAI) : "⏳ Menunggu";
+    const avgAI = countAI > 0 ? Math.round(sumAI / currentQuestionsList.length) : "⏳ Menunggu";
     return { avgLocal: avgLocal, avgAI: avgAI };
   }
   function updateAccumulatedScoreUI() {
