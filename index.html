@@ -280,18 +280,12 @@
   </div>
 
   <div id="tabSettings" class="card tab-content" style="display:none;">
-    <h3 style="margin-top:0; color:var(--primary); font-size:14px;">🔑 Pengaturan Token & Engine Penilaian</h3>
+    <h3 style="margin-top:0; color:var(--primary); font-size:14px;">🔑 Pengaturan Token & Timer Ujian</h3>
     <div style="background:#f0fdf4; padding:12px; border-radius:10px; border:1px solid #bbf7d0; margin-bottom:12px;">
       <div class="form-group"><label>Token Latihan:</label><input type="text" id="tokenLatihInput"></div>
     </div>
     <div style="background:#fef2f2; padding:12px; border-radius:10px; border:1px solid #fecaca; margin-bottom:12px;">
       <div class="form-group"><label>Token Ujian:</label><input type="text" id="tokenUjianInput"></div>
-      <div class="form-group"><label>Mesin Penilaian Mode Ujian:</label>
-        <select id="examEngineSelect">
-          <option value="LOKAL">⚡ Kata Kunci Lokal (Robot Sederhana)</option>
-          <option value="GEMINI">✨ AI Gemini (Evaluasi Komprehensif)</option>
-        </select>
-      </div>
     </div>
     <div class="form-group"><label>Durasi Timer Default (Menit):</label><input type="number" id="timerInput" min="0"></div>
     
@@ -317,7 +311,6 @@
     <button class="btn-success" onclick="submitSaveBabTimer()">💾 Simpan Timer Bab</button>
   </div>
 
-  <!-- TAB BARU: CHECKLIST ON/OFF BAB PER KELAS -->
   <div id="tabBabStatus" class="card tab-content" style="display:none;">
     <h3 style="margin-top:0; color:var(--primary); font-size:14px;">📌 Pengaturan Status Tampil Bab per Kelas</h3>
     <p style="font-size:12px; color:#64748b; margin-top:-5px;">Centang Bab yang ingin **ditampilkan (ON)** kepada siswa saat login. Uncheck untuk menyembunyikan (OFF).</p>
@@ -448,7 +441,6 @@
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbzBMx-BvZfCT_w6yG2HJur8KUm2kqK0tfcZhFiD6J7dxH3AOOxXQg72fS4pLzAjNFM_kA/exec";
 
-  // DEVICE ID KHUSUS BROWSER UNTUK LIMIT CACHE COOLDOWN
   let deviceId = localStorage.getItem('app_device_id');
   if (!deviceId) {
     deviceId = 'DEV_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
@@ -540,7 +532,6 @@
         document.getElementById('timerInput').value = res.timer;
         document.getElementById('aiPracticeLimitInput').value = res.aiPracticeLimit;
         document.getElementById('aiPracticeCooldownInput').value = res.aiPracticeCooldownMin;
-        document.getElementById('examEngineSelect').value = res.examEngine;
       }
     });
 
@@ -626,7 +617,7 @@
       banner.innerHTML = `<b>🟢 MODE LATIHAN MANDIRI</b><br>Tersedia 2 tombol penilaian: Penilaian Lokal Bebas dan Evaluasi AI Gemini Terbatas. Skor tidak masuk rekap resmi.`;
     } else if (mode === "SUBMISSION") {
       banner.style.display = "block"; banner.style.background = "#fef2f2"; banner.style.borderColor = "#fecaca"; banner.style.color = "#991b1b";
-      banner.innerHTML = `<b>🔴 MODE UJIAN RESMI</b><br>Jawaban Anda direkam ke database server.`;
+      banner.innerHTML = `<b>🔴 MODE UJIAN RESMI</b><br>Jawaban Anda direkam ke database server. Penilaian instan berupa Nilai Robot Kata Kunci.`;
     } else { banner.style.display = "none"; }
   }
 
@@ -963,7 +954,7 @@
       }
     });
     const avgLocal = countLocal > 0 ? Math.round(sumLocal / currentQuestionsList.length) : 0;
-    const avgAI = countAI > 0 ? Math.round(sumAI / currentQuestionsList.length) : "⏳ Menunggu";
+    const avgAI = countAI > 0 ? Math.round(sumAI / countAI) : "⏳ Menunggu";
     return { avgLocal: avgLocal, avgAI: avgAI };
   }
   function updateAccumulatedScoreUI() {
@@ -1002,8 +993,7 @@
       tokenUjian: document.getElementById('tokenUjianInput').value.trim(), 
       timer: document.getElementById('timerInput').value,
       aiPracticeLimit: document.getElementById('aiPracticeLimitInput').value,
-      aiPracticeCooldownMin: document.getElementById('aiPracticeCooldownInput').value,
-      examEngine: document.getElementById('examEngineSelect').value
+      aiPracticeCooldownMin: document.getElementById('aiPracticeCooldownInput').value
     }, res => {
       if (res && res.success) { showNotif(true, "BERHASIL ✅", res.message); } else showNotif(false, "GAGAL ❌", res ? res.error : "Gagal menyimpan");
     });
@@ -1021,7 +1011,6 @@
     });
   }
 
-  // === FITUR STATUS BAB CHECKLIST ON/OFF ADMIN ===
   function loadBabStatusAdmin() {
     if (!adminSessionPassword) return showAdminView();
     showLoader();
