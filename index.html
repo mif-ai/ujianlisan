@@ -83,7 +83,6 @@
     .tab-btn { background: #e2e8f0; color: #475569; border: none; padding: 8px 12px; border-radius: 8px; font-weight: 600; white-space: nowrap; width: auto; font-size: 12px; }
     .tab-btn.active { background: var(--primary); color: white; }
     
-    /* PENYESUAIAN RESPOSIF TABEL FULL SCREEN */
     .table-container { width: 100%; overflow-x: auto; margin-top: 10px; border-radius: 8px; border: 1px solid #cbd5e1; }
     .sub-table { width: 100%; border-collapse: collapse; font-size: 12px; }
     .sub-table th, .sub-table td { border: 1px solid #e2e8f0; padding: 8px 10px; text-align: left; }
@@ -326,7 +325,12 @@
         <button class="btn-secondary" style="flex:1;" onclick="resetSiswaForm()">Batal</button>
       </div>
     </div>
-    <button class="btn-primary" style="width:auto; margin-bottom:10px;" onclick="loadSiswaList()">🔄 Refresh</button>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+      <button class="btn-primary" style="width:auto;" onclick="loadSiswaList()">🔄 Refresh Data</button>
+    </div>
+    <div class="form-group" style="margin-top: 6px;">
+      <input type="text" id="searchSiswaInput" placeholder="🔍 Cari berdasarkan Nama, Rombel, atau No..." oninput="filterSiswaTable()">
+    </div>
     <div class="table-container">
       <table class="sub-table" id="siswaTable">
         <thead><tr><th>No</th><th>Nama Siswa</th><th>Rombel</th><th>JK</th><th style="width:90px;">Aksi</th></tr></thead>
@@ -351,7 +355,12 @@
         <button class="btn-secondary" style="flex:1;" onclick="resetSoalForm()">Batal</button>
       </div>
     </div>
-    <button class="btn-primary" style="width:auto; margin-bottom:10px;" onclick="loadSoalList()">🔄 Refresh</button>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+      <button class="btn-primary" style="width:auto;" onclick="loadSoalList()">🔄 Refresh Data</button>
+    </div>
+    <div class="form-group" style="margin-top: 6px;">
+      <input type="text" id="searchSoalInput" placeholder="🔍 Cari berdasarkan ID, Target Kelas, Bab, atau Pertanyaan..." oninput="filterSoalTable()">
+    </div>
     <div class="table-container">
       <table class="sub-table" id="soalTable">
         <thead><tr><th>ID</th><th>Target</th><th>Bab</th><th>Pertanyaan</th><th style="width:90px;">Aksi</th></tr></thead>
@@ -379,7 +388,6 @@
   <div id="tabCetak" class="card tab-content" style="display:none;">
     <h3 style="margin-top:0; color:var(--primary); font-size:14px;">🖨️ Cetak Rekap Nilai</h3>
     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-      <!-- FILTER CETAK ROMBEL & BAB -->
       <div class="form-group"><label>Rombel:</label><select id="cetakRombelSelect" onchange="onCetakRombelChange()"><option value="">-- Pilih Rombel --</option></select></div>
       <div class="form-group"><label>Bab:</label><select id="cetakBabSelect"><option value="">-- Semua Bab --</option></select></div>
     </div>
@@ -989,20 +997,39 @@
   function submitAddExtraTime(nama, rombel, bab) { fetchAPI({ action: "addExtraTime", password: adminSessionPassword, studentName: nama, rombel: rombel, bab: bab }, res => { if (res && res.success) submitLoadReview(); }); }
   function escapeQuotes(str) { return (str || '').replace(/'/g, "\\'").replace(/"/g, '\\"'); }
 
+  // === FITUR KELOLA SISWA & FILTER PENCARIAN ===
   function loadSiswaList() {
     fetchAPI({ action: "getStudentListAdmin", password: adminSessionPassword }, res => {
       if(res.success) {
-        siswaDataGlobal = res.list; const tbody = document.getElementById('siswaTbody'); tbody.innerHTML="";
-        res.list.forEach(item => {
-          tbody.innerHTML += `<tr><td>${item.no}</td><td>${item.nama}</td><td>${item.rombel}</td><td>${item.jk}</td>
-            <td>
-              <div style="display:flex; gap:4px;">
-                <button class="btn-warning" style="padding:4px 6px; font-size:10px;" onclick="editSiswa(${item.rowIndex}, '${item.no}', '${item.nama}', '${item.rombel}', '${item.jk}')">Edit</button>
-                <button class="btn-danger" style="padding:4px 6px; font-size:10px;" onclick="deleteSiswa(${item.rowIndex}, '${item.nama}')">Hapus</button>
-              </div>
-            </td></tr>`;
-        });
+        siswaDataGlobal = res.list;
+        filterSiswaTable();
       }
+    });
+  }
+  function filterSiswaTable() {
+    const query = document.getElementById('searchSiswaInput').value.toLowerCase().trim();
+    if (!siswaDataGlobal) return;
+    const filtered = siswaDataGlobal.filter(item => 
+      String(item.no || '').toLowerCase().includes(query) ||
+      String(item.nama || '').toLowerCase().includes(query) ||
+      String(item.rombel || '').toLowerCase().includes(query)
+    );
+    renderSiswaTbodyCustom(filtered);
+  }
+  function renderSiswaTbodyCustom(list) {
+    const tbody = document.getElementById('siswaTbody'); tbody.innerHTML = "";
+    if (!list || list.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8;">Data siswa tidak ditemukan.</td></tr>`;
+      return;
+    }
+    list.forEach(item => {
+      tbody.innerHTML += `<tr><td>${item.no}</td><td>${item.nama}</td><td>${item.rombel}</td><td>${item.jk}</td>
+        <td>
+          <div style="display:flex; gap:4px;">
+            <button class="btn-warning" style="padding:4px 6px; font-size:10px;" onclick="editSiswa(${item.rowIndex}, '${item.no}', '${item.nama}', '${item.rombel}', '${item.jk}')">Edit</button>
+            <button class="btn-danger" style="padding:4px 6px; font-size:10px;" onclick="deleteSiswa(${item.rowIndex}, '${item.nama}')">Hapus</button>
+          </div>
+        </td></tr>`;
     });
   }
   function editSiswa(rowIndex, no, nama, rombel, jk) {
@@ -1025,22 +1052,42 @@
     }
   }
 
+  // === FITUR BANK SOAL & FILTER PENCARIAN ===
   function loadSoalList() {
     fetchAPI({ action: "getAllQuestionsAdmin", password: adminSessionPassword }, res => {
       if(res.success) {
-        soalDataGlobal = res.list; const tbody = document.getElementById('soalTbody'); tbody.innerHTML="";
-        res.list.forEach(item => {
-          let escapedPertanyaan = (item.pertanyaan || "").replace(/"/g, '&quot;');
-          let escapedRubrik = (item.rubrik || "").replace(/"/g, '&quot;');
-          tbody.innerHTML += `<tr><td>${item.id}</td><td>${item.kelas}</td><td>${item.bab}</td><td>${item.pertanyaan}</td>
-            <td>
-              <div style="display:flex; gap:4px;">
-                <button class="btn-warning" style="padding:4px 6px; font-size:10px;" onclick="editSoal('${item.id}', '${item.kelas}', '${item.bab}', \`${escapedPertanyaan}\`, \`${escapedRubrik}\`)">Edit</button>
-                <button class="btn-danger" style="padding:4px 6px; font-size:10px;" onclick="deleteSoal('${item.id}')">Hapus</button>
-              </div>
-            </td></tr>`;
-        });
+        soalDataGlobal = res.list;
+        filterSoalTable();
       }
+    });
+  }
+  function filterSoalTable() {
+    const query = document.getElementById('searchSoalInput').value.toLowerCase().trim();
+    if (!soalDataGlobal) return;
+    const filtered = soalDataGlobal.filter(item => 
+      String(item.id || '').toLowerCase().includes(query) ||
+      String(item.kelas || '').toLowerCase().includes(query) ||
+      String(item.bab || '').toLowerCase().includes(query) ||
+      String(item.pertanyaan || '').toLowerCase().includes(query)
+    );
+    renderSoalTbodyCustom(filtered);
+  }
+  function renderSoalTbodyCustom(list) {
+    const tbody = document.getElementById('soalTbody'); tbody.innerHTML = "";
+    if (!list || list.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8;">Soal tidak ditemukan.</td></tr>`;
+      return;
+    }
+    list.forEach(item => {
+      let escapedPertanyaan = (item.pertanyaan || "").replace(/"/g, '&quot;');
+      let escapedRubrik = (item.rubrik || "").replace(/"/g, '&quot;');
+      tbody.innerHTML += `<tr><td>${item.id}</td><td>${item.kelas}</td><td>${item.bab}</td><td>${item.pertanyaan}</td>
+        <td>
+          <div style="display:flex; gap:4px;">
+            <button class="btn-warning" style="padding:4px 6px; font-size:10px;" onclick="editSoal('${item.id}', '${item.kelas}', '${item.bab}', \`${escapedPertanyaan}\`, \`${escapedRubrik}\`)">Edit</button>
+            <button class="btn-danger" style="padding:4px 6px; font-size:10px;" onclick="deleteSoal('${item.id}')">Hapus</button>
+          </div>
+        </td></tr>`;
     });
   }
   function editSoal(id, kelas, bab, pertanyaan, rubrik) {
@@ -1069,7 +1116,6 @@
     }
   }
 
-  /* KODE BARU: PEMICU FILTER BAB MENU CETAK */
   function onCetakRombelChange() {
     const rombel = document.getElementById('cetakRombelSelect').value;
     const bSelect = document.getElementById('cetakBabSelect');
@@ -1083,7 +1129,6 @@
     }
   }
 
-  /* KODE BARU: PENETAPAN CETAK DENGAN JENDELA BARU (BEBAS KENDALA MOBILE) */
   function generatePrintPreview() {
     const rombel = document.getElementById('cetakRombelSelect').value;
     const bab = document.getElementById('cetakBabSelect').value;
