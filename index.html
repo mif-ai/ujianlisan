@@ -14,7 +14,24 @@
       --card: #ffffff;
       --text: #0f172a;
     }
-    * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+    * { 
+      box-sizing: border-box; 
+      font-family: 'Poppins', sans-serif;
+      /* PROTEKSI ANTI-SELECT TEKS KESELURUHAN */
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+    
+    /* PENGECUALIAN: Area pengetikan siswa tetap boleh diisi */
+    textarea, input[type="text"], input[type="password"], input[type="number"] {
+      -webkit-user-select: text !important;
+      -moz-user-select: text !important;
+      -ms-user-select: text !important;
+      user-select: text !important;
+    }
+
     body { background-color: var(--bg); padding: 15px; max-width: 960px; margin: auto; color: var(--text); }
     
     .header-card { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; padding: 22px; border-radius: 20px; text-align: center; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(79, 70, 229, 0.25); }
@@ -46,10 +63,17 @@
     .q-num-btn.yellow { background: #fef08a; color: #854d0e; border-color: #eab308; }
     .q-num-btn.green { background: #10b981; color: white; border-color: #059669; }
     .q-num-btn.blue { background: #3b82f6; color: white; border-color: #1d4ed8; }
-    .question-box { background: #f0f9ff; padding: 18px; border-left: 5px solid var(--secondary); margin: 15px 0; border-radius: 12px; }
-    .img-soal { max-width: 100%; max-height: 250px; border-radius: 12px; margin-top: 12px; border: 1px solid #cbd5e1; }
+    .question-box { background: #f0f9ff; padding: 18px; border-left: 5px solid var(--secondary); margin: 15px 0; border-radius: 12px; position: relative; }
+    .img-soal { max-width: 100%; max-height: 250px; border-radius: 12px; margin-top: 12px; border: 1px solid #cbd5e1; pointer-events: none; }
 
-    /* LAYOUT KOMPARASI */
+    /* EFEK BLUR SAAT SISWA PINDAH TAB / SCREENSHOT */
+    .content-blurred {
+      filter: blur(12px) !important;
+      opacity: 0.1 !important;
+      pointer-events: none !important;
+      transition: filter 0.1s ease;
+    }
+
     .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; text-align: left; }
     .comp-card { background: #f8fafc; border: 1px solid #cbd5e1; padding: 14px; border-radius: 12px; font-size: 12px; }
     .comp-text-box { background: white; padding: 10px; border-radius: 8px; border: 1px dashed #94a3b8; font-style: italic; max-height: 120px; overflow-y: auto; margin: 8px 0; }
@@ -67,16 +91,14 @@
     .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 15px; }
     .modal-content { background: white; padding: 24px; border-radius: 20px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.25); }
 
-    /* LOADING SPINNER */
     .loader-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.7); display: none; align-items: center; justify-content: center; z-index: 3000; flex-direction: column; }
     .spinner { border: 4px solid rgba(0, 0, 0, 0.1); width: 40px; height: 40px; border-radius: 50%; border-left-color: var(--primary); animation: spin 1s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
+    /* PROTEKSI MULTIMEDIA CETAK & SCREENSHOT PRINTER */
     @media print {
-      @page { size: A4; margin: 10mm; }
-      body { background: white; padding: 0; font-size: 11pt; color: black; }
-      #studentView, #adminView header, .nav-tabs, .btn-guru, .no-print { display: none !important; }
-      #printArea { display: block !important; width: 100%; }
+      body * { display: none !important; }
+      #printArea, #printArea * { display: block !important; }
       .print-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
       .print-table th, .print-table td { border: 1px solid #000; padding: 6px 8px; font-size: 10pt; }
     }
@@ -84,7 +106,16 @@
 </head>
 <body>
 
-<!-- LOADING OVERLAY -->
+<!-- OVERLAY PERINGATAN INTEGRITAS -->
+<div id="securityWarningOverlay" class="modal-overlay" style="z-index:9999;">
+  <div class="modal-content" style="text-align:center; max-width:400px; background:#fff1f2; border:2px solid #f87171;">
+    <h2 style="font-size:40px; margin:0;">⚠️</h2>
+    <h3 style="margin:8px 0; color:#991b1b;">Tampilan Terkunci!</h3>
+    <p style="font-size:12px; color:#7f1d1d; margin-bottom:15px;">Anda terdeteksi meninggalkan layar ujian atau menggunakan fitur tangkapan layar. Kembalilah fokus ke jendela ujian ini.</p>
+    <button class="btn-primary" style="background:#dc2626;" onclick="unlockSecurityWarning()">Saya Mengerti & Kembali</button>
+  </div>
+</div>
+
 <div id="loadingOverlay" class="loader-overlay">
   <div class="spinner"></div>
   <b style="margin-top:10px; color:#3730a3;">Sedang memproses...</b>
@@ -101,7 +132,6 @@
     </div>
   </div>
 
-  <!-- BANNER INFORMASI MODE (RESPONSIF DI BAWAH HEADER) -->
   <div id="modeBannerCard" style="display:none; padding:14px; border-radius:14px; margin-bottom:20px; font-size:12px; border:1px solid; line-height: 1.5;"></div>
 
   <button class="btn-guru" onclick="showAdminView()">⚙️ Buka Panel Kendali Guru / Admin</button>
@@ -115,7 +145,6 @@
     <button id="btnStartExam" class="btn-primary" style="margin-top:10px; padding:12px; font-size:15px;" onclick="triggerTokenModal()" disabled>🚀 MULAI KERJAKAN</button>
   </div>
 
-  <!-- TOKEN MODAL SISWA -->
   <div id="tokenModal" class="modal-overlay">
     <div class="modal-content" style="text-align:center;">
       <h3 style="margin-top:0; color:var(--primary);">🔐 Masukkan Token</h3>
@@ -128,7 +157,6 @@
     </div>
   </div>
 
-  <!-- PALETTE & SOAL SECTION -->
   <div class="card" id="examWorkspaceCard" style="display:none;">
     <div id="paletteSection" style="margin-bottom:20px;">
       <div id="babTotalCard" style="background:#e0e7ff; border:1px solid #c7d2fe; padding:14px; border-radius:14px; margin-bottom:14px;">
@@ -155,13 +183,12 @@
     </div>
 
     <div id="questionContainer" style="display:none;">
-      <div class="question-box">
+      <div class="question-box" id="questionBoxElement">
         <b id="questionNumberLabel">Soal No. 1</b>
         <p id="questionText" style="margin:8px 0 0 0; font-weight:600; font-size:15px;"></p>
         <div id="gambarSoalBox" style="display:none; text-align:center;"><img id="gambarSoalImg" src="" class="img-soal"></div>
       </div>
 
-      <!-- BANNER JAWABAN LAMA TERSIMPAN -->
       <div id="oldDataBanner" style="display:none; background:#fef3c7; border:1px solid #fcd34d; padding:10px; border-radius:10px; margin-bottom:12px; font-size:12px; color:#b45309;">
         <b>📌 Jawaban Telah Tersimpan Sebelumnya.</b><br>
         Nilai Robot: <span id="bannerLoc">0</span> | Nilai Guru: <span id="bannerAI">-</span>
@@ -180,7 +207,7 @@
   </div>
 </div>
 
-<!-- MODAL 1: SINGLE RESULT -->
+<!-- MODAL RESULT & COMPARISON -->
 <div id="resultModal" class="modal-overlay">
   <div class="modal-content" style="text-align:center;">
     <h3 style="margin-top:0; color:var(--primary);">✨ Hasil Evaluasi Robot</h3>
@@ -197,21 +224,18 @@
   </div>
 </div>
 
-<!-- 🎯 MODAL 2: KOMPARASI SIDE-BY-SIDE -->
 <div id="comparisonModal" class="modal-overlay">
   <div class="modal-content" style="max-width: 650px;">
     <h3 style="margin-top:0; color:var(--primary); text-align:center;">⚖️ Komparasi Revisi Jawaban</h3>
     <p style="font-size:12px; text-align:center; color:#64748b; margin-top:-5px;">Pilih jawaban mana yang ingin Anda pertahankan di server.</p>
     
     <div class="compare-grid">
-      <!-- KIRI: LAMA -->
       <div class="comp-card" style="border-top: 4px solid #f59e0b;">
         <b style="color:#b45309;">📌 JAWABAN LAMA</b>
         <div class="comp-text-box" id="compOldText">...</div>
         <div class="comp-score-row"><span>🤖 Nilai Robot:</span> <span id="compOldScoreLoc" style="color:#d97706;">0</span></div>
         <div class="comp-score-row"><span>🎓 Nilai Guru:</span> <span id="compOldScoreAI">0</span></div>
       </div>
-      <!-- KANAN: BARU -->
       <div class="comp-card" style="border-top: 4px solid #10b981;">
         <b style="color:#059669;">✨ JAWABAN BARU</b>
         <div class="comp-text-box" id="compNewText">...</div>
@@ -231,7 +255,6 @@
   </div>
 </div>
 
-<!-- FINISH EXAM CONFIRMATION MODAL -->
 <div id="finishExamModal" class="modal-overlay">
   <div class="modal-content" style="text-align:center;">
     <h2 style="font-size:48px; margin:0;">🏁</h2>
@@ -266,7 +289,6 @@
     <button class="tab-btn" onclick="switchTab('tabCetak', event)">7. Cetak Rekap</button>
   </div>
 
-  <!-- TAB 1: DASHBOARD STATISTIK -->
   <div id="tabDashboard" class="card tab-content">
     <h3 style="margin-top:0; color:var(--primary); font-size:15px;">📊 Dashboard Statistik</h3>
     <button class="btn-primary" style="margin-bottom:15px; width:auto;" onclick="loadDashboardStats()">🔄 Muat Data Statistik</button>
@@ -279,7 +301,6 @@
     </div>
   </div>
 
-  <!-- TAB 2: MODE & TOKEN -->
   <div id="tabSettings" class="card tab-content" style="display:none;">
     <h3 style="margin-top:0; color:var(--primary); font-size:15px;">🔑 Pengaturan Token & Timer Ujian</h3>
     <div style="background:#f0fdf4; padding:14px; border-radius:12px; border:1px solid #bbf7d0; margin-bottom:15px;">
@@ -310,7 +331,6 @@
     </div>
   </div>
 
-  <!-- TAB 3: IDENTITAS SEKOLAH -->
   <div id="tabSekolah" class="card tab-content" style="display:none;">
     <h3 style="margin-top:0; color:var(--primary); font-size:15px;">🏛️ Info Sekolah & Admin</h3>
     <div class="form-group"><label>Nama Sekolah:</label><input type="text" id="inputNamaSekolah"></div>
@@ -320,7 +340,6 @@
     <button class="btn-success" onclick="submitSaveSchoolSettings()">💾 Simpan Info</button>
   </div>
 
-  <!-- TAB 4: CRUD SISWA (DENGAN TOMBOL EDIT) -->
   <div id="tabSiswa" class="card tab-content" style="display:none;">
     <h3 style="margin-top:0; color:var(--primary); font-size:15px;">👥 Kelola Data Siswa</h3>
     <div style="background:#f8fafc; padding:14px; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:15px;">
@@ -345,7 +364,6 @@
     </div>
   </div>
 
-  <!-- TAB 5: CRUD BANK SOAL (DENGAN TOMBOL EDIT) -->
   <div id="tabSoal" class="card tab-content" style="display:none;">
     <h3 style="margin-top:0; color:var(--primary); font-size:15px;">📚 Kelola Bank Soal</h3>
     <div style="background:#f8fafc; padding:14px; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:15px;">
@@ -371,7 +389,6 @@
     </div>
   </div>
 
-  <!-- TAB 6: REVIEW JAWABAN & PENILAIAN GURU -->
   <div id="tabReview" class="card tab-content" style="display:none;">
     <h3 style="margin-top:0; color:var(--primary); font-size:15px;">📝 Review Jawaban & Penilaian Guru</h3>
     <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
@@ -395,7 +412,6 @@
     </div>
   </div>
 
-  <!-- TAB 7: CETAK REKAP NILAI -->
   <div id="tabCetak" class="card tab-content" style="display:none;">
     <h3 style="margin-top:0; color:var(--primary); font-size:15px;">🖨️ Cetak Rekap Nilai</h3>
     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
@@ -429,10 +445,9 @@
 </div>
 
 <!-- ========================================================================= -->
-<!-- 3. JAVASCRIPT LOGIC (CLIENT SIDE) -->
+<!-- 3. JAVASCRIPT LOGIC (CLIENT SIDE & SECURITY ENFORCEMENT) -->
 <!-- ========================================================================= -->
 <script>
-  // GANTI DENGAN URL DEPLOYMENT GOOGLE APPS SCRIPT ANDA
   const API_URL = "https://script.google.com/macros/s/AKfycbzBMx-BvZfCT_w6yG2HJur8KUm2kqK0tfcZhFiD6J7dxH3AOOxXQg72fS4pLzAjNFM_kA/exec";
 
   let adminSessionPassword = null, adminInactivityTimer = null;
@@ -447,7 +462,65 @@
   let siswaDataGlobal = [], soalDataGlobal = [];
   let examTimerInterval = null, remainingExamSeconds = 0;
 
-  window.onload = function() { initApp(); setupInactivityTracker(); };
+  window.onload = function() { 
+    initApp(); 
+    setupInactivityTracker(); 
+    setupSecurityEnforcements();
+  };
+
+  // === SYSTEM ENGINE PROTEKSI SOAL & FITUR INTEGRITAS ===
+  function setupSecurityEnforcements() {
+    // 1. BLOKIR KLIK KANAN (CONTEXT MENU)
+    document.addEventListener('contextmenu', e => e.preventDefault());
+
+    // 2. BLOKIR SHORTCUT COPY, INSPECT ELEMENT & PRINT SCREEN
+    document.addEventListener('keydown', e => {
+      // Blokir Ctrl+C, Ctrl+U, Ctrl+S, Ctrl+P, Ctrl+Shift+I (DevTools)
+      if (e.ctrlKey || e.metaKey) {
+        const k = e.key.toLowerCase();
+        if (k === 'c' || k === 'u' || k === 's' || k === 'p' || k === 'i') {
+          e.preventDefault();
+          return false;
+        }
+      }
+      // Blokir Tombol F12 & PrintScreen
+      if (e.key === 'F12' || e.key === 'PrintScreen') {
+        e.preventDefault();
+        triggerSecurityWarning();
+        return false;
+      }
+    });
+
+    // 3. BLOKIR EVENT COPY & CUT
+    document.addEventListener('copy', e => e.preventDefault());
+    document.addEventListener('cut', e => e.preventDefault());
+
+    // 4. DETEKSI PINDAH TAB / MINIMIZE WINDOW (BLUR OTOMATIS)
+    window.addEventListener('blur', () => {
+      if (currentAppMode !== "") {
+        document.getElementById('questionBoxElement').classList.add('content-blurred');
+        triggerSecurityWarning();
+      }
+    });
+
+    window.addEventListener('focus', () => {
+      if (document.getElementById('securityWarningOverlay').style.display !== 'flex') {
+        document.getElementById('questionBoxElement').classList.remove('content-blurred');
+      }
+    });
+  }
+
+  function triggerSecurityWarning() {
+    if (currentAppMode !== "") {
+      document.getElementById('questionBoxElement').classList.add('content-blurred');
+      document.getElementById('securityWarningOverlay').style.display = 'flex';
+    }
+  }
+
+  function unlockSecurityWarning() {
+    document.getElementById('securityWarningOverlay').style.display = 'none';
+    document.getElementById('questionBoxElement').classList.remove('content-blurred');
+  }
 
   function setupInactivityTracker() {
     ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => {
@@ -532,7 +605,6 @@
     .then(res => res.json()).then(data => callback(data)).catch(err => { console.error(err); callback({ success: false, error: err.message }); });
   }
 
-  // Admin Navigation Setup
   function showAdminView() { stopRecordingIfActive(); if (adminSessionPassword) { document.getElementById('studentView').style.display = 'none'; document.getElementById('adminView').style.display = 'block'; resetInactivityTimer(); switchTab('tabDashboard'); } else { document.getElementById('inputAdminLoginPass').value = ""; document.getElementById('adminLoginModal').style.display = 'flex'; setTimeout(() => document.getElementById('inputAdminLoginPass').focus(), 200); } }
   function closeAdminLoginModal() { document.getElementById('adminLoginModal').style.display = 'none'; }
   function submitAdminLogin() {
@@ -554,7 +626,6 @@
   function showNotif(isSuccess, title, message) { document.getElementById('notifIcon').innerText = isSuccess ? "✅" : "❌"; document.getElementById('notifTitle').innerText = title; document.getElementById('notifTitle').style.color = isSuccess ? "#10b981" : "#ef4444"; document.getElementById('notifMessage').innerText = message; document.getElementById('notifModal').style.display = 'flex'; }
   function closeNotifModal() { document.getElementById('notifModal').style.display = 'none'; }
   
-  // === UPDATE BANNER MODE & DISCLAIMER DI BAWAH HEADER ===
   function updateModeBannerUI(mode) {
     const banner = document.getElementById('modeBannerCard');
     if (mode === "PRACTICE") {
@@ -596,7 +667,6 @@
   }
   function onBabChange() { resetQuestionViewDOM(); document.getElementById('btnStartExam').disabled = !document.getElementById('babSelect').value; }
 
-  // === TOKEN ROUTING & MULAI UJIAN ===
   function triggerTokenModal() {
     const rombel = document.getElementById('rombelSelect').value, bab = document.getElementById('babSelect').value, studentName = document.getElementById('studentSelect').value;
     if (!rombel || !studentName || !bab) return alert("Lengkapi data pilihan di atas!");
@@ -612,7 +682,7 @@
     fetchAPI({ action: "verifyToken", token: token }, res => {
       hideLoader();
       if (res && res.success) {
-        currentAppMode = res.mode; // PRACTICE atau SUBMISSION
+        currentAppMode = res.mode;
         closeTokenModal();
         updateModeBannerUI(currentAppMode);
         startExamDataFetch();
@@ -727,7 +797,6 @@
     }
   }
 
-  // === INTI LOGIKA KOMPARASI & NAVIGASI ===
   function doSelectQuestion(i) {
     stopRecordingIfActive(); activeQuestionIndex = i; selectedQuestionObject = currentQuestionsList[i];
     const qId = selectedQuestionObject.id; const oldData = questionState[qId];
@@ -910,7 +979,6 @@
     document.getElementById('studentSelectionCard').style.display = 'block';
   }
 
-  // --- LOGIC AKSI ADMIN ---
   function loadDashboardStats() {
     if (!adminSessionPassword) return showAdminView();
     fetchAPI({ action: "getDashboardStats", password: adminSessionPassword }, res => {
@@ -1006,7 +1074,6 @@
   function submitAddExtraTime(nama, rombel, bab) { fetchAPI({ action: "addExtraTime", password: adminSessionPassword, studentName: nama, rombel: rombel, bab: bab }, res => { if (res && res.success) submitLoadReview(); }); }
   function escapeQuotes(str) { return (str || '').replace(/'/g, "\\'").replace(/"/g, '\\"'); }
 
-  // === CRUD SISWA (DENGAN FITUR EDIT) ===
   function loadSiswaList() {
     fetchAPI({ action: "getStudentListAdmin", password: adminSessionPassword }, res => {
       if(res.success) {
@@ -1062,7 +1129,6 @@
     }
   }
 
-  // === CRUD BANK SOAL (DENGAN FITUR EDIT) ===
   function loadSoalList() {
     fetchAPI({ action: "getAllQuestionsAdmin", password: adminSessionPassword }, res => {
       if(res.success) {
