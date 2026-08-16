@@ -195,10 +195,10 @@
 
 <div id="resultModal" class="modal-overlay">
   <div class="modal-content" style="text-align:center;">
-    <h3 style="margin-top:0; color:var(--primary);">✨ Hasil Evaluasi Robot</h3>
+    <h3 style="margin-top:0; color:var(--primary);">✨ Hasil Evaluasi</h3>
     <h5 id="modalQuestionLabel" style="margin:0 0 10px 0; color:#64748b;">Soal No. X</h5>
     <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:12px; border-radius:12px; margin-bottom:12px;">
-      <div style="font-size:12px; color:#166534; font-weight:600;">Nilai Robot:</div>
+      <div style="font-size:12px; color:#166534; font-weight:600;">Skor Hasil Evaluasi:</div>
       <div id="modalScoreDisplay" style="font-size:32px; font-weight:800; color:#15803d;">0 / 100</div>
     </div>
     <div style="text-align:left; background:#f8fafc; padding:10px; border-radius:10px; font-size:12px; margin-bottom:12px; border:1px solid #e2e8f0;">
@@ -259,11 +259,12 @@
   <div class="nav-tabs">
     <button class="tab-btn active" onclick="switchTab('tabDashboard', event)">1. Dashboard</button>
     <button class="tab-btn" onclick="switchTab('tabSettings', event)">2. Token & Timer</button>
-    <button class="tab-btn" onclick="switchTab('tabSekolah', event)">3. Info Sekolah</button>
-    <button class="tab-btn" onclick="switchTab('tabSiswa', event)">4. Siswa</button>
-    <button class="tab-btn" onclick="switchTab('tabSoal', event)">5. Bank Soal</button>
-    <button class="tab-btn" onclick="switchTab('tabReview', event)">6. Penilaian Guru</button>
-    <button class="tab-btn" onclick="switchTab('tabCetak', event)">7. Cetak Rekap</button>
+    <button class="tab-btn" onclick="switchTab('tabBabStatus', event)">3. Status Bab Kelas</button>
+    <button class="tab-btn" onclick="switchTab('tabSekolah', event)">4. Info Sekolah</button>
+    <button class="tab-btn" onclick="switchTab('tabSiswa', event)">5. Siswa</button>
+    <button class="tab-btn" onclick="switchTab('tabSoal', event)">6. Bank Soal</button>
+    <button class="tab-btn" onclick="switchTab('tabReview', event)">7. Penilaian Guru</button>
+    <button class="tab-btn" onclick="switchTab('tabCetak', event)">8. Cetak Rekap</button>
   </div>
 
   <div id="tabDashboard" class="card tab-content">
@@ -279,18 +280,33 @@
   </div>
 
   <div id="tabSettings" class="card tab-content" style="display:none;">
-    <h3 style="margin-top:0; color:var(--primary); font-size:14px;">🔑 Pengaturan Token & Timer</h3>
+    <h3 style="margin-top:0; color:var(--primary); font-size:14px;">🔑 Pengaturan Token & Engine Penilaian</h3>
     <div style="background:#f0fdf4; padding:12px; border-radius:10px; border:1px solid #bbf7d0; margin-bottom:12px;">
       <div class="form-group"><label>Token Latihan:</label><input type="text" id="tokenLatihInput"></div>
     </div>
     <div style="background:#fef2f2; padding:12px; border-radius:10px; border:1px solid #fecaca; margin-bottom:12px;">
       <div class="form-group"><label>Token Ujian:</label><input type="text" id="tokenUjianInput"></div>
+      <div class="form-group"><label>Mesin Penilaian Mode Ujian:</label>
+        <select id="examEngineSelect">
+          <option value="LOKAL">⚡ Kata Kunci Lokal (Robot Sederhana)</option>
+          <option value="GEMINI">✨ AI Gemini (Evaluasi Komprehensif)</option>
+        </select>
+      </div>
     </div>
     <div class="form-group"><label>Durasi Timer Default (Menit):</label><input type="number" id="timerInput" min="0"></div>
+    
+    <hr style="border-top:1px dashed #cbd5e1; margin:15px 0;">
+    <h4 style="margin-top:0; color:var(--primary); font-size:13px;">⚙️ Batasan Penilaian AI pada Mode Latihan</h4>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+      <div class="form-group"><label>Jatah Uji AI (Kali):</label><input type="number" id="aiPracticeLimitInput" min="1" value="2"></div>
+      <div class="form-group"><label>Cooldown Reset (Menit):</label><input type="number" id="aiPracticeCooldownInput" min="1" value="60"></div>
+    </div>
+
     <div style="display:flex; gap:10px; margin-bottom:15px;">
-      <button class="btn-primary" style="flex:2;" onclick="submitSaveTokens()">💾 Simpan Token</button>
+      <button class="btn-primary" style="flex:2;" onclick="submitSaveTokens()">💾 Simpan Seluruh Pengaturan</button>
       <button class="btn-secondary" style="flex:1;" onclick="openGoogleSheetDirect()">🔗 Sheet</button>
     </div>
+    
     <hr style="border-top:1px dashed #cbd5e1; margin:15px 0;">
     <h4 style="margin-top:0; color:var(--primary); font-size:13px;">⏱️ Timer Per Bab (Opsional)</h4>
     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
@@ -299,6 +315,20 @@
     </div>
     <div class="form-group"><label>Durasi (Menit):</label><input type="number" id="timerBabInput" min="0"></div>
     <button class="btn-success" onclick="submitSaveBabTimer()">💾 Simpan Timer Bab</button>
+  </div>
+
+  <!-- TAB BARU: CHECKLIST ON/OFF BAB PER KELAS -->
+  <div id="tabBabStatus" class="card tab-content" style="display:none;">
+    <h3 style="margin-top:0; color:var(--primary); font-size:14px;">📌 Pengaturan Status Tampil Bab per Kelas</h3>
+    <p style="font-size:12px; color:#64748b; margin-top:-5px;">Centang Bab yang ingin **ditampilkan (ON)** kepada siswa saat login. Uncheck untuk menyembunyikan (OFF).</p>
+    <button class="btn-primary" style="width:auto; margin-bottom:12px;" onclick="loadBabStatusAdmin()">🔄 Muat Daftar Bab & Kelas</button>
+    <div class="table-container">
+      <table class="sub-table" id="babStatusTable">
+        <thead><tr><th style="width:40px; text-align:center;">Aktif</th><th>Rombel / Kelas</th><th>Nama Bab Soal</th></tr></thead>
+        <tbody id="babStatusTbody"></tbody>
+      </table>
+    </div>
+    <button class="btn-success" style="margin-top:15px;" onclick="submitSaveBabStatus()">💾 Simpan Status Bab Siswa</button>
   </div>
 
   <div id="tabSekolah" class="card tab-content" style="display:none;">
@@ -418,6 +448,13 @@
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbzBMx-BvZfCT_w6yG2HJur8KUm2kqK0tfcZhFiD6J7dxH3AOOxXQg72fS4pLzAjNFM_kA/exec";
 
+  // DEVICE ID KHUSUS BROWSER UNTUK LIMIT CACHE COOLDOWN
+  let deviceId = localStorage.getItem('app_device_id');
+  if (!deviceId) {
+    deviceId = 'DEV_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+    localStorage.setItem('app_device_id', deviceId);
+  }
+
   let adminSessionPassword = null, adminInactivityTimer = null;
   const INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000;
 
@@ -501,6 +538,9 @@
         document.getElementById('tokenLatihInput').value = res.tokenLatih;
         document.getElementById('tokenUjianInput').value = res.tokenUjian;
         document.getElementById('timerInput').value = res.timer;
+        document.getElementById('aiPracticeLimitInput').value = res.aiPracticeLimit;
+        document.getElementById('aiPracticeCooldownInput').value = res.aiPracticeCooldownMin;
+        document.getElementById('examEngineSelect').value = res.examEngine;
       }
     });
 
@@ -570,7 +610,10 @@
   function switchTab(tabId, evt) {
     document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none'); document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
     document.getElementById(tabId).style.display = 'block'; if (evt && evt.target) evt.target.classList.add('active');
-    if (tabId === 'tabDashboard') loadDashboardStats(); if (tabId === 'tabSiswa' && siswaDataGlobal.length === 0) loadSiswaList(); if (tabId === 'tabSoal' && soalDataGlobal.length === 0) loadSoalList();
+    if (tabId === 'tabDashboard') loadDashboardStats(); 
+    if (tabId === 'tabBabStatus') loadBabStatusAdmin();
+    if (tabId === 'tabSiswa' && siswaDataGlobal.length === 0) loadSiswaList(); 
+    if (tabId === 'tabSoal' && soalDataGlobal.length === 0) loadSoalList();
   }
 
   function showNotif(isSuccess, title, message) { document.getElementById('notifIcon').innerText = isSuccess ? "✅" : "❌"; document.getElementById('notifTitle').innerText = title; document.getElementById('notifTitle').style.color = isSuccess ? "#10b981" : "#ef4444"; document.getElementById('notifMessage').innerText = message; document.getElementById('notifModal').style.display = 'flex'; }
@@ -580,7 +623,7 @@
     const banner = document.getElementById('modeBannerCard');
     if (mode === "PRACTICE") {
       banner.style.display = "block"; banner.style.background = "#f0fdf4"; banner.style.borderColor = "#bbf7d0"; banner.style.color = "#166534";
-      banner.innerHTML = `<b>🟢 MODE LATIHAN MANDIRI</b><br>Skor simulasi tidak masuk rekap nilai resmi.`;
+      banner.innerHTML = `<b>🟢 MODE LATIHAN MANDIRI</b><br>Tersedia 2 tombol penilaian: Penilaian Lokal Bebas dan Evaluasi AI Gemini Terbatas. Skor tidak masuk rekap resmi.`;
     } else if (mode === "SUBMISSION") {
       banner.style.display = "block"; banner.style.background = "#fef2f2"; banner.style.borderColor = "#fecaca"; banner.style.color = "#991b1b";
       banner.innerHTML = `<b>🔴 MODE UJIAN RESMI</b><br>Jawaban Anda direkam ke database server.`;
@@ -640,7 +683,7 @@
           currentQuestionsList.forEach(q => questionState[q.id] = { oldTranscript: "", oldScoreLocal: 0, oldScoreAI: null });
           paletteColors = new Array(currentQuestionsList.length).fill('');
           renderPaletteUIOnly(); startTimerCountdown(0, 0); doSelectQuestion(0);
-          showNotif(true, "Mode Latihan Siap! 🟢", "Jawaban simulasi mandiri.");
+          showNotif(true, "Mode Latihan Siap! 🟢", "Gunakan tombol Penilaian Lokal / AI Gemini.");
         } else {
           showLoader();
           fetchAPI({ action: "getStudentProgress", studentName: studentName, rombel: rombel, bab: bab }, progRes => {
@@ -716,13 +759,56 @@
   function renderActionButtons() {
     const btnBox = document.getElementById('studentActionButtons');
     const oldData = questionState[selectedQuestionObject.id];
-    if (currentAppMode === "PRACTICE" || !oldData.oldTranscript || oldData.oldTranscript.trim() === "") {
-      btnBox.innerHTML = `<button class="btn-primary" style="background:linear-gradient(135deg, #10b981, #059669);" onclick="interceptNavigation(${activeQuestionIndex})">🟢 Cek Nilai & Simpan Jawaban</button>
-      <button class="btn-danger" style="margin-top:10px; font-weight:700;" onclick="openFinishExamModal()">🏁 AKHIRI SESI</button>`;
+
+    if (currentAppMode === "PRACTICE") {
+      btnBox.innerHTML = `
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <button class="btn-primary" style="background:linear-gradient(135deg, #10b981, #059669);" onclick="executePracticeGrading('LOKAL')">⚡ Cek Kata Kunci (Lokal - Free Unlimited)</button>
+          <button class="btn-primary" style="background:linear-gradient(135deg, #7c3aed, #6d28d9);" onclick="executePracticeGrading('GEMINI')">✨ Evaluasi AI Gemini (Jatah Terbatas)</button>
+          <button class="btn-danger" style="margin-top:6px; font-weight:700;" onclick="openFinishExamModal()">🏁 AKHIRI SESI LATIHAN</button>
+        </div>
+      `;
     } else {
-      btnBox.innerHTML = `<button class="btn-warning" style="background:linear-gradient(135deg, #f59e0b, #d97706); color:white;" onclick="interceptNavigation(${activeQuestionIndex})">🔄 Cek Nilai & Bandingkan Jawaban</button>
-      <button class="btn-danger" style="margin-top:10px; font-weight:700;" onclick="openFinishExamModal()">🏁 AKHIRI SESI</button>`;
+      if (!oldData.oldTranscript || oldData.oldTranscript.trim() === "") {
+        btnBox.innerHTML = `<button class="btn-primary" style="background:linear-gradient(135deg, #10b981, #059669);" onclick="interceptNavigation(${activeQuestionIndex})">🟢 Cek Nilai & Simpan Jawaban</button>
+        <button class="btn-danger" style="margin-top:10px; font-weight:700;" onclick="openFinishExamModal()">🏁 AKHIRI SESI</button>`;
+      } else {
+        btnBox.innerHTML = `<button class="btn-warning" style="background:linear-gradient(135deg, #f59e0b, #d97706); color:white;" onclick="interceptNavigation(${activeQuestionIndex})">🔄 Cek Nilai & Bandingkan Jawaban</button>
+        <button class="btn-danger" style="margin-top:10px; font-weight:700;" onclick="openFinishExamModal()">🏁 AKHIRI SESI</button>`;
+      }
     }
+  }
+
+  function executePracticeGrading(type) {
+    if (!selectedQuestionObject) return;
+    const currentText = document.getElementById('transcriptTextarea').value.trim();
+    if (!currentText) return alert("Ketik atau rekam jawaban Anda terlebih dahulu!");
+
+    stopRecordingIfActive(); showLoader();
+
+    const actionType = type === 'GEMINI' ? "processPracticeAIGrade" : "processLocalGrade";
+    
+    fetchAPI({
+      action: actionType,
+      deviceId: deviceId,
+      questionId: selectedQuestionObject.id,
+      studentName: document.getElementById('studentSelect').value,
+      rombel: document.getElementById('rombelSelect').value,
+      bab: document.getElementById('babSelect').value,
+      questionText: selectedQuestionObject.pertanyaan,
+      studentTranscriptText: currentText,
+      mode: "PRACTICE"
+    }, res => {
+      hideLoader();
+      if (res && res.success) {
+        const newScore = cleanScoreValue(res.scoreLocal);
+        saveAnswerAndState(selectedQuestionObject.id, currentText, newScore, res.feedback, null, () => {
+          showSingleResultModal(newScore, res.feedback);
+        });
+      } else {
+        showNotif(false, "Penilaian AI Ditolak ⚠️", res ? res.error : "Gagal mengevaluasi.");
+      }
+    });
   }
 
   function doSelectQuestion(i) {
@@ -765,20 +851,12 @@
     fetchAPI({
       action: "processLocalGrade", questionId: qId, studentName: document.getElementById('studentSelect').value,
       rombel: document.getElementById('rombelSelect').value, jenisKelamin: document.getElementById('jkDisplay').value, bab: document.getElementById('babSelect').value,
-      questionText: selectedQuestionObject.pertanyaan, studentTranscriptText: currentText, skipSave: true
+      questionText: selectedQuestionObject.pertanyaan, studentTranscriptText: currentText, mode: currentAppMode
     }, res => {
       hideLoader();
       if (!res || !res.success) { alert("Gagal memproses nilai."); if (isTimeout) finishExamDirectly(); return; }
 
       const newScore = cleanScoreValue(res.scoreLocal);
-
-      if (currentAppMode === "PRACTICE") {
-         saveAnswerAndState(qId, currentText, newScore, res.feedback, null, () => {
-             if (targetIndex === activeQuestionIndex) { showSingleResultModal(newScore, res.feedback); } 
-             else { doSelectQuestion(targetIndex); }
-         });
-         return;
-      }
 
       if (isTimeout) {
         if (isNewEntry || newScore > oldData.oldScoreLocal) {
@@ -914,23 +992,81 @@
       } else showNotif(false, "GAGAL ❌", res ? res.error : "Gagal memuat statistik");
     });
   }
+
   function submitSaveTokens() {
     if (!adminSessionPassword) return showAdminView();
-    const tLatih = document.getElementById('tokenLatihInput').value.trim(), tUjian = document.getElementById('tokenUjianInput').value.trim(), timer = document.getElementById('timerInput').value;
-    fetchAPI({ action: "saveTokenSettings", password: adminSessionPassword, tokenLatih: tLatih, tokenUjian: tUjian, timer: timer }, res => {
+    fetchAPI({ 
+      action: "saveTokenSettings", 
+      password: adminSessionPassword, 
+      tokenLatih: document.getElementById('tokenLatihInput').value.trim(), 
+      tokenUjian: document.getElementById('tokenUjianInput').value.trim(), 
+      timer: document.getElementById('timerInput').value,
+      aiPracticeLimit: document.getElementById('aiPracticeLimitInput').value,
+      aiPracticeCooldownMin: document.getElementById('aiPracticeCooldownInput').value,
+      examEngine: document.getElementById('examEngineSelect').value
+    }, res => {
       if (res && res.success) { showNotif(true, "BERHASIL ✅", res.message); } else showNotif(false, "GAGAL ❌", res ? res.error : "Gagal menyimpan");
     });
   }
+
   function onTimerRombelChange() {
     const rombel = document.getElementById('timerRombelSelect').value, timerBabSel = document.getElementById('timerBabSelect'); timerBabSel.innerHTML = '<option value="">-- Pilih --</option>';
     if (rombel) fetchAPI({ action: "getBabList", rombel: rombel }, res => { if (res && res.babList) res.babList.forEach(bab => timerBabSel.innerHTML += `<option value="${bab}">${bab}</option>`); });
   }
+
   function submitSaveBabTimer() {
     if (!adminSessionPassword) return showAdminView();
     fetchAPI({ action: "saveBabTimer", password: adminSessionPassword, rombel: document.getElementById('timerRombelSelect').value, bab: document.getElementById('timerBabSelect').value, timer: document.getElementById('timerBabInput').value }, res => {
       if (res && res.success) showNotif(true, "BERHASIL ✅", res.message); else showNotif(false, "GAGAL", res ? res.error : "");
     });
   }
+
+  // === FITUR STATUS BAB CHECKLIST ON/OFF ADMIN ===
+  function loadBabStatusAdmin() {
+    if (!adminSessionPassword) return showAdminView();
+    showLoader();
+    fetchAPI({ action: "getBabStatusAdmin", password: adminSessionPassword }, res => {
+      hideLoader();
+      if (res && res.success) {
+        const tbody = document.getElementById('babStatusTbody');
+        tbody.innerHTML = "";
+        if (!res.matrix || res.matrix.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">Tidak ada kombinasi Bab dan Rombel.</td></tr>`;
+          return;
+        }
+        res.matrix.forEach((item, idx) => {
+          const isChecked = item.status !== "OFF" ? "checked" : "";
+          tbody.innerHTML += `<tr>
+            <td style="text-align:center;">
+              <input type="checkbox" class="bab-status-chk" data-rombel="${item.rombel}" data-bab="${item.bab}" ${isChecked} style="width:18px; height:18px;">
+            </td>
+            <td><b>${item.rombel}</b></td>
+            <td>${item.bab}</td>
+          </tr>`;
+        });
+      } else showNotif(false, "GAGAL ❌", res ? res.error : "Gagal memuat status bab");
+    });
+  }
+
+  function submitSaveBabStatus() {
+    if (!adminSessionPassword) return showAdminView();
+    const chks = document.querySelectorAll('.bab-status-chk');
+    let matrix = [];
+    chks.forEach(chk => {
+      matrix.push({
+        rombel: chk.getAttribute('data-rombel'),
+        bab: chk.getAttribute('data-bab'),
+        status: chk.checked ? "ON" : "OFF"
+      });
+    });
+    showLoader();
+    fetchAPI({ action: "saveBabStatusSettings", password: adminSessionPassword, matrix: matrix }, res => {
+      hideLoader();
+      if (res && res.success) showNotif(true, "BERHASIL ✅", res.message);
+      else showNotif(false, "GAGAL ❌", res ? res.error : "Gagal menyimpan status bab");
+    });
+  }
+
   function submitSaveSchoolSettings() {
     if (!adminSessionPassword) return showAdminView();
     const namaSekolah = document.getElementById('inputNamaSekolah').value.trim(), mapel = document.getElementById('inputMataPelajaran').value.trim(), guru = document.getElementById('inputNamaGuru').value.trim(), newPass = document.getElementById('inputNewAdminPassword').value;
@@ -997,7 +1133,6 @@
   function submitAddExtraTime(nama, rombel, bab) { fetchAPI({ action: "addExtraTime", password: adminSessionPassword, studentName: nama, rombel: rombel, bab: bab }, res => { if (res && res.success) submitLoadReview(); }); }
   function escapeQuotes(str) { return (str || '').replace(/'/g, "\\'").replace(/"/g, '\\"'); }
 
-  // === FITUR KELOLA SISWA & FILTER PENCARIAN ===
   function loadSiswaList() {
     fetchAPI({ action: "getStudentListAdmin", password: adminSessionPassword }, res => {
       if(res.success) {
@@ -1052,7 +1187,6 @@
     }
   }
 
-  // === FITUR BANK SOAL & FILTER PENCARIAN ===
   function loadSoalList() {
     fetchAPI({ action: "getAllQuestionsAdmin", password: adminSessionPassword }, res => {
       if(res.success) {
