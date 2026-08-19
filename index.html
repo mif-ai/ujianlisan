@@ -522,6 +522,7 @@
   function hideLoader() { document.getElementById('loadingOverlay').style.display = 'none'; }
 
   function initApp() {
+    showLoader();
     fetchAPI({ action: "getAppConfig" }, res => {
       if (res && res.success) {
         document.getElementById('displayNamaSekolah').innerText = res.namaSekolah;
@@ -540,6 +541,7 @@
     });
 
     fetchAPI({ action: "getStudentData" }, data => {
+      hideLoader();
       if (!data || !data.rombelList) return;
       studentDataCache = data;
       const rSelect = document.getElementById('rombelSelect'), reviewRSelect = document.getElementById('reviewRombelSelect'), timerRSelect = document.getElementById('timerRombelSelect'), cetakRSelect = document.getElementById('cetakRombelSelect');
@@ -632,18 +634,48 @@
     document.getElementById('examWorkspaceCard').style.display = 'none';
   }
   
+  // FUNGSI PENGUBAH ROMBEL DENGAN INDIKATOR LOADING
   function onRombelChange() {
-    resetQuestionViewDOM(); const rombel = document.getElementById('rombelSelect').value, sSelect = document.getElementById('studentSelect'), bSelect = document.getElementById('babSelect'); document.getElementById('btnStartExam').disabled = true;
+    resetQuestionViewDOM(); 
+    const rombel = document.getElementById('rombelSelect').value, sSelect = document.getElementById('studentSelect'), bSelect = document.getElementById('babSelect'); 
+    document.getElementById('btnStartExam').disabled = true;
+    
     if (rombel && studentDataCache.studentsByRombel && studentDataCache.studentsByRombel[rombel]) {
-      sSelect.innerHTML = '<option value="">-- Pilih Nama --</option>'; studentDataCache.studentsByRombel[rombel].forEach(s => sSelect.innerHTML += `<option value="${s.nama}">${s.nama}</option>`); sSelect.disabled = false;
-      fetchAPI({ action: "getBabList", rombel: rombel }, res => { bSelect.innerHTML = '<option value="">-- Pilih Bab --</option>'; if (res && res.babList) res.babList.forEach(bab => bSelect.innerHTML += `<option value="${bab}">${bab}</option>`); bSelect.disabled = false; });
+      sSelect.innerHTML = '<option value="">-- Pilih Nama --</option>'; 
+      studentDataCache.studentsByRombel[rombel].forEach(s => sSelect.innerHTML += `<option value="${s.nama}">${s.nama}</option>`); 
+      sSelect.disabled = false;
+      
+      showLoader(); // TAMPILKAN SPINNER LOADING
+      bSelect.disabled = true;
+      bSelect.innerHTML = '<option value="">-- Memuat Bab... --</option>';
+
+      fetchAPI({ action: "getBabList", rombel: rombel }, res => {
+        hideLoader(); // SEMBUNYIKAN SPINNER LOADING
+        bSelect.innerHTML = '<option value="">-- Pilih Bab --</option>'; 
+        if (res && res.babList) res.babList.forEach(bab => bSelect.innerHTML += `<option value="${bab}">${bab}</option>`); 
+        bSelect.disabled = false; 
+      });
+    } else {
+      sSelect.innerHTML = '<option value="">-- Pilih Kelas Terlebih Dahulu --</option>';
+      sSelect.disabled = true;
+      bSelect.innerHTML = '<option value="">-- Pilih Nama Terlebih Dahulu --</option>';
+      bSelect.disabled = true;
     }
   }
+
   function onStudentChange() {
-    resetQuestionViewDOM(); const rombel = document.getElementById('rombelSelect').value, studentName = document.getElementById('studentSelect').value;
-    if (rombel && studentName && studentDataCache.studentsByRombel[rombel]) { const student = studentDataCache.studentsByRombel[rombel].find(s => s.nama === studentName); if (student) document.getElementById('jkDisplay').value = student.jk; }
+    resetQuestionViewDOM(); 
+    const rombel = document.getElementById('rombelSelect').value, studentName = document.getElementById('studentSelect').value;
+    if (rombel && studentName && studentDataCache.studentsByRombel[rombel]) { 
+      const student = studentDataCache.studentsByRombel[rombel].find(s => s.nama === studentName); 
+      if (student) document.getElementById('jkDisplay').value = student.jk; 
+    }
   }
-  function onBabChange() { resetQuestionViewDOM(); document.getElementById('btnStartExam').disabled = !document.getElementById('babSelect').value; }
+
+  function onBabChange() { 
+    resetQuestionViewDOM(); 
+    document.getElementById('btnStartExam').disabled = !document.getElementById('babSelect').value; 
+  }
 
   function triggerTokenModal() {
     const rombel = document.getElementById('rombelSelect').value, bab = document.getElementById('babSelect').value, studentName = document.getElementById('studentSelect').value;
@@ -991,7 +1023,9 @@
 
   function loadDashboardStats() {
     if (!adminSessionPassword) return showAdminView();
+    showLoader();
     fetchAPI({ action: "getDashboardStats", password: adminSessionPassword }, res => {
+      hideLoader();
       if (res && res.success) {
         document.getElementById('statTotalSiswa').innerText = res.totalSiswa; document.getElementById('statTotalSoal').innerText = res.totalSoal; document.getElementById('statPartisipasi').innerText = res.partisipasi + "%"; document.getElementById('statRecheck').innerText = res.recheckCount; document.getElementById('statAvgAI').innerText = res.avgAI || res.avgLocal;
       } else showNotif(false, "GAGAL ❌", res ? res.error : "Gagal memuat statistik");
@@ -1000,6 +1034,7 @@
 
   function submitSaveTokens() {
     if (!adminSessionPassword) return showAdminView();
+    showLoader();
     fetchAPI({ 
       action: "saveTokenSettings", 
       password: adminSessionPassword, 
@@ -1009,18 +1044,28 @@
       aiPracticeLimit: document.getElementById('aiPracticeLimitInput').value,
       aiPracticeCooldownMin: document.getElementById('aiPracticeCooldownInput').value
     }, res => {
+      hideLoader();
       if (res && res.success) { showNotif(true, "BERHASIL ✅", res.message); } else showNotif(false, "GAGAL ❌", res ? res.error : "Gagal menyimpan");
     });
   }
 
   function onTimerRombelChange() {
-    const rombel = document.getElementById('timerRombelSelect').value, timerBabSel = document.getElementById('timerBabSelect'); timerBabSel.innerHTML = '<option value="">-- Pilih --</option>';
-    if (rombel) fetchAPI({ action: "getBabList", rombel: rombel }, res => { if (res && res.babList) res.babList.forEach(bab => timerBabSel.innerHTML += `<option value="${bab}">${bab}</option>`); });
+    const rombel = document.getElementById('timerRombelSelect').value, timerBabSel = document.getElementById('timerBabSelect'); 
+    timerBabSel.innerHTML = '<option value="">-- Pilih --</option>';
+    if (rombel) {
+      showLoader();
+      fetchAPI({ action: "getBabList", rombel: rombel }, res => {
+        hideLoader();
+        if (res && res.babList) res.babList.forEach(bab => timerBabSel.innerHTML += `<option value="${bab}">${bab}</option>`);
+      });
+    }
   }
 
   function submitSaveBabTimer() {
     if (!adminSessionPassword) return showAdminView();
+    showLoader();
     fetchAPI({ action: "saveBabTimer", password: adminSessionPassword, rombel: document.getElementById('timerRombelSelect').value, bab: document.getElementById('timerBabSelect').value, timer: document.getElementById('timerBabInput').value }, res => {
+      hideLoader();
       if (res && res.success) showNotif(true, "BERHASIL ✅", res.message); else showNotif(false, "GAGAL", res ? res.error : "");
     });
   }
@@ -1073,19 +1118,31 @@
   function submitSaveSchoolSettings() {
     if (!adminSessionPassword) return showAdminView();
     const namaSekolah = document.getElementById('inputNamaSekolah').value.trim(), mapel = document.getElementById('inputMataPelajaran').value.trim(), guru = document.getElementById('inputNamaGuru').value.trim(), newPass = document.getElementById('inputNewAdminPassword').value;
+    showLoader();
     fetchAPI({ action: "saveSchoolSettings", password: adminSessionPassword, namaSekolah: namaSekolah, mataPelajaran: mapel, namaGuru: guru, newPassword: newPass }, res => {
+      hideLoader();
       if (res && res.success) { showNotif(true, "BERHASIL ✅", res.message); document.getElementById('displayNamaSekolah').innerText = namaSekolah; document.getElementById('displayMataPelajaran').innerText = mapel; if (newPass) adminSessionPassword = newPass; } else showNotif(false, "GAGAL", "");
     });
   }
   function openGoogleSheetDirect() { fetchAPI({ action: "getSheetUrl" }, res => { if (res && res.url) window.open(res.url, '_blank'); }); }
 
   function onReviewRombelChange() {
-    const rombel = document.getElementById('reviewRombelSelect').value, bSelect = document.getElementById('reviewBabSelect'); bSelect.innerHTML = '<option value="">-- Semua --</option>';
-    if (rombel) fetchAPI({ action: "getBabList", rombel: rombel }, res => { if (res && res.babList) res.babList.forEach(bab => bSelect.innerHTML += `<option value="${bab}">${bab}</option>`); });
+    const rombel = document.getElementById('reviewRombelSelect').value, bSelect = document.getElementById('reviewBabSelect'); 
+    bSelect.innerHTML = '<option value="">-- Semua --</option>';
+    if (rombel) {
+      showLoader();
+      fetchAPI({ action: "getBabList", rombel: rombel }, res => {
+        hideLoader();
+        if (res && res.babList) res.babList.forEach(bab => bSelect.innerHTML += `<option value="${bab}">${bab}</option>`);
+      });
+    }
   }
+
   function submitLoadReview() {
     if (!adminSessionPassword) return showAdminView();
+    showLoader();
     fetchAPI({ action: "getTeacherSubmissions", password: adminSessionPassword, rombel: document.getElementById('reviewRombelSelect').value, bab: document.getElementById('reviewBabSelect').value, filterStatus: document.getElementById('reviewStatusSelect').value }, res => {
+      hideLoader();
       if (res && res.success) { showNotif(true, "BERHASIL ✅", `Memuat ${res.list.length} data.`); renderReviewTable(res.list); } else showNotif(false, "GAGAL", "");
     });
   }
@@ -1113,7 +1170,8 @@
   }
   function promptManualGrade(qId, nama, rombel, bab) {
     if (!adminSessionPassword) return showAdminView(); const score = prompt(`Masukkan Nilai (0-100) untuk ${nama}:`, "85"); if (score === null) return;
-    fetchAPI({ action: "forceAIGrade", password: adminSessionPassword, questionId: qId, studentName: nama, rombel: rombel, bab: bab, customScore: score, customFeedback: "Telah dinilai Guru." }, res => { if (res && res.success) { showNotif(true, "BERHASIL ✅", "Disimpan"); submitLoadReview(); } });
+    showLoader();
+    fetchAPI({ action: "forceAIGrade", password: adminSessionPassword, questionId: qId, studentName: nama, rombel: rombel, bab: bab, customScore: score, customFeedback: "Telah dinilai Guru." }, res => { hideLoader(); if (res && res.success) { showNotif(true, "BERHASIL ✅", "Disimpan"); submitLoadReview(); } });
   }
   function triggerTeacherAIGrade(qId, nama, rombel, bab, transcript) {
     if (!adminSessionPassword) return showAdminView(); 
@@ -1133,11 +1191,13 @@
       else { showNotif(false, "GAGAL ❌", res ? res.error : "Gagal memproses AI."); }
     });
   }
-  function submitAddExtraTime(nama, rombel, bab) { fetchAPI({ action: "addExtraTime", password: adminSessionPassword, studentName: nama, rombel: rombel, bab: bab }, res => { if (res && res.success) submitLoadReview(); }); }
+  function submitAddExtraTime(nama, rombel, bab) { showLoader(); fetchAPI({ action: "addExtraTime", password: adminSessionPassword, studentName: nama, rombel: rombel, bab: bab }, res => { hideLoader(); if (res && res.success) submitLoadReview(); }); }
   function escapeQuotes(str) { return (str || '').replace(/'/g, "\\'").replace(/"/g, '\\"'); }
 
   function loadSiswaList() {
+    showLoader();
     fetchAPI({ action: "getStudentListAdmin", password: adminSessionPassword }, res => {
+      hideLoader();
       if(res.success) {
         siswaDataGlobal = res.list;
         filterSiswaTable();
@@ -1180,18 +1240,22 @@
   }
   function submitSaveSiswa() {
     if (!adminSessionPassword) return showAdminView();
+    showLoader();
     fetchAPI({ action: "saveStudent", password: adminSessionPassword, rowIndex: document.getElementById('siswaRowIndexInput').value, no: document.getElementById('siswaNoInput').value, nama: document.getElementById('siswaNamaInput').value, rombel: document.getElementById('siswaRombelInput').value, jk: document.getElementById('siswaJkInput').value }, res => { 
-      if(res.success) { showNotif(true, "BERHASIL ✅", res.message); resetSiswaForm(); loadSiswaList(); } else showNotif(false, "GAGAL", res.error); 
+      hideLoader(); if(res.success) { showNotif(true, "BERHASIL ✅", res.message); resetSiswaForm(); loadSiswaList(); } else showNotif(false, "GAGAL", res.error); 
     });
   }
   function deleteSiswa(rIdx, n) { 
     if(confirm("Hapus data "+n+"?")) {
-      fetchAPI({ action: "deleteStudent", password: adminSessionPassword, rowIndex: rIdx }, res => { if(res.success) { showNotif(true, "TERHAPUS", "Data dihapus."); loadSiswaList(); } });
+      showLoader();
+      fetchAPI({ action: "deleteStudent", password: adminSessionPassword, rowIndex: rIdx }, res => { hideLoader(); if(res.success) { showNotif(true, "TERHAPUS", "Data dihapus."); loadSiswaList(); } });
     }
   }
 
   function loadSoalList() {
+    showLoader();
     fetchAPI({ action: "getAllQuestionsAdmin", password: adminSessionPassword }, res => {
+      hideLoader();
       if(res.success) {
         soalDataGlobal = res.list;
         filterSoalTable();
@@ -1249,7 +1313,8 @@
   }
   function deleteSoal(id) { 
     if(confirm("Hapus soal "+id+"?")) {
-      fetchAPI({ action: "deleteQuestion", password: adminSessionPassword, questionId: id }, res => { if(res.success) { showNotif(true, "TERHAPUS", "Soal dihapus."); loadSoalList(); } else showNotif(false, "GAGAL", res.error); });
+      showLoader();
+      fetchAPI({ action: "deleteQuestion", password: adminSessionPassword, questionId: id }, res => { hideLoader(); if(res.success) { showNotif(true, "TERHAPUS", "Soal dihapus."); loadSoalList(); } else showNotif(false, "GAGAL", res.error); });
     }
   }
 
@@ -1258,7 +1323,9 @@
     const bSelect = document.getElementById('cetakBabSelect');
     bSelect.innerHTML = '<option value="">-- Semua Bab --</option>';
     if (rombel) {
+      showLoader();
       fetchAPI({ action: "getBabList", rombel: rombel }, res => {
+        hideLoader();
         if (res && res.babList) {
           res.babList.forEach(bab => bSelect.innerHTML += `<option value="${bab}">${bab}</option>`);
         }
