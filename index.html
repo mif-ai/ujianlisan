@@ -448,6 +448,7 @@
   }
 
   let remainingAiQuota = 2; 
+  let currentReviewList = []; // MEMORI GLOBAL PENINJAUAN GURU
 
   let adminSessionPassword = null, adminInactivityTimer = null;
   const INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000;
@@ -634,7 +635,6 @@
     document.getElementById('examWorkspaceCard').style.display = 'none';
   }
   
-  // FUNGSI PENGUBAH ROMBEL DENGAN INDIKATOR LOADING
   function onRombelChange() {
     resetQuestionViewDOM(); 
     const rombel = document.getElementById('rombelSelect').value, sSelect = document.getElementById('studentSelect'), bSelect = document.getElementById('babSelect'); 
@@ -645,12 +645,12 @@
       studentDataCache.studentsByRombel[rombel].forEach(s => sSelect.innerHTML += `<option value="${s.nama}">${s.nama}</option>`); 
       sSelect.disabled = false;
       
-      showLoader(); // TAMPILKAN SPINNER LOADING
+      showLoader();
       bSelect.disabled = true;
       bSelect.innerHTML = '<option value="">-- Memuat Bab... --</option>';
 
       fetchAPI({ action: "getBabList", rombel: rombel }, res => {
-        hideLoader(); // SEMBUNYIKAN SPINNER LOADING
+        hideLoader();
         bSelect.innerHTML = '<option value="">-- Pilih Bab --</option>'; 
         if (res && res.babList) res.babList.forEach(bab => bSelect.innerHTML += `<option value="${bab}">${bab}</option>`); 
         bSelect.disabled = false; 
@@ -1138,29 +1138,38 @@
     }
   }
 
+  // MEMUAT DATA REVIEW DENGAN PENYIMPANAN KE MEMORI GLOBAL
   function submitLoadReview() {
     if (!adminSessionPassword) return showAdminView();
     showLoader();
     fetchAPI({ action: "getTeacherSubmissions", password: adminSessionPassword, rombel: document.getElementById('reviewRombelSelect').value, bab: document.getElementById('reviewBabSelect').value, filterStatus: document.getElementById('reviewStatusSelect').value }, res => {
       hideLoader();
-      if (res && res.success) { showNotif(true, "BERHASIL ✅", `Memuat ${res.list.length} data.`); renderReviewTable(res.list); } else showNotif(false, "GAGAL", "");
+      if (res && res.success) { 
+        currentReviewList = res.list || []; 
+        showNotif(true, "BERHASIL ✅", `Memuat ${currentReviewList.length} data.`); 
+        renderReviewTable(currentReviewList); 
+      } else showNotif(false, "GAGAL", "");
     });
   }
+
+  // RENDERING TABEL PENINJAUAN MENGGUNAKAN INDEKS AMAN KARAKTER KUSUS
   function renderReviewTable(list) {
     const tbody = document.getElementById('reviewTbody'); tbody.innerHTML = "";
     if (!list || list.length === 0) { tbody.innerHTML = `<tr><td colspan="2" style="text-align:center;">Tidak ada data pengerjaan.</td></tr>`; document.getElementById('reviewResultBox').style.display = 'block'; return; }
-    list.forEach(item => {
+    
+    list.forEach((item, itemIdx) => {
       let qHtml = "";
-      item.questions.forEach(q => {
+      item.questions.forEach((q, qIdx) => {
         const recheckBadge = q.status === "RECHECK" ? `<span class="badge-recheck" style="background:#fef3c7; color:#b45309; padding:2px 6px; border-radius:4px; font-size:10px;">⚠️ Revisi</span>` : ``;
         const aiScoreDisplay = cleanScoreValue(q.scoreAI) > 0 ? `<b style="color:#15803d;">${cleanScoreValue(q.scoreAI)} (Guru)</b>` : `<span style="color:#d97706;">Belum Dinilai</span>`;
+        
         qHtml += `<div style="margin-bottom:12px; border-bottom:1px dashed #cbd5e1; padding-bottom:10px;">
           <div style="font-size:12px; font-weight:600;">[${q.qId}] ${q.pertanyaan} ${recheckBadge}</div>
           <div style="background:#f1f5f9; padding:6px 10px; border-radius:6px; margin:4px 0; font-style:italic; font-size:11px;">"${q.transcript || 'Kosong'}"</div>
           <div style="font-size:11px; margin-bottom:4px;"><b>Nilai Robot:</b> ${cleanScoreValue(q.scoreLocal)} | <b>Nilai Guru:</b> ${aiScoreDisplay}</div>
           <div style="display:flex; gap:6px;">
             <button class="btn-warning" style="padding:4px 8px; font-size:10px; width:auto;" onclick="promptManualGrade('${q.qId}','${item.nama}','${item.rombel}','${item.bab}')">📝 Manual</button>
-            <button class="btn-primary" style="padding:4px 8px; font-size:10px; width:auto;" onclick="triggerTeacherAIGrade('${q.qId}','${item.nama}','${item.rombel}','${item.bab}', \`${escapeQuotes(q.transcript)}\`)">🤖 AI</button>
+            <button class="btn-primary" style="padding:4px 8px; font-size:10px; width:auto;" onclick="triggerTeacherAIGrade(${itemIdx}, ${qIdx})">🤖 AI</button>
           </div>
         </div>`;
       });
@@ -1168,29 +1177,43 @@
     });
     document.getElementById('reviewResultBox').style.display = 'block';
   }
+
   function promptManualGrade(qId, nama, rombel, bab) {
     if (!adminSessionPassword) return showAdminView(); const score = prompt(`Masukkan Nilai (0-100) untuk ${nama}:`, "85"); if (score === null) return;
     showLoader();
     fetchAPI({ action: "forceAIGrade", password: adminSessionPassword, questionId: qId, studentName: nama, rombel: rombel, bab: bab, customScore: score, customFeedback: "Telah dinilai Guru." }, res => { hideLoader(); if (res && res.success) { showNotif(true, "BERHASIL ✅", "Disimpan"); submitLoadReview(); } });
   }
-  function triggerTeacherAIGrade(qId, nama, rombel, bab, transcript) {
+
+  // EKSEKUSI PENILAIAN AI OLEH GURU BERBASIS INDEKS LOKAL
+  function triggerTeacherAIGrade(itemIdx, qIdx) {
     if (!adminSessionPassword) return showAdminView(); 
-    if (!transcript) return alert("Jawaban kosong");
+    
+    const item = currentReviewList[itemIdx];
+    if (!item || !item.questions[qIdx]) return alert("Data tidak ditemukan.");
+    
+    const q = item.questions[qIdx];
+    if (!q.transcript || q.transcript.trim() === "") return alert("Jawaban siswa kosong.");
+
     showLoader(); 
     fetchAPI({ 
       action: "triggerGeminiGradingTeacher", 
       password: adminSessionPassword, 
-      questionId: qId, 
-      studentName: nama, 
-      rombel: rombel, 
-      bab: bab, 
-      studentTranscriptText: transcript 
+      questionId: q.qId, 
+      studentName: item.nama, 
+      rombel: item.rombel, 
+      bab: item.bab, 
+      studentTranscriptText: q.transcript 
     }, res => { 
       hideLoader(); 
-      if (res && res.success) { showNotif(true, "BERHASIL 🤖", "AI selesai menilai."); submitLoadReview(); } 
-      else { showNotif(false, "GAGAL ❌", res ? res.error : "Gagal memproses AI."); }
+      if (res && res.success) { 
+        showNotif(true, "BERHASIL 🤖", "AI selesai menilai."); 
+        submitLoadReview(); 
+      } else { 
+        showNotif(false, "GAGAL ❌", res ? res.error : "Gagal memproses AI."); 
+      }
     });
   }
+
   function submitAddExtraTime(nama, rombel, bab) { showLoader(); fetchAPI({ action: "addExtraTime", password: adminSessionPassword, studentName: nama, rombel: rombel, bab: bab }, res => { hideLoader(); if (res && res.success) submitLoadReview(); }); }
   function escapeQuotes(str) { return (str || '').replace(/'/g, "\\'").replace(/"/g, '\\"'); }
 
