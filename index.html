@@ -293,8 +293,8 @@
     <hr style="border-top:1px dashed #cbd5e1; margin:15px 0;">
     <h4 style="margin-top:0; color:var(--primary); font-size:13px;">⚙️ Batasan Penilaian AI pada Mode Latihan</h4>
     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-      <div class="form-group"><label>Jatah Uji AI (Kali):</label><input type="number" id="aiPracticeLimitInput" min="1" value="5"></div>
-      <div class="form-group"><label>Cooldown Reset (Menit):</label><input type="number" id="aiPracticeCooldownInput" min="1" value="60"></div>
+      <div class="form-group"><label>Jatah Uji AI (Kali):</label><input type="number" id="aiPracticeLimitInput" min="1"></div>
+      <div class="form-group"><label>Cooldown Reset (Menit):</label><input type="number" id="aiPracticeCooldownInput" min="1"></div>
     </div>
 
     <div style="display:flex; gap:10px; margin-bottom:15px;">
@@ -555,6 +555,21 @@
     initSpeechToText();
   }
 
+  function loadSettingsAdmin() {
+    showLoader();
+    fetchAPI({ action: "getAppConfig" }, res => {
+      hideLoader();
+      if (res && res.success) {
+        document.getElementById('tokenLatihInput').value = res.tokenLatih;
+        document.getElementById('tokenUjianInput').value = res.tokenUjian;
+        document.getElementById('timerInput').value = res.timer;
+        document.getElementById('aiPracticeLimitInput').value = res.aiPracticeLimit;
+        document.getElementById('aiPracticeCooldownInput').value = res.aiPracticeCooldownMin;
+        remainingAiQuota = Number(res.aiPracticeLimit) || 5;
+      }
+    });
+  }
+
   function initSpeechToText() {
     const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (Speech) {
@@ -610,6 +625,7 @@
     document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none'); document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
     document.getElementById(tabId).style.display = 'block'; if (evt && evt.target) evt.target.classList.add('active');
     if (tabId === 'tabDashboard') loadDashboardStats(); 
+    if (tabId === 'tabSettings') loadSettingsAdmin();
     if (tabId === 'tabBabStatus') loadBabStatusAdmin();
     if (tabId === 'tabSiswa' && siswaDataGlobal.length === 0) loadSiswaList(); 
     if (tabId === 'tabSoal' && soalDataGlobal.length === 0) loadSoalList();
@@ -1078,6 +1094,9 @@
 
   function submitSaveTokens() {
     if (!adminSessionPassword) return showAdminView();
+    const limitInput = document.getElementById('aiPracticeLimitInput').value;
+    const cooldownInput = document.getElementById('aiPracticeCooldownInput').value;
+    
     showLoader();
     fetchAPI({ 
       action: "saveTokenSettings", 
@@ -1085,11 +1104,14 @@
       tokenLatih: document.getElementById('tokenLatihInput').value.trim(), 
       tokenUjian: document.getElementById('tokenUjianInput').value.trim(), 
       timer: document.getElementById('timerInput').value,
-      aiPracticeLimit: document.getElementById('aiPracticeLimitInput').value,
-      aiPracticeCooldownMin: document.getElementById('aiPracticeCooldownInput').value
+      aiPracticeLimit: limitInput,
+      aiPracticeCooldownMin: cooldownInput
     }, res => {
       hideLoader();
-      if (res && res.success) { showNotif(true, "BERHASIL ✅", res.message); } else showNotif(false, "GAGAL ❌", res ? res.error : "Gagal menyimpan");
+      if (res && res.success) { 
+        showNotif(true, "BERHASIL ✅", res.message); 
+        remainingAiQuota = parseInt(limitInput, 10) || 5;
+      } else showNotif(false, "GAGAL ❌", res ? res.error : "Gagal menyimpan");
     });
   }
 
