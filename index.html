@@ -293,7 +293,7 @@
     <hr style="border-top:1px dashed #cbd5e1; margin:15px 0;">
     <h4 style="margin-top:0; color:var(--primary); font-size:13px;">⚙️ Batasan Penilaian AI pada Mode Latihan</h4>
     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-      <div class="form-group"><label>Jatah Uji AI (Kali):</label><input type="number" id="aiPracticeLimitInput" min="1" value="2"></div>
+      <div class="form-group"><label>Jatah Uji AI (Kali):</label><input type="number" id="aiPracticeLimitInput" min="1" value="5"></div>
       <div class="form-group"><label>Cooldown Reset (Menit):</label><input type="number" id="aiPracticeCooldownInput" min="1" value="60"></div>
     </div>
 
@@ -403,7 +403,7 @@
     <button class="btn-primary" style="background:#7c3aed;" onclick="submitLoadReview()">🔍 Muat Data Siswa</button>
     <div id="reviewResultBox" class="table-container" style="display:none; margin-top:12px;">
       <table class="sub-table">
-        <thead><tr><th style="width:160px;">Data Siswa</th><th>Detail Pertanyaan & Penilaian</th></tr></thead>
+        <thead><tr><th style="width:180px;">Data Siswa & Aksi Penilaian</th><th>Detail Pertanyaan & Penilaian Per Soal</th></tr></thead>
         <tbody id="reviewTbody"></tbody>
       </table>
     </div>
@@ -448,7 +448,7 @@
     localStorage.setItem('app_device_id', deviceId);
   }
 
-  let remainingAiQuota = 2; 
+  let remainingAiQuota = 5; 
   let currentReviewList = [];
 
   let adminSessionPassword = null, adminInactivityTimer = null;
@@ -538,7 +538,7 @@
         document.getElementById('aiPracticeLimitInput').value = res.aiPracticeLimit;
         document.getElementById('aiPracticeCooldownInput').value = res.aiPracticeCooldownMin;
         
-        remainingAiQuota = Number(res.aiPracticeLimit) || 2;
+        remainingAiQuota = Number(res.aiPracticeLimit) || 5;
       }
     });
 
@@ -622,7 +622,7 @@
     const banner = document.getElementById('modeBannerCard');
     if (mode === "PRACTICE") {
       banner.style.display = "block"; banner.style.background = "#f0fdf4"; banner.style.borderColor = "#bbf7d0"; banner.style.color = "#166534";
-      banner.innerHTML = `<b>🟢 MODE LATIHAN MANDIRI</b><br>Tersedia 2 tombol penilaian: Penilaian Lokal Bebas dan Evaluasi AI Gemini Terbatas. Skor tidak masuk rekap resmi.`;
+      banner.innerHTML = `<b>🟢 MODE LATIHAN MANDIRI</b><br>Tersedia 2 tombol penilaian: Penilaian Lokal Kata Kunci dan Evaluasi AI Sekaligus untuk Seluruh Soal.`;
     } else if (mode === "SUBMISSION") {
       banner.style.display = "block"; banner.style.background = "#fef2f2"; banner.style.borderColor = "#fecaca"; banner.style.color = "#991b1b";
       banner.innerHTML = `<b>🔴 MODE UJIAN RESMI</b><br>Jawaban Anda direkam ke database server. Penilaian instan berupa Nilai Robot Kata Kunci.`;
@@ -711,7 +711,7 @@
           currentQuestionsList.forEach(q => questionState[q.id] = { oldTranscript: "", oldScoreLocal: 0, oldScoreAI: null, aiPercentage: null });
           paletteColors = new Array(currentQuestionsList.length).fill('');
           renderPaletteUIOnly(); startTimerCountdown(0, 0); doSelectQuestion(0);
-          showNotif(true, "Mode Latihan Siap! 🟢", "Gunakan tombol Penilaian Lokal / AI Gemini.");
+          showNotif(true, "Mode Latihan Siap! 🟢", "Gunakan Cek Kata Kunci atau Evaluasi Semua AI.");
         } else {
           showLoader();
           fetchAPI({ action: "getStudentProgress", studentName: studentName, rombel: rombel, bab: bab }, progRes => {
@@ -790,13 +790,13 @@
     const oldData = questionState[selectedQuestionObject.id];
 
     if (currentAppMode === "PRACTICE") {
-      const aiBtnText = remainingAiQuota > 0 ? `✨ Evaluasi AI Gemini (Sisa Kuota: ${remainingAiQuota}x)` : `⏳ Evaluasi AI Terkunci (Kuota Habis)`;
+      const aiBtnText = remainingAiQuota > 0 ? `✨ Evaluasi SELURUH Soal (AI Gemini - Sisa Jatah: ${remainingAiQuota}x)` : `⏳ Evaluasi AI Terkunci (Kuota Habis)`;
       const aiDisabled = remainingAiQuota <= 0 ? 'disabled' : '';
 
       btnBox.innerHTML = `
         <div style="display:flex; flex-direction:column; gap:8px;">
-          <button class="btn-primary" style="background:linear-gradient(135deg, #10b981, #059669);" onclick="executePracticeGrading('LOKAL')">⚡ Cek Kata Kunci (Lokal - Free Unlimited)</button>
-          <button class="btn-primary" style="background:linear-gradient(135deg, #7c3aed, #6d28d9);" onclick="executePracticeGrading('GEMINI')" ${aiDisabled}>${aiBtnText}</button>
+          <button class="btn-primary" style="background:linear-gradient(135deg, #10b981, #059669);" onclick="executePracticeLocalSingle()">⚡ Cek Kata Kunci Soal Ini (Lokal)</button>
+          <button class="btn-primary" style="background:linear-gradient(135deg, #7c3aed, #6d28d9);" onclick="executePracticeAIBatch()" ${aiDisabled}>${aiBtnText}</button>
           <button class="btn-danger" style="margin-top:6px; font-weight:700;" onclick="openFinishExamModal()">🏁 AKHIRI SESI LATIHAN</button>
         </div>
       `;
@@ -811,18 +811,14 @@
     }
   }
 
-  function executePracticeGrading(type) {
+  function executePracticeLocalSingle() {
     if (!selectedQuestionObject) return;
     const currentText = document.getElementById('transcriptTextarea').value.trim();
     if (!currentText) return alert("Ketik atau rekam jawaban Anda terlebih dahulu!");
 
     stopRecordingIfActive(); showLoader();
-
-    const actionType = type === 'GEMINI' ? "processPracticeAIGrade" : "processLocalGrade";
-    
     fetchAPI({
-      action: actionType,
-      deviceId: deviceId,
+      action: "processLocalGrade",
       questionId: selectedQuestionObject.id,
       studentName: document.getElementById('studentSelect').value,
       rombel: document.getElementById('rombelSelect').value,
@@ -833,19 +829,47 @@
     }, res => {
       hideLoader();
       if (res && res.success) {
-        if (type === 'GEMINI' && res.usedQuota !== undefined && res.maxQuota !== undefined) {
+        const newScore = cleanScoreValue(res.scoreLocal);
+        saveAnswerAndState(selectedQuestionObject.id, currentText, newScore, res.feedback, null, null, () => {
+          showSingleResultModal(newScore, res.feedback, null);
+        });
+      } else alert("Gagal memproses penilaian.");
+    });
+  }
+
+  // EVALUASI BATCH SELURUH JAWABAN SISWA SEKALIGUS (MODE LATIHAN)
+  function executePracticeAIBatch() {
+    let itemsToGrade = [];
+    currentQuestionsList.forEach(q => {
+      let t = (q.id === selectedQuestionObject.id) ? document.getElementById('transcriptTextarea').value.trim() : (questionState[q.id].oldTranscript || "");
+      if (t !== "") itemsToGrade.push({ qId: q.id, questionText: q.pertanyaan, studentTranscriptText: t, rubrik: q.rubrik });
+    });
+
+    if (itemsToGrade.length === 0) return alert("Belum ada soal yang Anda jawab! Ketik/rekam jawaban setidaknya untuk 1 soal.");
+
+    stopRecordingIfActive(); showLoader();
+    fetchAPI({
+      action: "processPracticeAIBatchGrade",
+      deviceId: deviceId,
+      items: itemsToGrade
+    }, res => {
+      hideLoader();
+      if (res && res.success) {
+        if (res.usedQuota !== undefined && res.maxQuota !== undefined) {
           remainingAiQuota = Math.max(0, res.maxQuota - res.usedQuota);
         }
-        const newScore = cleanScoreValue(res.scoreLocal);
-        const aiPct = res.aiPercentage !== undefined ? res.aiPercentage : null;
-        saveAnswerAndState(selectedQuestionObject.id, currentText, newScore, res.feedback, null, aiPct, () => {
-          showSingleResultModal(newScore, res.feedback, aiPct);
+        res.results.forEach(item => {
+          const qId = item.qId;
+          if (questionState[qId]) {
+            questionState[qId].oldScoreAI = Number(item.score) || 0;
+            questionState[qId].aiPercentage = Number(item.aiPercentage) || 0;
+            questionState[qId].oldFeedback = item.feedback;
+          }
+          currentQuestionsList.forEach((q, idx) => { if (q.id === qId) paletteColors[idx] = 'blue'; });
         });
+        renderPaletteUIOnly(); renderActionButtons();
+        showNotif(true, "BERHASIL 🤖", `AI selesai menilai ${res.results.length} soal sekaligus!`);
       } else {
-        if (type === 'GEMINI' && res && res.error && res.error.includes("Kuota")) {
-          remainingAiQuota = 0;
-          renderActionButtons();
-        }
         showNotif(false, "Penilaian AI Ditolak ⚠️", res ? res.error : "Gagal mengevaluasi.");
       }
     });
@@ -1166,12 +1190,13 @@
       hideLoader();
       if (res && res.success) { 
         currentReviewList = res.list || []; 
-        showNotif(true, "BERHASIL ✅", `Memuat ${currentReviewList.length} data.`); 
+        showNotif(true, "BERHASIL ✅", `Memuat ${currentReviewList.length} data siswa.`); 
         renderReviewTable(currentReviewList); 
       } else showNotif(false, "GAGAL", "");
     });
   }
 
+  // TABEL REVIEW DENGAN TOMBOL PENILAIAN BATCH UTAMA PER SISWA
   function renderReviewTable(list) {
     const tbody = document.getElementById('reviewTbody'); tbody.innerHTML = "";
     if (!list || list.length === 0) { tbody.innerHTML = `<tr><td colspan="2" style="text-align:center;">Tidak ada data pengerjaan.</td></tr>`; document.getElementById('reviewResultBox').style.display = 'block'; return; }
@@ -1182,7 +1207,6 @@
         const recheckBadge = q.status === "RECHECK" ? `<span class="badge-recheck" style="background:#fef3c7; color:#b45309; padding:2px 6px; border-radius:4px; font-size:10px;">⚠️ Revisi</span>` : ``;
         const aiScoreDisplay = cleanScoreValue(q.scoreAI) > 0 ? `<b style="color:#15803d;">${cleanScoreValue(q.scoreAI)} (Guru)</b>` : `<span style="color:#d97706;">Belum Dinilai</span>`;
         
-        // VISUALISASI PERSENTASE DETEKSI AI BERSAMA BADGE WARNA OTOMATIS
         let aiBadge = "";
         if (q.aiPercentage !== null && q.aiPercentage !== undefined && q.aiPercentage !== "") {
           let pct = Number(q.aiPercentage) || 0;
@@ -1198,11 +1222,21 @@
           <div style="font-size:11px; margin-bottom:4px;"><b>Nilai Robot:</b> ${cleanScoreValue(q.scoreLocal)} | <b>Nilai Guru:</b> ${aiScoreDisplay} ${aiBadge}</div>
           <div style="display:flex; gap:6px;">
             <button class="btn-warning" style="padding:4px 8px; font-size:10px; width:auto;" onclick="promptManualGrade('${q.qId}','${item.nama}','${item.rombel}','${item.bab}')">📝 Manual</button>
-            <button class="btn-primary" style="padding:4px 8px; font-size:10px; width:auto;" onclick="triggerTeacherAIGrade(${itemIdx}, ${qIdx})">🤖 AI</button>
           </div>
         </div>`;
       });
-      tbody.innerHTML += `<tr><td style="width:160px; vertical-align:top; padding:8px; background:#fafafa;"><b style="font-size:12px;">${item.nama}</b><small style="color:#64748b; display:block; margin-bottom:6px;">${item.rombel} | ${item.bab}</small><button class="btn-primary" style="padding:4px 8px; font-size:10px; width:100%;" onclick="submitAddExtraTime('${item.nama}','${item.rombel}','${item.bab}')">⏱️ +10 Min</button></td><td style="vertical-align:top; padding:8px;">${qHtml}</td></tr>`;
+
+      tbody.innerHTML += `<tr>
+        <td style="width:180px; vertical-align:top; padding:10px; background:#fafafa;">
+          <b style="font-size:13px; color:#1e293b; display:block; margin-bottom:2px;">${item.nama}</b>
+          <small style="color:#64748b; display:block; margin-bottom:10px;">${item.rombel} | ${item.bab}</small>
+          
+          <!-- TOMBOL PENILAIAN BATCH AI UNTUK SELURUH SOAL SISWA INI (1 KLIK KHUSUS) -->
+          <button class="btn-primary" style="padding:8px; font-size:11px; margin-bottom:6px; background:linear-gradient(135deg, #7c3aed, #6d28d9);" onclick="triggerTeacherAIBatchGrade(${itemIdx})">🤖 AI (Nilai Semua Soal)</button>
+          <button class="btn-secondary" style="padding:6px; font-size:10px; width:100%; background:#475569;" onclick="submitAddExtraTime('${item.nama}','${item.rombel}','${item.bab}')">⏱️ +10 Min</button>
+        </td>
+        <td style="vertical-align:top; padding:10px;">${qHtml}</td>
+      </tr>`;
     });
     document.getElementById('reviewResultBox').style.display = 'block';
   }
@@ -1213,28 +1247,24 @@
     fetchAPI({ action: "forceAIGrade", password: adminSessionPassword, questionId: qId, studentName: nama, rombel: rombel, bab: bab, customScore: score, customFeedback: "Telah dinilai Guru." }, res => { hideLoader(); if (res && res.success) { showNotif(true, "BERHASIL ✅", "Disimpan"); submitLoadReview(); } });
   }
 
-  function triggerTeacherAIGrade(itemIdx, qIdx) {
+  // EKSEKUSI PENILAIAN BATCH AI GURU PER SISWA (HANYA MEMAKAI 1 REQUEST UNTUK SELURUH SOAL)
+  function triggerTeacherAIBatchGrade(itemIdx) {
     if (!adminSessionPassword) return showAdminView(); 
     
     const item = currentReviewList[itemIdx];
-    if (!item || !item.questions[qIdx]) return alert("Data tidak ditemukan.");
-    
-    const q = item.questions[qIdx];
-    if (!q.transcript || q.transcript.trim() === "") return alert("Jawaban siswa kosong.");
+    if (!item || !item.questions || item.questions.length === 0) return alert("Data pengerjaan tidak ditemukan.");
 
     showLoader(); 
     fetchAPI({ 
-      action: "triggerGeminiGradingTeacher", 
+      action: "triggerGeminiBatchGradingTeacher", 
       password: adminSessionPassword, 
-      questionId: q.qId, 
       studentName: item.nama, 
       rombel: item.rombel, 
-      bab: item.bab, 
-      studentTranscriptText: q.transcript 
+      bab: item.bab
     }, res => { 
       hideLoader(); 
       if (res && res.success) { 
-        showNotif(true, "BERHASIL 🤖", `AI selesai menilai (Indikasi AI: ${res.aiPercentage}%).`); 
+        showNotif(true, "BERHASIL 🤖", res.message); 
         submitLoadReview(); 
       } else { 
         showNotif(false, "GAGAL ❌", res ? res.error : "Gagal memproses AI."); 
