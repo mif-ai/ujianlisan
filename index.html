@@ -293,8 +293,8 @@
     <hr style="border-top:1px dashed #cbd5e1; margin:15px 0;">
     <h4 style="margin-top:0; color:var(--primary); font-size:13px;">⚙️ Batasan Penilaian AI pada Mode Latihan</h4>
     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-      <div class="form-group"><label>Jatah Uji AI (Kali):</label><input type="number" id="aiPracticeLimitInput" min="1"></div>
-      <div class="form-group"><label>Cooldown Reset (Menit):</label><input type="number" id="aiPracticeCooldownInput" min="1"></div>
+      <div class="form-group"><label>Jatah Uji AI (Kali):</label><input type="number" id="aiPracticeLimitInput" min="0"></div>
+      <div class="form-group"><label>Cooldown Reset (Menit):</label><input type="number" id="aiPracticeCooldownInput" min="0"></div>
     </div>
 
     <div style="display:flex; gap:10px; margin-bottom:15px;">
@@ -538,7 +538,7 @@
         document.getElementById('aiPracticeLimitInput').value = res.aiPracticeLimit;
         document.getElementById('aiPracticeCooldownInput').value = res.aiPracticeCooldownMin;
         
-        remainingAiQuota = Number(res.aiPracticeLimit) || 5;
+        remainingAiQuota = res.aiPracticeLimit !== undefined ? Number(res.aiPracticeLimit) : 5;
       }
     });
 
@@ -565,7 +565,7 @@
         document.getElementById('timerInput').value = res.timer;
         document.getElementById('aiPracticeLimitInput').value = res.aiPracticeLimit;
         document.getElementById('aiPracticeCooldownInput').value = res.aiPracticeCooldownMin;
-        remainingAiQuota = Number(res.aiPracticeLimit) || 5;
+        remainingAiQuota = res.aiPracticeLimit !== undefined ? Number(res.aiPracticeLimit) : 5;
       }
     });
   }
@@ -806,7 +806,7 @@
     const oldData = questionState[selectedQuestionObject.id];
 
     if (currentAppMode === "PRACTICE") {
-      const aiBtnText = remainingAiQuota > 0 ? `✨ Evaluasi SELURUH Soal (AI Gemini - Sisa Jatah: ${remainingAiQuota}x)` : `⏳ Evaluasi AI Terkunci (Kuota Habis)`;
+      const aiBtnText = remainingAiQuota > 0 ? `✨ Evaluasi SELURUH Soal (AI Gemini - Sisa Jatah: ${remainingAiQuota}x)` : `⏳ Evaluasi AI Terkunci (Kuota Habis / Nonaktif)`;
       const aiDisabled = remainingAiQuota <= 0 ? 'disabled' : '';
 
       btnBox.innerHTML = `
@@ -1110,7 +1110,7 @@
       hideLoader();
       if (res && res.success) { 
         showNotif(true, "BERHASIL ✅", res.message); 
-        remainingAiQuota = parseInt(limitInput, 10) || 5;
+        remainingAiQuota = parseInt(limitInput, 10) || 0;
       } else showNotif(false, "GAGAL ❌", res ? res.error : "Gagal menyimpan");
     });
   }
