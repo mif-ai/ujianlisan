@@ -3,597 +3,1505 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Asesmen Wawancara & Esai AI</title>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
+  <title>Asesmen Wawancara dan Esai</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    /* =========================================================
-       1. PROTEKSI ANTI-COPY & ANTI-SELEKSI TEKS (GLOBAL)
-       ========================================================= */
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      -webkit-user-select: none !important;
-      -moz-user-select: none !important;
-      -ms-user-select: none !important;
-      user-select: none !important;
-      -webkit-touch-callout: none !important;
+    :root {
+      --primary: #4f46e5;
+      --primary-dark: #3730a3;
+      --secondary: #06b6d4;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
     }
-
-    /* Tetap izinkan siswa memilih dan mengetik di dalam kolom jawaban */
-    input, textarea {
+    * { 
+      box-sizing: border-box; 
+      font-family: 'Poppins', sans-serif;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+    
+    textarea, input[type="text"], input[type="password"], input[type="number"] {
       -webkit-user-select: text !important;
       -moz-user-select: text !important;
       -ms-user-select: text !important;
       user-select: text !important;
     }
 
-    /* =========================================================
-       2. TAMPILAN & TEMA WEB (RESPONSIVE MOBILE FIRST)
-       ========================================================= */
-    :root {
-      --primary: #4f46e5;
-      --primary-hover: #4338ca;
-      --bg-dark: #0f172a;
-      --card-bg: #ffffff;
-      --text-main: #1e293b;
-      --text-muted: #64748b;
-      --border-color: #e2e8f0;
-      --success: #10b981;
-      --warning: #f59e0b;
-      --danger: #ef4444;
+    body { 
+      background-color: var(--bg); 
+      padding: 10px; 
+      width: 100%; 
+      max-width: 100%; 
+      margin: 0; 
+      color: var(--text); 
     }
+    
+    .header-card { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; padding: 18px; border-radius: 16px; text-align: center; margin-bottom: 15px; box-shadow: 0 10px 25px rgba(79, 70, 229, 0.25); }
+    .header-card-admin { background: linear-gradient(135deg, #0f172a, #334155); }
+    
+    .card { background: var(--card); padding: 16px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); margin-bottom: 15px; border: 1px solid #e2e8f0; width: 100%; }
+    .form-group { margin-bottom: 12px; }
+    label { font-weight: 600; display: block; margin-bottom: 6px; font-size: 13px; color: #334155; }
+    select, input[type="text"], input[type="password"], input[type="number"], textarea { width: 100%; padding: 12px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 13px; background-color: #f8fafc; transition: all 0.2s; }
+    select:focus, input:focus, textarea:focus { border-color: var(--primary); outline: none; background-color: #fff; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); }
+    
+    button { padding: 12px 16px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s; width: 100%; }
+    button:active { transform: scale(0.98); }
+    button:disabled { background: #cbd5e1 !important; color: #64748b !important; cursor: not-allowed; }
+    .btn-primary { background: linear-gradient(135deg, #4f46e5, #4338ca); color: white; }
+    .btn-success { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+    .btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+    .btn-warning { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+    .btn-secondary { background: #64748b; color: white; }
+    .btn-guru { background: linear-gradient(135deg, #1e293b, #0f172a); color: white; margin-bottom: 14px; }
+    
+    .btn-record-start { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; margin: 12px 0; }
+    .btn-record-stop { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; margin: 12px 0; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
 
-    body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      background-color: #f8fafc;
-      color: var(--text-main);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
+    .palette-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .q-num-btn { width: 40px; height: 40px; border-radius: 10px; border: 2px solid #cbd5e1; background: #fff; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #334155; }
+    .q-num-btn.active { border-color: var(--primary) !important; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3); }
+    .q-num-btn.yellow { background: #fef08a; color: #854d0e; border-color: #eab308; }
+    .q-num-btn.green { background: #10b981; color: white; border-color: #059669; }
+    .q-num-btn.blue { background: #3b82f6; color: white; border-color: #1d4ed8; }
+    .question-box { background: #f0f9ff; padding: 16px; border-left: 5px solid var(--secondary); margin: 15px 0; border-radius: 12px; position: relative; }
+    .img-soal { max-width: 100%; max-height: 250px; border-radius: 12px; margin-top: 12px; border: 1px solid #cbd5e1; pointer-events: none; }
 
-    header {
-      background: var(--card-bg);
-      border-bottom: 1px solid var(--border-color);
-      padding: 1rem 1.5rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
+    .content-blurred { filter: blur(12px) !important; opacity: 0.1 !important; pointer-events: none !important; transition: filter 0.1s ease; }
+    .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; text-align: left; }
+    .comp-card { background: #f8fafc; border: 1px solid #cbd5e1; padding: 12px; border-radius: 10px; font-size: 12px; }
+    .comp-text-box { background: white; padding: 8px; border-radius: 8px; border: 1px dashed #94a3b8; font-style: italic; max-height: 120px; overflow-y: auto; margin: 6px 0; }
+    .comp-score-row { display: flex; justify-content: space-between; margin-top: 4px; font-weight: 700; }
 
-    .brand {
-      font-weight: 700;
-      font-size: 1.125rem;
-      color: var(--primary);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 15px; }
+    .stat-card { background: white; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; text-align: center; }
+    .nav-tabs { display: flex; gap: 6px; margin-bottom: 12px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .tab-btn { background: #e2e8f0; color: #475569; border: none; padding: 8px 12px; border-radius: 8px; font-weight: 600; white-space: nowrap; width: auto; font-size: 12px; }
+    .tab-btn.active { background: var(--primary); color: white; }
+    
+    .table-container { width: 100%; overflow-x: auto; margin-top: 10px; border-radius: 8px; border: 1px solid #cbd5e1; }
+    .sub-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .sub-table th, .sub-table td { border: 1px solid #e2e8f0; padding: 8px 10px; text-align: left; }
+    .sub-table th { background: #f1f5f9; white-space: nowrap; }
 
-    .container {
-      max-width: 800px;
-      margin: 1.5rem auto;
-      padding: 0 1rem;
-      width: 100%;
-      flex: 1;
-    }
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 15px; }
+    .modal-content { background: white; padding: 20px; border-radius: 18px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.25); }
 
-    .card {
-      background: var(--card-bg);
-      border-radius: 1rem;
-      padding: 1.5rem;
-      border: 1px solid var(--border-color);
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-      margin-bottom: 1.5rem;
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      padding: 0.75rem 1.25rem;
-      border-radius: 0.625rem;
-      font-weight: 600;
-      font-size: 0.95rem;
-      border: none;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      width: 100%;
-    }
-
-    .btn-primary { background: var(--primary); color: white; }
-    .btn-primary:hover { background: var(--primary-hover); }
-    .btn-success { background: var(--success); color: white; }
-    .btn-danger { background: var(--danger); color: white; }
-    .btn-secondary { background: #e2e8f0; color: var(--text-main); }
-
-    /* Navigasi Soal Grid */
-    .question-nav {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
-      gap: 0.5rem;
-      margin-bottom: 1.25rem;
-    }
-
-    .q-btn {
-      aspect-ratio: 1;
-      border-radius: 0.5rem;
-      border: 1px solid var(--border-color);
-      background: #f1f5f9;
-      font-weight: 600;
-      color: var(--text-muted);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .q-btn.active { border-color: var(--primary); background: #e0e7ff; color: var(--primary); font-weight: 700; }
-    .q-btn.answered { background: var(--success); color: white; border-color: var(--success); }
-
-    .question-text {
-      font-size: 1.05rem;
-      line-height: 1.6;
-      font-weight: 500;
-      margin-bottom: 1rem;
-      color: #334155;
-    }
-
-    textarea.answer-input {
-      width: 100%;
-      min-height: 130px;
-      padding: 0.875rem;
-      border-radius: 0.75rem;
-      border: 1.5px solid var(--border-color);
-      font-family: inherit;
-      font-size: 0.95rem;
-      line-height: 1.5;
-      resize: vertical;
-      margin-bottom: 1rem;
-      outline: none;
-    }
-
-    textarea.answer-input:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-    }
-
-    /* Modal & Processing Overlay */
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(15, 23, 42, 0.6);
-      backdrop-filter: blur(4px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      padding: 1rem;
-    }
-
-    .modal-content {
-      background: white;
-      border-radius: 1.25rem;
-      padding: 1.75rem;
-      max-width: 420px;
-      width: 100%;
-      text-align: center;
-    }
-
-    .spinner {
-      width: 48px; height: 48px;
-      border: 4px solid #e2e8f0;
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin: 0 auto 1rem auto;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .hidden { display: none !important; }
+    .loader-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.7); display: none; align-items: center; justify-content: center; z-index: 3000; flex-direction: column; }
+    .spinner { border: 4px solid rgba(0, 0, 0, 0.1); width: 40px; height: 40px; border-radius: 50%; border-left-color: var(--primary); animation: spin 1s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
 
-  <header>
-    <div class="brand">
-      <i class="fa-solid fa-graduation-cap"></i>
-      <span id="appHeaderTitle">Asesmen Wawancara & Esai</span>
-    </div>
-    <div id="studentBadge" class="hidden" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);"></div>
-  </header>
+<div id="securityWarningOverlay" class="modal-overlay" style="z-index:9999;">
+  <div class="modal-content" style="text-align:center; max-width:400px; background:#fff1f2; border:2px solid #f87171;">
+    <h2 style="font-size:36px; margin:0;">⚠️</h2>
+    <h3 style="margin:8px 0; color:#991b1b;">Tampilan Terkunci!</h3>
+    <p style="font-size:12px; color:#7f1d1d; margin-bottom:15px;">Anda terdeteksi meninggalkan layar ujian atau mengambil tangkapan layar. Harap fokus pada ujian.</p>
+    <button class="btn-primary" style="background:#dc2626;" onclick="unlockSecurityWarning()">Saya Mengerti & Kembali</button>
+  </div>
+</div>
 
-  <div class="container">
+<div id="loadingOverlay" class="loader-overlay">
+  <div class="spinner"></div>
+  <b style="margin-top:10px; color:#3730a3;">Sedang memproses...</b>
+</div>
+
+<!-- STUDENT VIEW -->
+<div id="studentView">
+  <div class="header-card">
+    <h1 style="margin:0 0 4px 0; font-size:18px;">🎙️ Asesmen Wawancara & Esai</h1>
+    <div class="school-info" style="font-size:12px;">
+      <span id="displayNamaSekolah">Memuat...</span> | <span id="displayMataPelajaran">Memuat...</span>
+    </div>
+  </div>
+
+  <div id="modeBannerCard" style="display:none; padding:12px; border-radius:12px; margin-bottom:15px; font-size:12px; border:1px solid; line-height:1.4;"></div>
+
+  <button class="btn-guru" onclick="showAdminView()">⚙️ Buka Panel Kendali Guru / Admin</button>
+
+  <div class="card" id="studentSelectionCard">
+    <div class="form-group"><label>Pilih Kelas / Rombel:</label><select id="rombelSelect" onchange="onRombelChange()"><option value="">-- Memuat Kelas... --</option></select></div>
+    <div class="form-group"><label>Pilih Nama Siswa:</label><select id="studentSelect" onchange="onStudentChange()" disabled><option value="">-- Pilih Kelas Terlebih Dahulu --</option></select></div>
+    <div class="form-group"><label>Jenis Kelamin:</label><input type="text" id="jkDisplay" readonly placeholder="Otomatis terisi..."></div>
+    <div class="form-group"><label>Pilih Bab / Topik Soal:</label><select id="babSelect" onchange="onBabChange()" disabled><option value="">-- Pilih Nama Terlebih Dahulu --</option></select></div>
+
+    <button id="btnStartExam" class="btn-primary" style="margin-top:10px; padding:12px; font-size:14px;" onclick="triggerTokenModal()" disabled>🚀 MULAI KERJAKAN</button>
+  </div>
+
+  <div id="tokenModal" class="modal-overlay">
+    <div class="modal-content" style="text-align:center;">
+      <h3 style="margin-top:0; color:var(--primary);">🔐 Masukkan Token</h3>
+      <p style="font-size:12px; color:#64748b; margin-top:-5px; margin-bottom:15px;">Minta token kepada Guru Anda untuk membuka sesi ini.</p>
+      <input type="text" id="inputStudentToken" placeholder="Ketik Token..." style="text-align:center; font-size:18px; font-weight:700; text-transform:uppercase; margin-bottom:15px;" onkeyup="if(event.key==='Enter') submitStudentToken()">
+      <div style="display:flex; gap:10px;">
+        <button class="btn-secondary" onclick="closeTokenModal()" style="flex:1;">Batal</button>
+        <button class="btn-primary" onclick="submitStudentToken()" style="flex:1.5;">Buka Sesi</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="examWorkspaceCard" style="display:none;">
+    <div id="paletteSection" style="margin-bottom:15px;">
+      <div id="babTotalCard" style="background:#e0e7ff; border:1px solid #c7d2fe; padding:12px; border-radius:12px; margin-bottom:12px;">
+        <div style="margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:12px; font-weight:700; color:#3730a3;">📊 Akumulasi Nilai Bab</span>
+          <small id="timerDisplayBox" style="font-size:11px; font-weight:700; color:#4338ca;">⏱️ Timer: -</small>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; text-align:center;">
+          <div style="background:white; padding:6px; border-radius:8px; border:1px solid #c7d2fe;">
+            <small style="font-size:10px; color:#475569; font-weight:600; display:block;">🤖 Nilai Robot</small>
+            <span id="accumulatedLocalScoreDisplay" style="font-size:18px; font-weight:800; color:#10b981;">0 / 100</span>
+          </div>
+          <div style="background:white; padding:6px; border-radius:8px; border:1px solid #c7d2fe;">
+            <small style="font-size:10px; color:#475569; font-weight:600; display:block;">🎓 Nilai Guru</small>
+            <span id="accumulatedAIScoreDisplay" style="font-size:13px; font-weight:700; color:#1d4ed8; padding-top:4px; display:block;">⏳ Menunggu</span>
+          </div>
+        </div>
+      </div>
+
+      <label>Pilih Nomor Soal:</label>
+      <div id="questionPalette" class="palette-grid"></div>
+    </div>
+
+    <div id="questionContainer" style="display:none;">
+      <div class="question-box" id="questionBoxElement">
+        <b id="questionNumberLabel">Soal No. 1</b>
+        <p id="questionText" style="margin:8px 0 0 0; font-weight:600; font-size:14px;"></p>
+        <div id="gambarSoalBox" style="display:none; text-align:center;"><img id="gambarSoalImg" src="" class="img-soal"></div>
+      </div>
+
+      <div id="oldDataBanner" style="display:none; background:#fef3c7; border:1px solid #fcd34d; padding:10px; border-radius:10px; margin-bottom:12px; font-size:12px; color:#b45309;">
+        <b>📌 Jawaban Telah Tersimpan.</b> Nilai Robot: <span id="bannerLoc">0</span> | Nilai Guru: <span id="bannerAI">-</span> <span id="bannerAiPct"></span>
+      </div>
+
+      <div class="form-group">
+        <label>Jawaban Lisan Siswa:</label>
+        <textarea id="transcriptTextarea" rows="4" placeholder="Tekan rekam atau ketik jawaban di sini..." oninput="onTranscriptInput()"></textarea>
+      </div>
+
+      <button type="button" class="btn-record-start" id="btnRecordToggle" onclick="toggleDirectRecording()">🎤 Klik untuk Merekam Suara</button>
+      <div id="statusText" style="text-align:center; font-size:11px; font-weight:600; color:#4f46e5; margin-bottom:10px;">Status: Siap Merekam</div>
+
+      <div id="studentActionButtons"></div>
+    </div>
+  </div>
+</div>
+
+<div id="resultModal" class="modal-overlay">
+  <div class="modal-content" style="text-align:center;">
+    <h3 style="margin-top:0; color:var(--primary);">✨ Hasil Evaluasi</h3>
+    <h5 id="modalQuestionLabel" style="margin:0 0 10px 0; color:#64748b;">Soal No. X</h5>
+    <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:12px; border-radius:12px; margin-bottom:12px;">
+      <div style="font-size:12px; color:#166534; font-weight:600;">Skor Hasil Evaluasi:</div>
+      <div id="modalScoreDisplay" style="font-size:32px; font-weight:800; color:#15803d;">0 / 100</div>
+      <div id="modalAiPctDisplay" style="margin-top:6px;"></div>
+    </div>
+    <div style="text-align:left; background:#f8fafc; padding:10px; border-radius:10px; font-size:12px; margin-bottom:12px; border:1px solid #e2e8f0;">
+      <b>Ulasan:</b> <p id="modalFeedbackDisplay" style="margin:4px 0 0 0; color:#334155;"></p>
+    </div>
+    <button class="btn-primary" onclick="closeResultModal()">Tutup & Lanjutkan</button>
+  </div>
+</div>
+
+<div id="comparisonModal" class="modal-overlay">
+  <div class="modal-content" style="max-width: 650px;">
+    <h3 style="margin-top:0; color:var(--primary); text-align:center;">⚖️ Komparasi Revisi Jawaban</h3>
+    <div class="compare-grid">
+      <div class="comp-card" style="border-top: 4px solid #f59e0b;">
+        <b style="color:#b45309;">📌 JAWABAN LAMA</b>
+        <div class="comp-text-box" id="compOldText">...</div>
+        <div class="comp-score-row"><span>🤖 Nilai Robot:</span> <span id="compOldScoreLoc" style="color:#d97706;">0</span></div>
+        <div class="comp-score-row"><span>🎓 Nilai Guru:</span> <span id="compOldScoreAI">0</span></div>
+      </div>
+      <div class="comp-card" style="border-top: 4px solid #10b981;">
+        <b style="color:#059669;">✨ JAWABAN BARU</b>
+        <div class="comp-text-box" id="compNewText">...</div>
+        <div class="comp-score-row"><span>🤖 Nilai Robot:</span> <span id="compNewScoreLoc" style="color:#15803d;">0</span></div>
+        <div class="comp-score-row"><span>🎓 Nilai Guru:</span> <span style="color:#64748b; font-style:italic;">⏳ Menunggu</span></div>
+      </div>
+    </div>
+    <div id="compRecommendationBox" style="margin-top:12px; padding:10px; border-radius:8px; border:1px solid; text-align:center; font-size:12px;">
+      <span id="compRecommendationText">...</span>
+    </div>
+    <div style="display:flex; gap:10px; margin-top:15px;">
+      <button id="btnKeepOld" class="btn-secondary" style="flex:1; background:#ef4444;">🔴 Pakai Lama</button>
+      <button id="btnUseNew" class="btn-primary" style="flex:1.5; background:#10b981;">🟢 Timpa Baru</button>
+    </div>
+  </div>
+</div>
+
+<div id="finishExamModal" class="modal-overlay">
+  <div class="modal-content" style="text-align:center;">
+    <h2 style="font-size:40px; margin:0;">🏁</h2>
+    <h3 style="margin:0 0 8px 0; color:var(--primary);">Akhiri Sesi Ini?</h3>
+    <div style="display:flex; gap:10px;">
+      <button class="btn-secondary" style="flex:1;" onclick="closeFinishExamModal()">Batal</button>
+      <button class="btn-primary" style="flex:1.5; background:#10b981;" onclick="finishExamDirectly()">Ya, Akhiri</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN VIEW -->
+<div id="adminView" style="display:none;">
+  <div class="header-card header-card-admin" style="display:flex; justify-content:space-between; align-items:center;">
+    <div style="text-align:left;"><h2 style="margin:0; font-size:16px;">⚙️ Panel Guru & Admin</h2></div>
+    <div style="display:flex; gap:6px;">
+      <button class="btn-danger" style="width:auto; font-size:10px; padding:6px 10px;" onclick="userClickLogout()">Logout</button>
+      <button class="btn-secondary" style="width:auto; font-size:10px; padding:6px 10px; background:#475569;" onclick="showStudentView()">Siswa</button>
+    </div>
+  </div>
+
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="switchTab('tabDashboard', event)">1. Dashboard</button>
+    <button class="tab-btn" onclick="switchTab('tabSettings', event)">2. Token & Timer</button>
+    <button class="tab-btn" onclick="switchTab('tabBabStatus', event)">3. Status Bab Kelas</button>
+    <button class="tab-btn" onclick="switchTab('tabSekolah', event)">4. Info Sekolah</button>
+    <button class="tab-btn" onclick="switchTab('tabSiswa', event)">5. Siswa</button>
+    <button class="tab-btn" onclick="switchTab('tabSoal', event)">6. Bank Soal</button>
+    <button class="tab-btn" onclick="switchTab('tabReview', event)">7. Penilaian Guru</button>
+    <button class="tab-btn" onclick="switchTab('tabCetak', event)">8. Cetak Rekap</button>
+  </div>
+
+  <div id="tabDashboard" class="card tab-content">
+    <h3 style="margin-top:0; color:var(--primary); font-size:14px;">📊 Dashboard Statistik</h3>
+    <button class="btn-primary" style="margin-bottom:12px; width:auto;" onclick="loadDashboardStats()">🔄 Refresh Data</button>
+    <div class="stats-grid">
+      <div class="stat-card"><div id="statTotalSiswa" class="stat-val" style="font-size:20px; font-weight:700;">0</div><div class="stat-lbl" style="font-size:11px;">Siswa</div></div>
+      <div class="stat-card"><div id="statTotalSoal" class="stat-val" style="font-size:20px; font-weight:700;">0</div><div class="stat-lbl" style="font-size:11px;">Soal</div></div>
+      <div class="stat-card"><div id="statPartisipasi" class="stat-val" style="font-size:20px; font-weight:700;">0%</div><div class="stat-lbl" style="font-size:11px;">Partisipasi</div></div>
+      <div class="stat-card" style="border-color:#fde68a;"><div id="statRecheck" class="stat-val" style="font-size:20px; font-weight:700; color:#d97706;">0</div><div class="stat-lbl" style="font-size:11px;">Revisian</div></div>
+      <div class="stat-card"><div id="statAvgAI" class="stat-val" style="font-size:20px; font-weight:700; color:#10b981;">0</div><div class="stat-lbl" style="font-size:11px;">Rata Nilai</div></div>
+    </div>
+  </div>
+
+  <div id="tabSettings" class="card tab-content" style="display:none;">
+    <h3 style="margin-top:0; color:var(--primary); font-size:14px;">🔑 Pengaturan Token & Timer Ujian</h3>
+    <div style="background:#f0fdf4; padding:12px; border-radius:10px; border:1px solid #bbf7d0; margin-bottom:12px;">
+      <div class="form-group"><label>Token Latihan:</label><input type="text" id="tokenLatihInput"></div>
+    </div>
+    <div style="background:#fef2f2; padding:12px; border-radius:10px; border:1px solid #fecaca; margin-bottom:12px;">
+      <div class="form-group"><label>Token Ujian:</label><input type="text" id="tokenUjianInput"></div>
+    </div>
+    <div class="form-group"><label>Durasi Timer Default (Menit):</label><input type="number" id="timerInput" min="0"></div>
     
-    <!-- STEP 1: MASUKKAN TOKEN -->
-    <div id="stepToken" class="card">
-      <h2 style="margin-bottom: 0.5rem; font-size: 1.25rem;"><i class="fa-solid fa-key" style="color:var(--primary);"></i> Masukkan Token Ujian</h2>
-      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem;">Minta token kepada Guru untuk memulai latihan atau ujian.</p>
-      
-      <input type="text" id="inputToken" placeholder="Contoh: LATIH2026 / UJIAN2026" style="width:100%; padding:0.75rem; border-radius:0.5rem; border:1px solid var(--border-color); text-transform:uppercase; font-weight:600; margin-bottom:1rem;">
-      <button class="btn btn-primary" onclick="handleVerifyToken()"><i class="fa-solid fa-arrow-right"></i> Lanjutkan</button>
+    <hr style="border-top:1px dashed #cbd5e1; margin:15px 0;">
+    <h4 style="margin-top:0; color:var(--primary); font-size:13px;">⚙️ Batasan Penilaian AI pada Mode Latihan</h4>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+      <div class="form-group"><label>Jatah Uji AI (Kali):</label><input type="number" id="aiPracticeLimitInput" min="0"></div>
+      <div class="form-group"><label>Cooldown Reset (Menit):</label><input type="number" id="aiPracticeCooldownInput" min="0"></div>
     </div>
 
-    <!-- STEP 2: IDENTITAS SISWA & PILIH BAB -->
-    <div id="stepIdentitas" class="card hidden">
-      <h2 style="margin-bottom: 1rem; font-size: 1.25rem;"><i class="fa-solid fa-user-pen" style="color:var(--primary);"></i> Identitas Peserta</h2>
-      
-      <div style="margin-bottom: 1rem;">
-        <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:0.4rem;">Pilih Kelas / Rombel:</label>
-        <select id="selectRombel" onchange="loadStudentAndBabList()" style="width:100%; padding:0.75rem; border-radius:0.5rem; border:1px solid var(--border-color); font-family:inherit;">
-          <option value="">-- Pilih Kelas --</option>
-        </select>
-      </div>
-
-      <div style="margin-bottom: 1rem;">
-        <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:0.4rem;">Nama Siswa:</label>
-        <select id="selectSiswa" style="width:100%; padding:0.75rem; border-radius:0.5rem; border:1px solid var(--border-color); font-family:inherit;">
-          <option value="">-- Pilih Nama --</option>
-        </select>
-      </div>
-
-      <div style="margin-bottom: 1.25rem;">
-        <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:0.4rem;">Pilih Bab / Materi:</label>
-        <select id="selectBab" style="width:100%; padding:0.75rem; border-radius:0.5rem; border:1px solid var(--border-color); font-family:inherit;">
-          <option value="">-- Pilih Bab --</option>
-        </select>
-      </div>
-
-      <button class="btn btn-primary" onclick="startExam()"><i class="fa-solid fa-play"></i> Mulai Asesmen</button>
+    <div style="display:flex; gap:10px; margin-bottom:15px;">
+      <button class="btn-primary" style="flex:2;" onclick="submitSaveTokens()">💾 Simpan Seluruh Pengaturan</button>
+      <button class="btn-secondary" style="flex:1;" onclick="openGoogleSheetDirect()">🔗 Sheet</button>
     </div>
-
-    <!-- STEP 3: TAMPILAN SOAL & JAWABAN -->
-    <div id="stepExam" class="card hidden">
-      <div id="questionNavGrid" class="question-nav"></div>
-
-      <div id="questionContainer">
-        <h3 id="questionTitle" style="font-size: 1rem; color: var(--primary); margin-bottom: 0.5rem;">Soal No. 1</h3>
-        <div id="questionText" class="question-text">Memuat pertanyaan...</div>
-        
-        <div id="imageContainer" class="hidden" style="margin-bottom:1rem; text-align:center;">
-          <img id="questionImage" src="" style="max-width:100%; max-height:250px; border-radius:0.5rem; border:1px solid var(--border-color);">
-        </div>
-
-        <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:0.4rem;">Jawaban Lisan / Teks Siswa:</label>
-        <textarea id="answerText" class="answer-input" placeholder="Tuliskan jawaban Anda di sini atau gunakan rekam suara..."></textarea>
-
-        <div style="display:flex; flex-direction:column; gap:0.75rem;">
-          <button id="btnRecord" class="btn btn-secondary" onclick="toggleSpeechRecognition()">
-            <i class="fa-solid fa-microphone"></i> Klik untuk Merekam Suara
-          </button>
-          
-          <button class="btn btn-success" onclick="saveCurrentAnswer()">
-            <i class="fa-solid fa-floppy-disk"></i> Simpan Jawaban
-          </button>
-
-          <button class="btn btn-danger" onclick="finishExamSession()" style="margin-top: 0.5rem;">
-            <i class="fa-solid fa-check-circle"></i> AKHIRI SESI
-          </button>
-        </div>
-      </div>
+    
+    <hr style="border-top:1px dashed #cbd5e1; margin:15px 0;">
+    <h4 style="margin-top:0; color:var(--primary); font-size:13px;">⏱️ Timer Per Bab (Opsional)</h4>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+      <div class="form-group"><label>Rombel:</label><select id="timerRombelSelect" onchange="onTimerRombelChange()"><option value="">-- Pilih --</option></select></div>
+      <div class="form-group"><label>Bab:</label><select id="timerBabSelect"><option value="">-- Pilih Rombel --</option></select></div>
     </div>
-
+    <div class="form-group"><label>Durasi (Menit):</label><input type="number" id="timerBabInput" min="0"></div>
+    <button class="btn-success" onclick="submitSaveBabTimer()">💾 Simpan Timer Bab</button>
   </div>
 
-  <!-- OVERLAY LOADING / PROCESSING -->
-  <div id="loadingOverlay" class="modal-overlay hidden">
-    <div class="modal-content">
-      <div class="spinner"></div>
-      <h3 id="loadingText" style="font-size:1.1rem; margin-bottom:0.25rem;">Sedang memproses...</h3>
-      <p style="font-size:0.85rem; color:var(--text-muted);">Mohon tunggu sebentar, jangan menutup halaman.</p>
+  <div id="tabBabStatus" class="card tab-content" style="display:none;">
+    <h3 style="margin-top:0; color:var(--primary); font-size:14px;">📌 Pengaturan Status Tampil Bab per Kelas</h3>
+    <p style="font-size:12px; color:#64748b; margin-top:-5px;">Centang Bab yang ingin **ditampilkan (ON)** kepada siswa saat login. Uncheck untuk menyembunyikan (OFF).</p>
+    <button class="btn-primary" style="width:auto; margin-bottom:12px;" onclick="loadBabStatusAdmin()">🔄 Muat Daftar Bab & Kelas</button>
+    <div class="table-container">
+      <table class="sub-table" id="babStatusTable">
+        <thead><tr><th style="width:40px; text-align:center;">Aktif</th><th>Rombel / Kelas</th><th>Nama Bab Soal</th></tr></thead>
+        <tbody id="babStatusTbody"></tbody>
+      </table>
+    </div>
+    <button class="btn-success" style="margin-top:15px;" onclick="submitSaveBabStatus()">💾 Simpan Status Bab Siswa</button>
+  </div>
+
+  <div id="tabSekolah" class="card tab-content" style="display:none;">
+    <h3 style="margin-top:0; color:var(--primary); font-size:14px;">🏛️ Info Sekolah & Admin</h3>
+    <div class="form-group"><label>Nama Sekolah:</label><input type="text" id="inputNamaSekolah"></div>
+    <div class="form-group"><label>Mata Pelajaran:</label><input type="text" id="inputMataPelajaran"></div>
+    <div class="form-group"><label>Nama Guru:</label><input type="text" id="inputNamaGuru"></div>
+    <div class="form-group"><label>Password Admin Baru:</label><input type="password" id="inputNewAdminPassword"></div>
+    <button class="btn-success" onclick="submitSaveSchoolSettings()">💾 Simpan Info</button>
+  </div>
+
+  <div id="tabSiswa" class="card tab-content" style="display:none;">
+    <h3 style="margin-top:0; color:var(--primary); font-size:14px;">👥 Kelola Data Siswa</h3>
+    <div style="background:#f8fafc; padding:12px; border-radius:10px; border:1px solid #e2e8f0; margin-bottom:12px;">
+      <input type="hidden" id="siswaRowIndexInput">
+      <div style="display:grid; grid-template-columns: 1fr 2fr 1fr; gap:8px;">
+        <div class="form-group"><label>No:</label><input type="text" id="siswaNoInput"></div>
+        <div class="form-group"><label>Nama Lengkap:</label><input type="text" id="siswaNamaInput"></div>
+        <div class="form-group"><label>JK:</label><select id="siswaJkInput"><option value="L">L</option><option value="P">P</option></select></div>
+      </div>
+      <div class="form-group"><label>Rombel:</label><input type="text" id="siswaRombelInput"></div>
+      <div style="display:flex; gap:8px;">
+        <button id="btnSaveSiswa" class="btn-success" style="flex:2;" onclick="submitSaveSiswa()">💾 Simpan Siswa</button>
+        <button class="btn-secondary" style="flex:1;" onclick="resetSiswaForm()">Batal</button>
+      </div>
+    </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+      <button class="btn-primary" style="width:auto;" onclick="loadSiswaList()">🔄 Refresh Data</button>
+    </div>
+    <div class="form-group" style="margin-top: 6px;">
+      <input type="text" id="searchSiswaInput" placeholder="🔍 Cari berdasarkan Nama, Rombel, atau No..." oninput="filterSiswaTable()">
+    </div>
+    <div class="table-container">
+      <table class="sub-table" id="siswaTable">
+        <thead><tr><th>No</th><th>Nama Siswa</th><th>Rombel</th><th>JK</th><th style="width:90px;">Aksi</th></tr></thead>
+        <tbody id="siswaTbody"></tbody>
+      </table>
     </div>
   </div>
 
-  <!-- SCRIPT UTAMA & LOGIKA SISTEM -->
-  <script>
-    // =========================================================
-    // 1. CONFIG & URL APPS SCRIPT
-    // =========================================================
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbzBMx-BvZfCT_w6yG2HJur8KUm2kqK0tfcZhFiD6J7dxH3AOOxXQg72fS4pLzAjNFM_kA/exec"; // Sesuaikan dengan URL Deploy Apps Script Anda
+  <div id="tabSoal" class="card tab-content" style="display:none;">
+    <h3 style="margin-top:0; color:var(--primary); font-size:14px;">📚 Kelola Bank Soal</h3>
+    <div style="background:#f8fafc; padding:12px; border-radius:10px; border:1px solid #e2e8f0; margin-bottom:12px;">
+      <input type="hidden" id="soalIdInput">
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+        <div class="form-group"><label>Kelas:</label><input type="text" id="soalKelasInput"></div>
+        <div class="form-group"><label>Bab:</label><input type="text" id="soalBabInput"></div>
+      </div>
+      <div class="form-group"><label>Pertanyaan:</label><textarea id="soalPertanyaanInput" rows="2"></textarea></div>
+      <div class="form-group"><label>Rubrik Kunci:</label><textarea id="soalRubrikInput" rows="2"></textarea></div>
+      <div class="form-group"><label>Gambar (Opsional):</label><input type="file" id="soalGambarInput" accept="image/*"></div>
+      <div style="display:flex; gap:8px;">
+        <button id="btnSaveSoal" class="btn-success" style="flex:2;" onclick="submitSaveSoal()">💾 Simpan Soal</button>
+        <button class="btn-secondary" style="flex:1;" onclick="resetSoalForm()">Batal</button>
+      </div>
+    </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+      <button class="btn-primary" style="width:auto;" onclick="loadSoalList()">🔄 Refresh Data</button>
+    </div>
+    <div class="form-group" style="margin-top: 6px;">
+      <input type="text" id="searchSoalInput" placeholder="🔍 Cari berdasarkan ID, Target Kelas, Bab, atau Pertanyaan..." oninput="filterSoalTable()">
+    </div>
+    <div class="table-container">
+      <table class="sub-table" id="soalTable">
+        <thead><tr><th>ID</th><th>Target</th><th>Bab</th><th>Pertanyaan</th><th style="width:90px;">Aksi</th></tr></thead>
+        <tbody id="soalTbody"></tbody>
+      </table>
+    </div>
+  </div>
 
-    let currentMode = ""; // "PRACTICE" atau "SUBMISSION"
-    let allStudentsData = {};
-    let questionsList = [];
-    let studentAnswersMap = {}; // Storage lokal jawaban siswa
-    let currentIndex = 0;
-    let isRecording = false;
-    let recognition = null;
+  <div id="tabReview" class="card tab-content" style="display:none;">
+    <h3 style="margin-top:0; color:var(--primary); font-size:14px;">📝 Review Jawaban & Penilaian Guru</h3>
+    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px;">
+      <div class="form-group"><label>Filter Rombel:</label><select id="reviewRombelSelect" onchange="onReviewRombelChange()"><option value="">-- Semua --</option></select></div>
+      <div class="form-group"><label>Filter Bab:</label><select id="reviewBabSelect"><option value="">-- Semua --</option></select></div>
+      <div class="form-group"><label>Status:</label><select id="reviewStatusSelect"><option value="">Semua</option><option value="RECHECK">⚠️ Revisi Baru</option><option value="UNGRADED">Belum Dinilai</option></select></div>
+    </div>
+    <button class="btn-primary" style="background:#7c3aed;" onclick="submitLoadReview()">🔍 Muat Data Siswa</button>
+    <div id="reviewResultBox" class="table-container" style="display:none; margin-top:12px;">
+      <table class="sub-table">
+        <thead><tr><th style="width:180px;">Data Siswa & Aksi Penilaian</th><th>Detail Pertanyaan & Penilaian Per Soal</th></tr></thead>
+        <tbody id="reviewTbody"></tbody>
+      </table>
+    </div>
+  </div>
 
-    // =========================================================
-    // 2. KODE PROTEKSI ANTI-COPY & ANTI-KLIK KANAN
-    // =========================================================
+  <div id="tabCetak" class="card tab-content" style="display:none;">
+    <h3 style="margin-top:0; color:var(--primary); font-size:14px;">🖨️ Cetak Rekap Nilai</h3>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+      <div class="form-group"><label>Rombel:</label><select id="cetakRombelSelect" onchange="onCetakRombelChange()"><option value="">-- Pilih Rombel --</option></select></div>
+      <div class="form-group"><label>Bab:</label><select id="cetakBabSelect"><option value="">-- Semua Bab --</option></select></div>
+    </div>
+    <button class="btn-success" onclick="generatePrintPreview()">🖨️ Cetak Rekap A4</button>
+  </div>
+</div>
+
+<div id="adminLoginModal" class="modal-overlay">
+  <div class="modal-content" style="text-align:center;">
+    <h3 style="margin-top:0; color:var(--primary);">🔐 Masuk Panel Guru</h3>
+    <input type="password" id="inputAdminLoginPass" placeholder="Ketik Password Admin..." style="text-align:center; font-size:16px; margin-bottom:15px;" onkeyup="if(event.key==='Enter') submitAdminLogin()">
+    <div style="display:flex; gap:10px;">
+      <button class="btn-secondary" style="flex:1;" onclick="closeAdminLoginModal()">Batal</button>
+      <button class="btn-primary" style="flex:1;" onclick="submitAdminLogin()">Masuk</button>
+    </div>
+  </div>
+</div>
+
+<div id="notifModal" class="modal-overlay">
+  <div class="modal-content" style="text-align:center;">
+    <div id="notifIcon" style="font-size:40px; margin-bottom:6px;">✅</div>
+    <h3 id="notifTitle" style="margin:0 0 6px 0;">Notifikasi</h3>
+    <p id="notifMessage" style="font-size:12px; color:#475569; margin-bottom:15px;"></p>
+    <button class="btn-primary" onclick="closeNotifModal()">Tutup</button>
+  </div>
+</div>
+
+<script>
+  const API_URL = "https://script.google.com/macros/s/AKfycbzBMx-BvZfCT_w6yG2HJur8KUm2kqK0tfcZhFiD6J7dxH3AOOxXQg72fS4pLzAjNFM_kA/exec";
+
+  let deviceId = localStorage.getItem('app_device_id');
+  if (!deviceId) {
+    deviceId = 'DEV_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+    localStorage.setItem('app_device_id', deviceId);
+  }
+
+  let remainingAiQuota = 5; 
+  let currentReviewList = [];
+
+  let adminSessionPassword = null, adminInactivityTimer = null;
+  const INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000;
+
+  let studentDataCache = {}, currentQuestionsList = [], activeQuestionIndex = -1, selectedQuestionObject = null;
+  let currentAppMode = "", activeBabTimer = 0; 
+  let speechRecognition = null, isRecording = false;
+  
+  let questionState = {}; 
+  let paletteColors = []; 
+  let siswaDataGlobal = [], soalDataGlobal = [];
+  let examTimerInterval = null, remainingExamSeconds = 0;
+
+  window.onload = function() { 
+    initApp(); 
+    setupInactivityTracker(); 
+    setupSecurityEnforcements();
+  };
+
+  function setupSecurityEnforcements() {
     document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('keydown', e => {
+      if (e.ctrlKey || e.metaKey) {
+        const k = e.key.toLowerCase();
+        if (k === 'c' || k === 'u' || k === 's' || k === 'p' || k === 'i') { e.preventDefault(); return false; }
+      }
+      if (e.key === 'F12' || e.key === 'PrintScreen') { e.preventDefault(); triggerSecurityWarning(); return false; }
+    });
     document.addEventListener('copy', e => e.preventDefault());
     document.addEventListener('cut', e => e.preventDefault());
-    document.addEventListener('selectstart', e => {
-      // Hanya izinkan seleksi di dalam textarea & input
-      if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-        e.preventDefault();
+    window.addEventListener('blur', () => {
+      if (currentAppMode !== "") {
+        document.getElementById('questionBoxElement').classList.add('content-blurred');
+        triggerSecurityWarning();
       }
     });
-
-    document.addEventListener('keydown', e => {
-      // Blokir pintasan Ctrl+C, Ctrl+U, Ctrl+S, F12 (Kecuali mengetik biasa)
-      if (e.ctrlKey && ['c', 'C', 'u', 'U', 's', 'S', 'a', 'A'].includes(e.key)) {
-        if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-          e.preventDefault();
-        }
+    window.addEventListener('focus', () => {
+      if (document.getElementById('securityWarningOverlay').style.display !== 'flex') {
+        document.getElementById('questionBoxElement').classList.remove('content-blurred');
       }
-      if (e.key === 'F12') e.preventDefault();
     });
+  }
 
-    // Catatan: TIDAK ADA event listener 'blur' atau 'visibilitychange' (Tampilan Terkunci Dimatikan Total)
-
-    // =========================================================
-    // 3. API FETCH ENGINE
-    // =========================================================
-    async function apiCall(action, payload = {}) {
-      showLoading("Sedang memproses...");
-      try {
-        const response = await fetch(GAS_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: action, ...payload })
-        });
-        const json = await response.json();
-        hideLoading();
-        return json;
-      } catch (err) {
-        hideLoading();
-        alert("Gagal terhubung ke server: " + err.message);
-        return { success: false, error: err.message };
-      }
+  function triggerSecurityWarning() {
+    if (currentAppMode !== "") {
+      document.getElementById('questionBoxElement').classList.add('content-blurred');
+      document.getElementById('securityWarningOverlay').style.display = 'flex';
     }
+  }
 
-    function showLoading(msg) {
-      document.getElementById("loadingText").innerText = msg || "Sedang memproses...";
-      document.getElementById("loadingOverlay").classList.remove("hidden");
-    }
+  function unlockSecurityWarning() {
+    document.getElementById('securityWarningOverlay').style.display = 'none';
+    document.getElementById('questionBoxElement').classList.remove('content-blurred');
+  }
 
-    function hideLoading() {
-      document.getElementById("loadingOverlay").classList.add("hidden");
-    }
+  function setupInactivityTracker() {
+    ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => {
+      window.addEventListener(evt, () => { if (adminSessionPassword && document.getElementById('adminView').style.display !== 'none') resetInactivityTimer(); }, { passive: true });
+    });
+  }
+  function resetInactivityTimer() {
+    if (adminInactivityTimer) clearTimeout(adminInactivityTimer);
+    adminInactivityTimer = setTimeout(() => { logoutAdmin(); showNotif(false, "Sesi Kadaluarsa ⏳", "Sesi Admin berakhir."); }, INACTIVITY_TIMEOUT_MS);
+  }
 
-    // =========================================================
-    // 4. FLOW VERIFIKASI & APPS LOGIC
-    // =========================================================
-    async function handleVerifyToken() {
-      const token = document.getElementById("inputToken").value.trim();
-      if (!token) return alert("Masukkan Token Ujian terlebih dahulu!");
+  function cleanScoreValue(val) {
+    if (val === null || val === undefined || val === "") return 0;
+    let n = Number(val); return isNaN(n) ? 0 : n;
+  }
 
-      const res = await apiCall("verifyToken", { token: token });
-      if (res.success) {
-        currentMode = res.mode;
-        document.getElementById("stepToken").classList.add("hidden");
-        document.getElementById("stepIdentitas").classList.remove("hidden");
-        loadStudentDataMaster();
-      } else {
-        alert(res.error || "Token Salah!");
-      }
-    }
+  function showLoader() { document.getElementById('loadingOverlay').style.display = 'flex'; }
+  function hideLoader() { document.getElementById('loadingOverlay').style.display = 'none'; }
 
-    async function loadStudentDataMaster() {
-      const res = await apiCall("getStudentData");
-      if (res.success) {
-        allStudentsData = res.studentsByRombel || {};
-        const selectRombel = document.getElementById("selectRombel");
-        selectRombel.innerHTML = '<option value="">-- Pilih Kelas --</option>';
-        (res.rombelList || []).forEach(r => {
-          selectRombel.innerHTML += `<option value="${r}">${r}</option>`;
-        });
-      }
-    }
-
-    async function loadStudentAndBabList() {
-      const rombel = document.getElementById("selectRombel").value;
-      const selectSiswa = document.getElementById("selectSiswa");
-      const selectBab = document.getElementById("selectBab");
-
-      selectSiswa.innerHTML = '<option value="">-- Pilih Nama --</option>';
-      selectBab.innerHTML = '<option value="">-- Pilih Bab --</option>';
-
-      if (!rombel) return;
-
-      // Populate Siswa
-      const listSiswa = allStudentsData[rombel] || [];
-      listSiswa.forEach(s => {
-        selectSiswa.innerHTML += `<option value="${s.nama}" data-jk="${s.jk}">${s.nama}</option>`;
-      });
-
-      // Populate Bab dari Backend
-      const res = await apiCall("getBabList", { rombel: rombel });
-      if (res.success) {
-        (res.babList || []).forEach(b => {
-          selectBab.innerHTML += `<option value="${b}">${b}</option>`;
-        });
-      }
-    }
-
-    async function startExam() {
-      const rombel = document.getElementById("selectRombel").value;
-      const nama = document.getElementById("selectSiswa").value;
-      const bab = document.getElementById("selectBab").value;
-
-      if (!rombel || !nama || !bab) return alert("Lengkapi seluruh pilihan identitas!");
-
-      const res = await apiCall("getQuestions", { rombel: rombel, bab: bab });
-      if (res.success && res.questions && res.questions.length > 0) {
-        questionsList = res.questions;
-        document.getElementById("stepIdentitas").classList.add("hidden");
-        document.getElementById("stepExam").classList.remove("hidden");
-        document.getElementById("studentBadge").classList.remove("hidden");
-        document.getElementById("studentBadge").innerText = `${nama} (${rombel})`;
-
-        // Load progress jawaban jika ada
-        const prog = await apiCall("getStudentProgress", { studentName: nama, rombel: rombel, bab: bab });
-        if (prog.success && prog.progress) {
-          studentAnswersMap = prog.progress;
-        } else {
-          studentAnswersMap = {};
-        }
-
-        renderQuestionNavigation();
-        loadQuestion(0);
-      } else {
-        alert("Tidak ada soal yang tersedia untuk Bab/Kelas ini.");
-      }
-    }
-
-    // =========================================================
-    // 5. NAVIGASI SOAL & PEMROSESAN JAWABAN
-    // =========================================================
-    function renderQuestionNavigation() {
-      const grid = document.getElementById("questionNavGrid");
-      grid.innerHTML = "";
-      questionsList.forEach((q, idx) => {
-        const isAnswered = studentAnswersMap[q.id] && studentAnswersMap[q.id].transcript;
-        const activeClass = idx === currentIndex ? "active" : "";
-        const answeredClass = isAnswered ? "answered" : "";
+  function initApp() {
+    showLoader();
+    fetchAPI({ action: "getAppConfig" }, res => {
+      if (res && res.success) {
+        document.getElementById('displayNamaSekolah').innerText = res.namaSekolah;
+        document.getElementById('displayMataPelajaran').innerText = res.mataPelajaran;
+        document.getElementById('inputNamaSekolah').value = res.namaSekolah;
+        document.getElementById('inputMataPelajaran').value = res.mataPelajaran;
+        document.getElementById('inputNamaGuru').value = res.namaGuru;
+        document.getElementById('tokenLatihInput').value = res.tokenLatih;
+        document.getElementById('tokenUjianInput').value = res.tokenUjian;
+        document.getElementById('timerInput').value = res.timer;
+        document.getElementById('aiPracticeLimitInput').value = res.aiPracticeLimit;
+        document.getElementById('aiPracticeCooldownInput').value = res.aiPracticeCooldownMin;
         
-        grid.innerHTML += `
-          <button class="q-btn ${activeClass} ${answeredClass}" onclick="switchQuestion(${idx})">
-            ${idx + 1}
-          </button>
-        `;
+        remainingAiQuota = res.aiPracticeLimit !== undefined ? Number(res.aiPracticeLimit) : 5;
+      }
+    });
+
+    fetchAPI({ action: "getStudentData" }, data => {
+      hideLoader();
+      if (!data || !data.rombelList) return;
+      studentDataCache = data;
+      const rSelect = document.getElementById('rombelSelect'), reviewRSelect = document.getElementById('reviewRombelSelect'), timerRSelect = document.getElementById('timerRombelSelect'), cetakRSelect = document.getElementById('cetakRombelSelect');
+      data.rombelList.forEach(r => {
+        let opt = `<option value="${r}">${r}</option>`;
+        rSelect.innerHTML += opt; reviewRSelect.innerHTML += opt; timerRSelect.innerHTML += opt; cetakRSelect.innerHTML += opt;
       });
-    }
+    });
+    initSpeechToText();
+  }
 
-    function switchQuestion(idx) {
-      // Simpan draf saat ini sebelum pindah
-      saveCurrentDraft();
-      currentIndex = idx;
-      renderQuestionNavigation();
-      loadQuestion(idx);
-    }
-
-    function loadQuestion(idx) {
-      const q = questionsList[idx];
-      document.getElementById("questionTitle").innerText = `Soal No. ${idx + 1} dari ${questionsList.length}`;
-      document.getElementById("questionText").innerText = q.pertanyaan;
-
-      // Gambar jika ada
-      const imgContainer = document.getElementById("imageContainer");
-      if (q.gambar && q.gambar.trim() !== "") {
-        document.getElementById("questionImage").src = q.gambar;
-        imgContainer.classList.remove("hidden");
-      } else {
-        imgContainer.classList.add("hidden");
+  function loadSettingsAdmin() {
+    showLoader();
+    fetchAPI({ action: "getAppConfig" }, res => {
+      hideLoader();
+      if (res && res.success) {
+        document.getElementById('tokenLatihInput').value = res.tokenLatih;
+        document.getElementById('tokenUjianInput').value = res.tokenUjian;
+        document.getElementById('timerInput').value = res.timer;
+        document.getElementById('aiPracticeLimitInput').value = res.aiPracticeLimit;
+        document.getElementById('aiPracticeCooldownInput').value = res.aiPracticeCooldownMin;
+        remainingAiQuota = res.aiPracticeLimit !== undefined ? Number(res.aiPracticeLimit) : 5;
       }
+    });
+  }
 
-      // Isi jawaban jika sudah pernah diisi
-      const ansData = studentAnswersMap[q.id];
-      document.getElementById("answerText").value = ansData ? (ansData.transcript || "") : "";
+  function initSpeechToText() {
+    const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (Speech) {
+      speechRecognition = new Speech(); speechRecognition.lang = 'id-ID'; speechRecognition.continuous = false; speechRecognition.interimResults = false;
+      speechRecognition.onresult = e => {
+        let addedText = '';
+        for (let i = e.resultIndex; i < e.results.length; i++) if (e.results[i].isFinal) addedText += e.results[i][0].transcript + ' ';
+        const newSnippet = addedText.trim();
+        if (newSnippet !== '') {
+          const textarea = document.getElementById('transcriptTextarea'), currentText = textarea.value.trim();
+          if (!currentText.toLowerCase().endsWith(newSnippet.toLowerCase())) { textarea.value = currentText ? currentText + ' ' + newSnippet : newSnippet; onTranscriptInput(); }
+        }
+      };
+      speechRecognition.onerror = e => { if (e.error !== 'no-speech' && e.error !== 'aborted') document.getElementById('statusText').innerText = "⚠️ Mikrofon: " + e.error; };
+      speechRecognition.onend = () => {
+        if (isRecording) { try { speechRecognition.start(); } catch(err) { setTimeout(() => { if (isRecording) speechRecognition.start(); }, 300); } }
+        else updateRecordButtonUI(false);
+      };
     }
+  }
 
-    function saveCurrentDraft() {
-      const q = questionsList[currentIndex];
-      const text = document.getElementById("answerText").value;
-      if (!studentAnswersMap[q.id]) studentAnswersMap[q.id] = {};
-      studentAnswersMap[q.id].transcript = text;
-    }
+  function toggleDirectRecording() {
+    if (!speechRecognition) return alert("Browser tidak mendukung Speech-to-Text. Silakan ketik langsung.");
+    if (!isRecording) { try { isRecording = true; speechRecognition.start(); updateRecordButtonUI(true); } catch (err) { isRecording = false; alert("Mikrofon error: " + err.message); } } 
+    else stopRecordingIfActive();
+  }
+  function stopRecordingIfActive() { if (isRecording) { isRecording = false; if (speechRecognition) try { speechRecognition.stop(); } catch(e){} updateRecordButtonUI(false); } }
+  function updateRecordButtonUI(recording) {
+    const btn = document.getElementById('btnRecordToggle'), status = document.getElementById('statusText');
+    if (!btn || !status) return;
+    if (recording) { btn.innerText = "⏹️ Hentikan Perekaman"; btn.className = "btn-record-stop"; status.innerText = "Status: 🔴 Merekam..."; } 
+    else { btn.innerText = "🎤 Klik untuk Merekam Suara"; btn.className = "btn-record-start"; status.innerText = "Status: Siap Merekam"; }
+  }
 
-    async function saveCurrentAnswer() {
-      saveCurrentDraft();
-      const q = questionsList[currentIndex];
-      const text = document.getElementById("answerText").value.trim();
-      const nama = document.getElementById("selectSiswa").value;
-      const rombel = document.getElementById("selectRombel").value;
-      const bab = document.getElementById("selectBab").value;
+  function fetchAPI(payload, callback) {
+    fetch(API_URL, { method: "POST", body: JSON.stringify(payload) })
+    .then(res => res.json()).then(data => callback(data)).catch(err => { console.error(err); callback({ success: false, error: err.message }); });
+  }
+
+  function showAdminView() { stopRecordingIfActive(); if (adminSessionPassword) { document.getElementById('studentView').style.display = 'none'; document.getElementById('adminView').style.display = 'block'; resetInactivityTimer(); switchTab('tabDashboard'); } else { document.getElementById('inputAdminLoginPass').value = ""; document.getElementById('adminLoginModal').style.display = 'flex'; setTimeout(() => document.getElementById('inputAdminLoginPass').focus(), 200); } }
+  function closeAdminLoginModal() { document.getElementById('adminLoginModal').style.display = 'none'; }
+  function submitAdminLogin() {
+    const pass = document.getElementById('inputAdminLoginPass').value; if (!pass) return alert("Masukkan Password Admin!");
+    fetchAPI({ action: "verifyAdminPassword", password: pass }, res => {
+      if (res && res.success) { adminSessionPassword = pass; closeAdminLoginModal(); document.getElementById('studentView').style.display = 'none'; document.getElementById('adminView').style.display = 'block'; resetInactivityTimer(); showNotif(true, "BERHASIL ✅", "Selamat datang di Panel Guru."); switchTab('tabDashboard'); } 
+      else showNotif(false, "GAGAL ❌", "Password Salah.");
+    });
+  }
+  function logoutAdmin() { adminSessionPassword = null; if (adminInactivityTimer) clearTimeout(adminInactivityTimer); document.getElementById('adminView').style.display = 'none'; document.getElementById('studentView').style.display = 'block'; }
+  function userClickLogout() { logoutAdmin(); showNotif(true, "BERHASIL ✅", "Logout berhasil."); }
+  function showStudentView() { document.getElementById('adminView').style.display = 'none'; document.getElementById('studentView').style.display = 'block'; }
+  function switchTab(tabId, evt) {
+    document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none'); document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById(tabId).style.display = 'block'; if (evt && evt.target) evt.target.classList.add('active');
+    if (tabId === 'tabDashboard') loadDashboardStats(); 
+    if (tabId === 'tabSettings') loadSettingsAdmin();
+    if (tabId === 'tabBabStatus') loadBabStatusAdmin();
+    if (tabId === 'tabSiswa' && siswaDataGlobal.length === 0) loadSiswaList(); 
+    if (tabId === 'tabSoal' && soalDataGlobal.length === 0) loadSoalList();
+  }
+
+  function showNotif(isSuccess, title, message) { document.getElementById('notifIcon').innerText = isSuccess ? "✅" : "❌"; document.getElementById('notifTitle').innerText = title; document.getElementById('notifTitle').style.color = isSuccess ? "#10b981" : "#ef4444"; document.getElementById('notifMessage').innerText = message; document.getElementById('notifModal').style.display = 'flex'; }
+  function closeNotifModal() { document.getElementById('notifModal').style.display = 'none'; }
+  
+  function updateModeBannerUI(mode) {
+    const banner = document.getElementById('modeBannerCard');
+    if (mode === "PRACTICE") {
+      banner.style.display = "block"; banner.style.background = "#f0fdf4"; banner.style.borderColor = "#bbf7d0"; banner.style.color = "#166534";
+      banner.innerHTML = `<b>🟢 MODE LATIHAN MANDIRI</b><br>Tersedia 2 tombol penilaian: Penilaian Lokal Kata Kunci dan Evaluasi AI Sekaligus untuk Seluruh Soal.`;
+    } else if (mode === "SUBMISSION") {
+      banner.style.display = "block"; banner.style.background = "#fef2f2"; banner.style.borderColor = "#fecaca"; banner.style.color = "#991b1b";
+      banner.innerHTML = `<b>🔴 MODE UJIAN RESMI</b><br>Jawaban Anda direkam ke database server. Penilaian instan berupa Nilai Robot Kata Kunci.`;
+    } else { banner.style.display = "none"; }
+  }
+
+  function resetQuestionViewDOM() { 
+    stopRecordingIfActive(); selectedQuestionObject = null; activeQuestionIndex = -1; 
+    document.getElementById('transcriptTextarea').value = ""; 
+    document.getElementById('questionContainer').style.display = 'none'; 
+    document.getElementById('examWorkspaceCard').style.display = 'none';
+  }
+  
+  function onRombelChange() {
+    resetQuestionViewDOM(); 
+    const rombel = document.getElementById('rombelSelect').value, sSelect = document.getElementById('studentSelect'), bSelect = document.getElementById('babSelect'); 
+    document.getElementById('btnStartExam').disabled = true;
+    
+    if (rombel && studentDataCache.studentsByRombel && studentDataCache.studentsByRombel[rombel]) {
+      sSelect.innerHTML = '<option value="">-- Pilih Nama --</option>'; 
+      studentDataCache.studentsByRombel[rombel].forEach(s => sSelect.innerHTML += `<option value="${s.nama}">${s.nama}</option>`); 
+      sSelect.disabled = false;
       
-      const selectSiswaEl = document.getElementById("selectSiswa");
-      const jk = selectSiswaEl.options[selectSiswaEl.selectedIndex].getAttribute("data-jk") || "L";
+      showLoader();
+      bSelect.disabled = true;
+      bSelect.innerHTML = '<option value="">-- Memuat Bab... --</option>';
 
-      if (!text) return alert("Tuliskan atau rekam jawaban Anda sebelum menyimpan!");
-
-      // Nilai lokal kata kunci
-      const localRes = await apiCall("processLocalGrade", { questionId: q.id, studentTranscriptText: text });
-      
-      // Simpan jawaban ke Google Sheet Backend
-      const saveRes = await apiCall("saveConfirmedAnswer", {
-        questionId: q.id,
-        studentName: nama,
-        rombel: rombel,
-        jenisKelamin: jk,
-        bab: bab,
-        questionText: q.pertanyaan,
-        studentTranscriptText: text,
-        scoreLocal: localRes.scoreLocal || 0,
-        feedback: localRes.feedback || "Tersimpan",
-        scoreAI: null,
-        aiPercentage: null
+      fetchAPI({ action: "getBabList", rombel: rombel }, res => {
+        hideLoader();
+        bSelect.innerHTML = '<option value="">-- Pilih Bab --</option>'; 
+        if (res && res.babList) res.babList.forEach(bab => bSelect.innerHTML += `<option value="${bab}">${bab}</option>`); 
+        bSelect.disabled = false; 
       });
+    } else {
+      sSelect.innerHTML = '<option value="">-- Pilih Kelas Terlebih Dahulu --</option>';
+      sSelect.disabled = true;
+      bSelect.innerHTML = '<option value="">-- Pilih Nama Terlebih Dahulu --</option>';
+      bSelect.disabled = true;
+    }
+  }
 
-      if (saveRes.success) {
-        alert("Jawaban Soal No. " + (currentIndex + 1) + " Berhasil Disimpan!");
-        renderQuestionNavigation();
+  function onStudentChange() {
+    resetQuestionViewDOM(); 
+    const rombel = document.getElementById('rombelSelect').value, studentName = document.getElementById('studentSelect').value;
+    if (rombel && studentName && studentDataCache.studentsByRombel[rombel]) { 
+      const student = studentDataCache.studentsByRombel[rombel].find(s => s.nama === studentName); 
+      if (student) document.getElementById('jkDisplay').value = student.jk; 
+    }
+  }
+
+  function onBabChange() { 
+    resetQuestionViewDOM(); 
+    document.getElementById('btnStartExam').disabled = !document.getElementById('babSelect').value; 
+  }
+
+  function triggerTokenModal() {
+    const rombel = document.getElementById('rombelSelect').value, bab = document.getElementById('babSelect').value, studentName = document.getElementById('studentSelect').value;
+    if (!rombel || !studentName || !bab) return alert("Lengkapi data pilihan di atas!");
+    document.getElementById("inputStudentToken").value = ""; document.getElementById("tokenModal").style.display = "flex";
+    setTimeout(() => document.getElementById("inputStudentToken").focus(), 200);
+  }
+  function closeTokenModal() { document.getElementById("tokenModal").style.display = "none"; }
+
+  function submitStudentToken() {
+    const token = document.getElementById("inputStudentToken").value.trim(); if (!token) return alert("Masukkan Token!");
+    showLoader();
+    fetchAPI({ action: "verifyToken", token: token }, res => {
+      hideLoader();
+      if (res && res.success) { currentAppMode = res.mode; closeTokenModal(); updateModeBannerUI(currentAppMode); startExamDataFetch(); } 
+      else { showNotif(false, "Token Salah! ❌", "Token tidak sesuai."); }
+    });
+  }
+
+  function startExamDataFetch() {
+    stopRecordingIfActive();
+    const rombel = document.getElementById('rombelSelect').value, bab = document.getElementById('babSelect').value, studentName = document.getElementById('studentSelect').value;
+    selectedQuestionObject = null; activeQuestionIndex = -1; questionState = {}; paletteColors = [];
+    document.getElementById('studentSelectionCard').style.display = 'none';
+    
+    showLoader();
+    fetchAPI({ action: "getQuestions", rombel: rombel, bab: bab }, res => {
+      hideLoader();
+      if (res && res.questions && res.questions.length > 0) {
+        currentQuestionsList = res.questions; activeBabTimer = Number(res.babTimer) || 0;
+        if (currentAppMode === "PRACTICE") {
+          currentQuestionsList.forEach(q => questionState[q.id] = { oldTranscript: "", oldScoreLocal: 0, oldScoreAI: null, aiPercentage: null });
+          paletteColors = new Array(currentQuestionsList.length).fill('');
+          renderPaletteUIOnly(); startTimerCountdown(0, 0); doSelectQuestion(0);
+          showNotif(true, "Mode Latihan Siap! 🟢", "Gunakan Cek Kata Kunci atau Evaluasi Semua AI.");
+        } else {
+          showLoader();
+          fetchAPI({ action: "getStudentProgress", studentName: studentName, rombel: rombel, bab: bab }, progRes => {
+            hideLoader();
+            const progress = (progRes && progRes.progress) ? progRes.progress : {};
+            const extraTime = progRes ? Number(progRes.extraTime) || 0 : 0;
+            paletteColors = new Array(currentQuestionsList.length).fill('');
+            currentQuestionsList.forEach((q, i) => {
+              const qKey = q.id; const progData = progress[qKey];
+              questionState[q.id] = {
+                oldTranscript: progData ? progData.transcript || "" : "",
+                oldScoreLocal: progData ? cleanScoreValue(progData.scoreLocal) : 0,
+                oldScoreAI: progData ? progData.scoreAI : null,
+                aiPercentage: progData ? progData.aiPercentage : null,
+                oldFeedback: progData ? progData.feedback || "" : "",
+                oldStatus: progData ? progData.status || "" : ""
+              };
+              if (progData) {
+                if (progData.status === "GRADED" && progData.scoreAI !== null && progData.scoreAI !== "") paletteColors[i] = 'blue';
+                else if (cleanScoreValue(progData.scoreLocal) > 0) paletteColors[i] = 'green';
+                else if (progData.transcript && progData.transcript.trim() !== "") paletteColors[i] = 'yellow';
+              }
+            });
+            renderPaletteUIOnly(); startTimerCountdown(extraTime, activeBabTimer); doSelectQuestion(0);
+            showNotif(true, "Mode Ujian Aktif! 🔴", "Jawaban direkam ke server.");
+          });
+        }
+      } else { alert("Belum ada soal."); finishExamDirectly(); }
+    });
+  }
+
+  function startTimerCountdown(extraMinutes, durationMinutes) {
+    clearInterval(examTimerInterval); const box = document.getElementById('timerDisplayBox');
+    const totalMinutes = durationMinutes + extraMinutes;
+    if (currentAppMode === "PRACTICE" || totalMinutes <= 0) { box.innerText = "⏱️ Timer: ♾️ Bebas"; return; }
+    
+    remainingExamSeconds = totalMinutes * 60;
+    examTimerInterval = setInterval(() => {
+      remainingExamSeconds--;
+      if (remainingExamSeconds <= 0) {
+        clearInterval(examTimerInterval); box.innerText = "⏱️ WAKTU HABIS!";
+        if (activeQuestionIndex !== -1) interceptNavigation(activeQuestionIndex, true);
+        else finishExamDirectly("Waktu Habis! Sesi otomatis ditutup.");
       } else {
-        alert("Gagal menyimpan jawaban: " + saveRes.error);
+        const m = Math.floor(remainingExamSeconds / 60), s = remainingExamSeconds % 60;
+        box.innerText = `⏱️ ${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`;
+      }
+    }, 1000);
+  }
+
+  function onTranscriptInput() {
+    const val = document.getElementById('transcriptTextarea').value.trim();
+    const oldData = questionState[selectedQuestionObject.id];
+    if (val !== "" && val !== oldData.oldTranscript) {
+      if (paletteColors[activeQuestionIndex] !== 'blue' && paletteColors[activeQuestionIndex] !== 'green') {
+        paletteColors[activeQuestionIndex] = 'yellow'; renderPaletteUIOnly();
       }
     }
+  }
 
-    function finishExamSession() {
-      saveCurrentDraft();
-      if (confirm("Apakah Anda yakin ingin mengakhiri sesi ujian ini?")) {
-        alert("Sesi ujian selesai. Terima kasih telah mengerjakan!");
-        location.reload();
+  function renderPaletteUIOnly() {
+    const container = document.getElementById('questionPalette'); container.innerHTML = "";
+    document.getElementById('examWorkspaceCard').style.display = 'block';
+    currentQuestionsList.forEach((q, i) => {
+      const btn = document.createElement('button');
+      btn.className = `q-num-btn ${paletteColors[i] || ''} ${i === activeQuestionIndex ? 'active' : ''}`;
+      btn.innerText = i + 1;
+      btn.onclick = () => interceptNavigation(i);
+      container.appendChild(btn);
+    });
+    updateAccumulatedScoreUI();
+  }
+
+  function renderActionButtons() {
+    const btnBox = document.getElementById('studentActionButtons');
+    const oldData = questionState[selectedQuestionObject.id];
+
+    if (currentAppMode === "PRACTICE") {
+      const aiBtnText = remainingAiQuota > 0 ? `✨ Evaluasi SELURUH Soal (AI Gemini - Sisa Jatah: ${remainingAiQuota}x)` : `⏳ Evaluasi AI Terkunci (Kuota Habis / Nonaktif)`;
+      const aiDisabled = remainingAiQuota <= 0 ? 'disabled' : '';
+
+      btnBox.innerHTML = `
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <button class="btn-primary" style="background:linear-gradient(135deg, #10b981, #059669);" onclick="executePracticeLocalSingle()">⚡ Cek Kata Kunci Soal Ini (Lokal)</button>
+          <button class="btn-primary" style="background:linear-gradient(135deg, #7c3aed, #6d28d9);" onclick="executePracticeAIBatch()" ${aiDisabled}>${aiBtnText}</button>
+          <button class="btn-danger" style="margin-top:6px; font-weight:700;" onclick="openFinishExamModal()">🏁 AKHIRI SESI LATIHAN</button>
+        </div>
+      `;
+    } else {
+      if (!oldData.oldTranscript || oldData.oldTranscript.trim() === "") {
+        btnBox.innerHTML = `<button class="btn-primary" style="background:linear-gradient(135deg, #10b981, #059669);" onclick="interceptNavigation(${activeQuestionIndex})">🟢 Cek Nilai & Simpan Jawaban</button>
+        <button class="btn-danger" style="margin-top:10px; font-weight:700;" onclick="openFinishExamModal()">🏁 AKHIRI SESI</button>`;
+      } else {
+        btnBox.innerHTML = `<button class="btn-warning" style="background:linear-gradient(135deg, #f59e0b, #d97706); color:white;" onclick="interceptNavigation(${activeQuestionIndex})">🔄 Cek Nilai & Bandingkan Jawaban</button>
+        <button class="btn-danger" style="margin-top:10px; font-weight:700;" onclick="openFinishExamModal()">🏁 AKHIRI SESI</button>`;
       }
     }
+  }
 
-    // =========================================================
-    // 6. SPEECH RECOGNITION (REKAM SUARA SISWA)
-    // =========================================================
-    function toggleSpeechRecognition() {
-      const btn = document.getElementById("btnRecord");
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  function executePracticeLocalSingle() {
+    if (!selectedQuestionObject) return;
+    const currentText = document.getElementById('transcriptTextarea').value.trim();
+    if (!currentText) return alert("Ketik atau rekam jawaban Anda terlebih dahulu!");
 
-      if (!SpeechRecognition) {
-        return alert("Fitur rekam suara tidak didukung oleh browser ini. Gunakan Google Chrome di Android/PC.");
-      }
+    stopRecordingIfActive(); showLoader();
+    fetchAPI({
+      action: "processLocalGrade",
+      questionId: selectedQuestionObject.id,
+      studentName: document.getElementById('studentSelect').value,
+      rombel: document.getElementById('rombelSelect').value,
+      bab: document.getElementById('babSelect').value,
+      questionText: selectedQuestionObject.pertanyaan,
+      studentTranscriptText: currentText,
+      mode: "PRACTICE"
+    }, res => {
+      hideLoader();
+      if (res && res.success) {
+        const newScore = cleanScoreValue(res.scoreLocal);
+        saveAnswerAndState(selectedQuestionObject.id, currentText, newScore, res.feedback, null, null, () => {
+          showSingleResultModal(newScore, res.feedback, null);
+        });
+      } else alert("Gagal memproses penilaian.");
+    });
+  }
 
-      if (isRecording) {
-        recognition.stop();
-        isRecording = false;
-        btn.classList.remove("btn-danger");
-        btn.classList.add("btn-secondary");
-        btn.innerHTML = `<i class="fa-solid fa-microphone"></i> Klik untuk Merekam Suara`;
-      } else {
-        recognition = new SpeechRecognition();
-        recognition.lang = "id-ID";
-        recognition.interimResults = true;
-        recognition.continuous = true;
+  function executePracticeAIBatch() {
+    let itemsToGrade = [];
+    currentQuestionsList.forEach(q => {
+      let t = (q.id === selectedQuestionObject.id) ? document.getElementById('transcriptTextarea').value.trim() : (questionState[q.id].oldTranscript || "");
+      if (t !== "") itemsToGrade.push({ qId: q.id, questionText: q.pertanyaan, studentTranscriptText: t, rubrik: q.rubrik });
+    });
 
-        recognition.onstart = function() {
-          isRecording = true;
-          btn.classList.remove("btn-secondary");
-          btn.classList.add("btn-danger");
-          btn.innerHTML = `<i class="fa-solid fa-stop"></i> Mendengarkan... (Klik untuk Stop)`;
-        };
+    if (itemsToGrade.length === 0) return alert("Belum ada soal yang Anda jawab! Ketik/rekam jawaban setidaknya untuk 1 soal.");
 
-        recognition.onresult = function(event) {
-          let transcript = "";
-          for (let i = event.resultIndex; i < event.results.length; ++i) {
-            transcript += event.results[i][0].transcript;
+    stopRecordingIfActive(); showLoader();
+    fetchAPI({
+      action: "processPracticeAIBatchGrade",
+      deviceId: deviceId,
+      items: itemsToGrade
+    }, res => {
+      hideLoader();
+      if (res && res.success) {
+        if (res.usedQuota !== undefined && res.maxQuota !== undefined) {
+          remainingAiQuota = Math.max(0, res.maxQuota - res.usedQuota);
+        }
+        res.results.forEach(item => {
+          const qId = item.qId;
+          if (questionState[qId]) {
+            questionState[qId].oldScoreAI = Number(item.score) || 0;
+            questionState[qId].aiPercentage = Number(item.aiPercentage) || 0;
+            questionState[qId].oldFeedback = item.feedback;
           }
-          const textarea = document.getElementById("answerText");
-          textarea.value = transcript;
-        };
-
-        recognition.onerror = function(e) {
-          console.error("Speech Error:", e.error);
-          isRecording = false;
-          btn.classList.remove("btn-danger");
-          btn.classList.add("btn-secondary");
-          btn.innerHTML = `<i class="fa-solid fa-microphone"></i> Klik untuk Merekam Suara`;
-        };
-
-        recognition.start();
+          currentQuestionsList.forEach((q, idx) => { if (q.id === qId) paletteColors[idx] = 'blue'; });
+        });
+        renderPaletteUIOnly(); renderActionButtons();
+        showNotif(true, "BERHASIL 🤖", `AI selesai menilai ${res.results.length} soal sekaligus!`);
+      } else {
+        showNotif(false, "Penilaian AI Ditolak ⚠️", res ? res.error : "Gagal mengevaluasi.");
       }
+    });
+  }
+
+  function doSelectQuestion(i) {
+    stopRecordingIfActive(); activeQuestionIndex = i; selectedQuestionObject = currentQuestionsList[i];
+    const qId = selectedQuestionObject.id; const oldData = questionState[qId];
+
+    document.getElementById('questionNumberLabel').innerText = `Soal No. ${i + 1}`;
+    document.getElementById('questionText').innerText = selectedQuestionObject.pertanyaan;
+    
+    const imgBox = document.getElementById('gambarSoalBox');
+    if (selectedQuestionObject.gambar) { document.getElementById('gambarSoalImg').src = selectedQuestionObject.gambar; imgBox.style.display = 'block'; } else imgBox.style.display = 'none';
+
+    document.getElementById('transcriptTextarea').value = oldData.oldTranscript || "";
+    
+    const banner = document.getElementById('oldDataBanner');
+    if (currentAppMode === "SUBMISSION" && oldData.oldTranscript && oldData.oldTranscript.trim() !== "") {
+      document.getElementById('bannerLoc').innerText = oldData.oldScoreLocal;
+      document.getElementById('bannerAI').innerText = (oldData.oldScoreAI !== null && oldData.oldScoreAI !== "") ? oldData.oldScoreAI : "⏳ Menunggu";
+      if (oldData.aiPercentage !== null && oldData.aiPercentage !== undefined && oldData.aiPercentage !== "") {
+        document.getElementById('bannerAiPct').innerHTML = `| <b>Indikasi AI:</b> ${oldData.aiPercentage}%`;
+      } else {
+        document.getElementById('bannerAiPct').innerText = "";
+      }
+      banner.style.display = 'block';
+    } else { banner.style.display = 'none'; }
+
+    renderPaletteUIOnly(); renderActionButtons();
+    document.getElementById('questionContainer').style.display = 'block';
+  }
+
+  function interceptNavigation(targetIndex, isTimeout = false) {
+    if (!selectedQuestionObject) return;
+    const qId = selectedQuestionObject.id;
+    const currentText = document.getElementById('transcriptTextarea').value.trim();
+    const oldData = questionState[qId];
+    const isNewEntry = !oldData.oldTranscript || oldData.oldTranscript.trim() === "";
+
+    if (currentText === oldData.oldTranscript || currentText === "") {
+      if (isTimeout) return finishExamDirectly("Waktu Habis! Sesi ditutup.");
+      if (targetIndex !== activeQuestionIndex) doSelectQuestion(targetIndex);
+      return;
     }
-  </script>
+
+    stopRecordingIfActive(); showLoader();
+    fetchAPI({
+      action: "processLocalGrade", questionId: qId, studentName: document.getElementById('studentSelect').value,
+      rombel: document.getElementById('rombelSelect').value, jenisKelamin: document.getElementById('jkDisplay').value, bab: document.getElementById('babSelect').value,
+      questionText: selectedQuestionObject.pertanyaan, studentTranscriptText: currentText, mode: currentAppMode
+    }, res => {
+      hideLoader();
+      if (!res || !res.success) { alert("Gagal memproses nilai."); if (isTimeout) finishExamDirectly(); return; }
+
+      const newScore = cleanScoreValue(res.scoreLocal);
+
+      if (isTimeout) {
+        if (isNewEntry || newScore > oldData.oldScoreLocal) {
+          saveAnswerAndState(qId, currentText, newScore, res.feedback, oldData.oldScoreAI, oldData.aiPercentage, () => finishExamDirectly("⏱️ Waktu Habis! Jawaban terakhir disimpan."));
+        } else {
+          finishExamDirectly("⏱️ Waktu Habis!");
+        }
+      } else {
+        if (isNewEntry) {
+           saveAnswerAndState(qId, currentText, newScore, res.feedback, oldData.oldScoreAI, oldData.aiPercentage, () => {
+              if (targetIndex === activeQuestionIndex) { showSingleResultModal(newScore, res.feedback, null); } 
+              else { doSelectQuestion(targetIndex); }
+           });
+        } else {
+           showComparisonModal(targetIndex, oldData, currentText, newScore, res.feedback);
+        }
+      }
+    });
+  }
+
+  function saveAnswerAndState(qId, text, scoreLoc, feedback, scoreAI, aiPercentage, callback) {
+    if (currentAppMode === "PRACTICE") {
+      questionState[qId].oldTranscript = text; questionState[qId].oldScoreLocal = scoreLoc; questionState[qId].oldFeedback = feedback; questionState[qId].aiPercentage = aiPercentage;
+      if (paletteColors[activeQuestionIndex] !== 'blue') paletteColors[activeQuestionIndex] = 'green';
+      renderPaletteUIOnly(); renderActionButtons();
+      if (callback) callback();
+      return;
+    }
+    
+    fetchAPI({
+      action: "saveConfirmedAnswer", questionId: qId, studentName: document.getElementById('studentSelect').value,
+      rombel: document.getElementById('rombelSelect').value, jenisKelamin: document.getElementById('jkDisplay').value, bab: document.getElementById('babSelect').value,
+      questionText: selectedQuestionObject.pertanyaan, studentTranscriptText: text, scoreLocal: scoreLoc, feedback: feedback, scoreAI: scoreAI, aiPercentage: aiPercentage
+    }, res => {
+      if (res && res.success) {
+        questionState[qId].oldTranscript = text; questionState[qId].oldScoreLocal = scoreLoc; questionState[qId].oldFeedback = feedback; questionState[qId].aiPercentage = aiPercentage;
+        if (paletteColors[activeQuestionIndex] !== 'blue') paletteColors[activeQuestionIndex] = 'green';
+        renderPaletteUIOnly(); renderActionButtons();
+        if (callback) callback();
+      } else alert("Gagal menyimpan.");
+    });
+  }
+
+  function showComparisonModal(targetIndex, oldData, newText, newScore, newFeedback) {
+    document.getElementById('compOldText').innerText = oldData.oldTranscript;
+    document.getElementById('compOldScoreLoc').innerText = oldData.oldScoreLocal;
+    document.getElementById('compOldScoreAI').innerText = (oldData.oldScoreAI !== null && oldData.oldScoreAI !== "") ? oldData.oldScoreAI : "⏳ Menunggu";
+    
+    document.getElementById('compNewText').innerText = newText;
+    document.getElementById('compNewScoreLoc').innerText = newScore;
+
+    const recBox = document.getElementById('compRecommendationBox'), recText = document.getElementById('compRecommendationText');
+    const diff = newScore - oldData.oldScoreLocal;
+
+    if (diff > 0) {
+      recBox.style.background = "#dcfce7"; recBox.style.borderColor = "#86efac";
+      recText.innerHTML = `<span style="color:#166534;">📈 <b>Nilai Robot Baru LEBIH TINGGI (+${diff} Poin).</b></span>`;
+    } else if (diff < 0) {
+      recBox.style.background = "#fee2e2"; recBox.style.borderColor = "#fca5a5";
+      recText.innerHTML = `<span style="color:#991b1b;">📉 <b>Nilai Robot Baru LEBIH RENDAH (${diff} Poin).</b></span>`;
+    } else {
+      recBox.style.background = "#e0e7ff"; recBox.style.borderColor = "#a5b4fc";
+      recText.innerHTML = `<span style="color:#3730a3;">⚖️ <b>Nilai Robot SAMA.</b></span>`;
+    }
+
+    const btnKeep = document.getElementById('btnKeepOld'), btnUse = document.getElementById('btnUseNew');
+
+    btnKeep.onclick = () => {
+      document.getElementById('comparisonModal').style.display = 'none';
+      document.getElementById('transcriptTextarea').value = oldData.oldTranscript;
+      if (targetIndex !== activeQuestionIndex) doSelectQuestion(targetIndex); else renderActionButtons();
+    };
+
+    btnUse.onclick = () => {
+      document.getElementById('comparisonModal').style.display = 'none'; showLoader();
+      saveAnswerAndState(selectedQuestionObject.id, newText, newScore, newFeedback, oldData.oldScoreAI, oldData.aiPercentage, () => {
+         hideLoader();
+         if (targetIndex !== activeQuestionIndex) doSelectQuestion(targetIndex);
+         else { showSingleResultModal(newScore, newFeedback, null); doSelectQuestion(activeQuestionIndex); }
+      });
+    };
+    document.getElementById('comparisonModal').style.display = 'flex';
+  }
+
+  function showSingleResultModal(score, feedback, aiPercentage) {
+    document.getElementById('modalQuestionLabel').innerText = `Soal No. ${activeQuestionIndex + 1}`;
+    document.getElementById('modalScoreDisplay').innerText = `${score} / 100`;
+    
+    const aiPctDisplay = document.getElementById('modalAiPctDisplay');
+    if (aiPercentage !== null && aiPercentage !== undefined) {
+      let pct = Number(aiPercentage) || 0;
+      let colorBg = pct > 60 ? '#fee2e2' : (pct >= 30 ? '#fef3c7' : '#dcfce7');
+      let colorTxt = pct > 60 ? '#991b1b' : (pct >= 30 ? '#b45309' : '#166534');
+      aiPctDisplay.innerHTML = `<span style="background:${colorBg}; color:${colorTxt}; font-size:12px; font-weight:700; padding:4px 8px; border-radius:6px; display:inline-block;">🤖 Indikasi Teks AI: ${pct}%</span>`;
+    } else {
+      aiPctDisplay.innerHTML = "";
+    }
+
+    document.getElementById('modalFeedbackDisplay').innerText = feedback;
+    document.getElementById('resultModal').style.display = 'flex';
+  }
+
+  function closeResultModal() {
+    document.getElementById('resultModal').style.display = 'none';
+    if (activeQuestionIndex + 1 < currentQuestionsList.length) interceptNavigation(activeQuestionIndex + 1);
+  }
+
+  function calculateAccumulatedScores() {
+    if (!currentQuestionsList || currentQuestionsList.length === 0) return { avgLocal: 0, avgAI: "⏳ Menunggu" };
+    let sumLocal = 0, countLocal = 0, sumAI = 0, countAI = 0;
+    currentQuestionsList.forEach(q => {
+      const data = questionState[q.id];
+      if (data) {
+        if (data.oldScoreLocal > 0) { sumLocal += data.oldScoreLocal; countLocal++; }
+        if (data.oldScoreAI !== null && data.oldScoreAI !== "") { sumAI += data.oldScoreAI; countAI++; }
+      }
+    });
+    const avgLocal = countLocal > 0 ? Math.round(sumLocal / currentQuestionsList.length) : 0;
+    const avgAI = countAI > 0 ? Math.round(sumAI / currentQuestionsList.length) : "⏳ Menunggu";
+    return { avgLocal: avgLocal, avgAI: avgAI };
+  }
+
+  function updateAccumulatedScoreUI() {
+    const scores = calculateAccumulatedScores();
+    document.getElementById('accumulatedLocalScoreDisplay').innerText = `${scores.avgLocal} / 100`;
+    document.getElementById('accumulatedAIScoreDisplay').innerText = scores.avgAI === "⏳ Menunggu" ? "⏳ Menunggu" : `${scores.avgAI} / 100`;
+  }
+
+  function openFinishExamModal() { document.getElementById('finishExamModal').style.display = 'flex'; }
+  function closeFinishExamModal() { document.getElementById('finishExamModal').style.display = 'none'; }
+  function finishExamDirectly(customMsg) {
+    closeFinishExamModal(); clearInterval(examTimerInterval); currentAppMode = ""; updateModeBannerUI("");
+    const scores = calculateAccumulatedScores();
+    const finalMsg = customMsg || `Nilai Robot: ${scores.avgLocal} | Nilai Guru: ${scores.avgAI}`;
+    showNotif(true, "Sesi Selesai! 🎉", finalMsg);
+    resetQuestionViewDOM(); 
+    document.getElementById('btnStartExam').disabled = false;
+    document.getElementById('studentSelectionCard').style.display = 'block';
+  }
+
+  function loadDashboardStats() {
+    if (!adminSessionPassword) return showAdminView();
+    showLoader();
+    fetchAPI({ action: "getDashboardStats", password: adminSessionPassword }, res => {
+      hideLoader();
+      if (res && res.success) {
+        document.getElementById('statTotalSiswa').innerText = res.totalSiswa; document.getElementById('statTotalSoal').innerText = res.totalSoal; document.getElementById('statPartisipasi').innerText = res.partisipasi + "%"; document.getElementById('statRecheck').innerText = res.recheckCount; document.getElementById('statAvgAI').innerText = res.avgAI || res.avgLocal;
+      } else showNotif(false, "GAGAL ❌", res ? res.error : "Gagal memuat statistik");
+    });
+  }
+
+  function submitSaveTokens() {
+    if (!adminSessionPassword) return showAdminView();
+    const limitInput = document.getElementById('aiPracticeLimitInput').value;
+    const cooldownInput = document.getElementById('aiPracticeCooldownInput').value;
+    
+    showLoader();
+    fetchAPI({ 
+      action: "saveTokenSettings", 
+      password: adminSessionPassword, 
+      tokenLatih: document.getElementById('tokenLatihInput').value.trim(), 
+      tokenUjian: document.getElementById('tokenUjianInput').value.trim(), 
+      timer: document.getElementById('timerInput').value,
+      aiPracticeLimit: limitInput,
+      aiPracticeCooldownMin: cooldownInput
+    }, res => {
+      hideLoader();
+      if (res && res.success) { 
+        showNotif(true, "BERHASIL ✅", res.message); 
+        remainingAiQuota = parseInt(limitInput, 10) || 0;
+      } else showNotif(false, "GAGAL ❌", res ? res.error : "Gagal menyimpan");
+    });
+  }
+
+  function onTimerRombelChange() {
+    const rombel = document.getElementById('timerRombelSelect').value, timerBabSel = document.getElementById('timerBabSelect'); 
+    timerBabSel.innerHTML = '<option value="">-- Pilih --</option>';
+    if (rombel) {
+      showLoader();
+      fetchAPI({ action: "getBabList", rombel: rombel }, res => {
+        hideLoader();
+        if (res && res.babList) res.babList.forEach(bab => timerBabSel.innerHTML += `<option value="${bab}">${bab}</option>`);
+      });
+    }
+  }
+
+  function submitSaveBabTimer() {
+    if (!adminSessionPassword) return showAdminView();
+    showLoader();
+    fetchAPI({ action: "saveBabTimer", password: adminSessionPassword, rombel: document.getElementById('timerRombelSelect').value, bab: document.getElementById('timerBabSelect').value, timer: document.getElementById('timerBabInput').value }, res => {
+      hideLoader();
+      if (res && res.success) showNotif(true, "BERHASIL ✅", res.message); else showNotif(false, "GAGAL", res ? res.error : "");
+    });
+  }
+
+  function loadBabStatusAdmin() {
+    if (!adminSessionPassword) return showAdminView();
+    showLoader();
+    fetchAPI({ action: "getBabStatusAdmin", password: adminSessionPassword }, res => {
+      hideLoader();
+      if (res && res.success) {
+        const tbody = document.getElementById('babStatusTbody');
+        tbody.innerHTML = "";
+        if (!res.matrix || res.matrix.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">Tidak ada kombinasi Bab dan Rombel.</td></tr>`;
+          return;
+        }
+        res.matrix.forEach((item, idx) => {
+          const isChecked = item.status !== "OFF" ? "checked" : "";
+          tbody.innerHTML += `<tr>
+            <td style="text-align:center;">
+              <input type="checkbox" class="bab-status-chk" data-rombel="${item.rombel}" data-bab="${item.bab}" ${isChecked} style="width:18px; height:18px;">
+            </td>
+            <td><b>${item.rombel}</b></td>
+            <td>${item.bab}</td>
+          </tr>`;
+        });
+      } else showNotif(false, "GAGAL ❌", res ? res.error : "Gagal memuat status bab");
+    });
+  }
+
+  function submitSaveBabStatus() {
+    if (!adminSessionPassword) return showAdminView();
+    const chks = document.querySelectorAll('.bab-status-chk');
+    let matrix = [];
+    chks.forEach(chk => {
+      matrix.push({
+        rombel: chk.getAttribute('data-rombel'),
+        bab: chk.getAttribute('data-bab'),
+        status: chk.checked ? "ON" : "OFF"
+      });
+    });
+    showLoader();
+    fetchAPI({ action: "saveBabStatusSettings", password: adminSessionPassword, matrix: matrix }, res => {
+      hideLoader();
+      if (res && res.success) showNotif(true, "BERHASIL ✅", res.message);
+      else showNotif(false, "GAGAL ❌", res ? res.error : "Gagal menyimpan status bab");
+    });
+  }
+
+  function submitSaveSchoolSettings() {
+    if (!adminSessionPassword) return showAdminView();
+    const namaSekolah = document.getElementById('inputNamaSekolah').value.trim(), mapel = document.getElementById('inputMataPelajaran').value.trim(), guru = document.getElementById('inputNamaGuru').value.trim(), newPass = document.getElementById('inputNewAdminPassword').value;
+    showLoader();
+    fetchAPI({ action: "saveSchoolSettings", password: adminSessionPassword, namaSekolah: namaSekolah, mataPelajaran: mapel, namaGuru: guru, newPassword: newPass }, res => {
+      hideLoader();
+      if (res && res.success) { showNotif(true, "BERHASIL ✅", res.message); document.getElementById('displayNamaSekolah').innerText = namaSekolah; document.getElementById('displayMataPelajaran').innerText = mapel; if (newPass) adminSessionPassword = newPass; } else showNotif(false, "GAGAL", "");
+    });
+  }
+  function openGoogleSheetDirect() { fetchAPI({ action: "getSheetUrl" }, res => { if (res && res.url) window.open(res.url, '_blank'); }); }
+
+  function onReviewRombelChange() {
+    const rombel = document.getElementById('reviewRombelSelect').value, bSelect = document.getElementById('reviewBabSelect'); 
+    bSelect.innerHTML = '<option value="">-- Semua --</option>';
+    if (rombel) {
+      showLoader();
+      fetchAPI({ action: "getBabList", rombel: rombel }, res => {
+        hideLoader();
+        if (res && res.babList) res.babList.forEach(bab => bSelect.innerHTML += `<option value="${bab}">${bab}</option>`);
+      });
+    }
+  }
+
+  function submitLoadReview() {
+    if (!adminSessionPassword) return showAdminView();
+    showLoader();
+    fetchAPI({ action: "getTeacherSubmissions", password: adminSessionPassword, rombel: document.getElementById('reviewRombelSelect').value, bab: document.getElementById('reviewBabSelect').value, filterStatus: document.getElementById('reviewStatusSelect').value }, res => {
+      hideLoader();
+      if (res && res.success) { 
+        currentReviewList = res.list || []; 
+        showNotif(true, "BERHASIL ✅", `Memuat ${currentReviewList.length} data siswa.`); 
+        renderReviewTable(currentReviewList); 
+      } else showNotif(false, "GAGAL", "");
+    });
+  }
+
+  function renderReviewTable(list) {
+    const tbody = document.getElementById('reviewTbody'); tbody.innerHTML = "";
+    if (!list || list.length === 0) { tbody.innerHTML = `<tr><td colspan="2" style="text-align:center;">Tidak ada data pengerjaan.</td></tr>`; document.getElementById('reviewResultBox').style.display = 'block'; return; }
+    
+    list.forEach((item, itemIdx) => {
+      let qHtml = "";
+      item.questions.forEach((q, qIdx) => {
+        const recheckBadge = q.status === "RECHECK" ? `<span class="badge-recheck" style="background:#fef3c7; color:#b45309; padding:2px 6px; border-radius:4px; font-size:10px;">⚠️ Revisi</span>` : ``;
+        const aiScoreDisplay = cleanScoreValue(q.scoreAI) > 0 ? `<b style="color:#15803d;">${cleanScoreValue(q.scoreAI)} (Guru)</b>` : `<span style="color:#d97706;">Belum Dinilai</span>`;
+        
+        let aiBadge = "";
+        if (q.aiPercentage !== null && q.aiPercentage !== undefined && q.aiPercentage !== "") {
+          let pct = Number(q.aiPercentage) || 0;
+          let bg = pct > 60 ? '#fee2e2' : (pct >= 30 ? '#fef3c7' : '#dcfce7');
+          let txt = pct > 60 ? '#991b1b' : (pct >= 30 ? '#b45309' : '#166534');
+          let bdr = pct > 60 ? '#fca5a5' : (pct >= 30 ? '#fcd34d' : '#86efac');
+          aiBadge = `<span style="background:${bg}; color:${txt}; border:1px solid ${bdr}; padding:2px 6px; border-radius:6px; font-weight:700; font-size:10px; margin-left:4px;">🤖 AI: ${pct}%</span>`;
+        }
+
+        qHtml += `<div style="margin-bottom:12px; border-bottom:1px dashed #cbd5e1; padding-bottom:10px;">
+          <div style="font-size:12px; font-weight:600;">[${q.qId}] ${q.pertanyaan} ${recheckBadge}</div>
+          <div style="background:#f1f5f9; padding:6px 10px; border-radius:6px; margin:4px 0; font-style:italic; font-size:11px;">"${q.transcript || 'Kosong'}"</div>
+          <div style="font-size:11px; margin-bottom:4px;"><b>Nilai Robot:</b> ${cleanScoreValue(q.scoreLocal)} | <b>Nilai Guru:</b> ${aiScoreDisplay} ${aiBadge}</div>
+          <div style="display:flex; gap:6px;">
+            <button class="btn-warning" style="padding:4px 8px; font-size:10px; width:auto;" onclick="promptManualGrade('${q.qId}','${item.nama}','${item.rombel}','${item.bab}')">📝 Manual</button>
+          </div>
+        </div>`;
+      });
+
+      tbody.innerHTML += `<tr>
+        <td style="width:180px; vertical-align:top; padding:10px; background:#fafafa;">
+          <b style="font-size:13px; color:#1e293b; display:block; margin-bottom:2px;">${item.nama}</b>
+          <small style="color:#64748b; display:block; margin-bottom:10px;">${item.rombel} | ${item.bab}</small>
+          
+          <button class="btn-primary" style="padding:8px; font-size:11px; margin-bottom:6px; background:linear-gradient(135deg, #7c3aed, #6d28d9);" onclick="triggerTeacherAIBatchGrade(${itemIdx})">🤖 AI (Nilai Semua Soal)</button>
+          <button class="btn-secondary" style="padding:6px; font-size:10px; width:100%; background:#475569;" onclick="submitAddExtraTime('${item.nama}','${item.rombel}','${item.bab}')">⏱️ +10 Min</button>
+        </td>
+        <td style="vertical-align:top; padding:10px;">${qHtml}</td>
+      </tr>`;
+    });
+    document.getElementById('reviewResultBox').style.display = 'block';
+  }
+
+  function promptManualGrade(qId, nama, rombel, bab) {
+    if (!adminSessionPassword) return showAdminView(); const score = prompt(`Masukkan Nilai (0-100) untuk ${nama}:`, "85"); if (score === null) return;
+    showLoader();
+    fetchAPI({ action: "forceAIGrade", password: adminSessionPassword, questionId: qId, studentName: nama, rombel: rombel, bab: bab, customScore: score, customFeedback: "Telah dinilai Guru." }, res => { hideLoader(); if (res && res.success) { showNotif(true, "BERHASIL ✅", "Disimpan & Rekap Diperbarui"); submitLoadReview(); } });
+  }
+
+  function triggerTeacherAIBatchGrade(itemIdx) {
+    if (!adminSessionPassword) return showAdminView(); 
+    
+    const item = currentReviewList[itemIdx];
+    if (!item || !item.questions || item.questions.length === 0) return alert("Data pengerjaan tidak ditemukan.");
+
+    showLoader(); 
+    fetchAPI({ 
+      action: "triggerGeminiBatchGradingTeacher", 
+      password: adminSessionPassword, 
+      studentName: item.nama, 
+      rombel: item.rombel, 
+      bab: item.bab
+    }, res => { 
+      hideLoader(); 
+      if (res && res.success) { 
+        showNotif(true, "BERHASIL 🤖", res.message); 
+        submitLoadReview(); 
+      } else { 
+        showNotif(false, "GAGAL ❌", res ? res.error : "Gagal memproses AI."); 
+      }
+    });
+  }
+
+  function submitAddExtraTime(nama, rombel, bab) { showLoader(); fetchAPI({ action: "addExtraTime", password: adminSessionPassword, studentName: nama, rombel: rombel, bab: bab }, res => { hideLoader(); if (res && res.success) submitLoadReview(); }); }
+  function escapeQuotes(str) { return (str || '').replace(/'/g, "\\'").replace(/"/g, '\\"'); }
+
+  function loadSiswaList() {
+    showLoader();
+    fetchAPI({ action: "getStudentListAdmin", password: adminSessionPassword }, res => {
+      hideLoader();
+      if(res.success) {
+        siswaDataGlobal = res.list;
+        filterSiswaTable();
+      }
+    });
+  }
+  function filterSiswaTable() {
+    const query = document.getElementById('searchSiswaInput').value.toLowerCase().trim();
+    if (!siswaDataGlobal) return;
+    const filtered = siswaDataGlobal.filter(item => 
+      String(item.no || '').toLowerCase().includes(query) ||
+      String(item.nama || '').toLowerCase().includes(query) ||
+      String(item.rombel || '').toLowerCase().includes(query)
+    );
+    renderSiswaTbodyCustom(filtered);
+  }
+  function renderSiswaTbodyCustom(list) {
+    const tbody = document.getElementById('siswaTbody'); tbody.innerHTML = "";
+    if (!list || list.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8;">Data siswa tidak ditemukan.</td></tr>`;
+      return;
+    }
+    list.forEach(item => {
+      tbody.innerHTML += `<tr><td>${item.no}</td><td>${item.nama}</td><td>${item.rombel}</td><td>${item.jk}</td>
+        <td>
+          <div style="display:flex; gap:4px;">
+            <button class="btn-warning" style="padding:4px 6px; font-size:10px;" onclick="editSiswa(${item.rowIndex}, '${item.no}', '${item.nama}', '${item.rombel}', '${item.jk}')">Edit</button>
+            <button class="btn-danger" style="padding:4px 6px; font-size:10px;" onclick="deleteSiswa(${item.rowIndex}, '${item.nama}')">Hapus</button>
+          </div>
+        </td></tr>`;
+    });
+  }
+  function editSiswa(rowIndex, no, nama, rombel, jk) {
+    document.getElementById('siswaRowIndexInput').value = rowIndex; document.getElementById('siswaNoInput').value = no; document.getElementById('siswaNamaInput').value = nama; document.getElementById('siswaRombelInput').value = rombel; document.getElementById('siswaJkInput').value = jk;
+    document.getElementById('btnSaveSiswa').innerText = "🔄 Perbarui Siswa"; document.getElementById('tabSiswa').scrollIntoView({ behavior: 'smooth' });
+  }
+  function resetSiswaForm() {
+    document.getElementById('siswaRowIndexInput').value = ""; document.getElementById('siswaNoInput').value = ""; document.getElementById('siswaNamaInput').value = ""; document.getElementById('siswaRombelInput').value = ""; document.getElementById('siswaJkInput').value = "L";
+    document.getElementById('btnSaveSiswa').innerText = "💾 Simpan Siswa Baru";
+  }
+  function submitSaveSiswa() {
+    if (!adminSessionPassword) return showAdminView();
+    showLoader();
+    fetchAPI({ action: "saveStudent", password: adminSessionPassword, rowIndex: document.getElementById('siswaRowIndexInput').value, no: document.getElementById('siswaNoInput').value, nama: document.getElementById('siswaNamaInput').value, rombel: document.getElementById('siswaRombelInput').value, jk: document.getElementById('siswaJkInput').value }, res => { 
+      hideLoader(); if(res.success) { showNotif(true, "BERHASIL ✅", res.message); resetSiswaForm(); loadSiswaList(); } else showNotif(false, "GAGAL", res.error); 
+    });
+  }
+  function deleteSiswa(rIdx, n) { 
+    if(confirm("Hapus data "+n+"?")) {
+      showLoader();
+      fetchAPI({ action: "deleteStudent", password: adminSessionPassword, rowIndex: rIdx }, res => { hideLoader(); if(res.success) { showNotif(true, "TERHAPUS", "Data dihapus."); loadSiswaList(); } });
+    }
+  }
+
+  function loadSoalList() {
+    showLoader();
+    fetchAPI({ action: "getAllQuestionsAdmin", password: adminSessionPassword }, res => {
+      hideLoader();
+      if(res.success) {
+        soalDataGlobal = res.list;
+        filterSoalTable();
+      }
+    });
+  }
+  function filterSoalTable() {
+    const query = document.getElementById('searchSoalInput').value.toLowerCase().trim();
+    if (!soalDataGlobal) return;
+    const filtered = soalDataGlobal.filter(item => 
+      String(item.id || '').toLowerCase().includes(query) ||
+      String(item.kelas || '').toLowerCase().includes(query) ||
+      String(item.bab || '').toLowerCase().includes(query) ||
+      String(item.pertanyaan || '').toLowerCase().includes(query)
+    );
+    renderSoalTbodyCustom(filtered);
+  }
+  function renderSoalTbodyCustom(list) {
+    const tbody = document.getElementById('soalTbody'); tbody.innerHTML = "";
+    if (!list || list.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8;">Soal tidak ditemukan.</td></tr>`;
+      return;
+    }
+    list.forEach(item => {
+      let escapedPertanyaan = (item.pertanyaan || "").replace(/"/g, '&quot;');
+      let escapedRubrik = (item.rubrik || "").replace(/"/g, '&quot;');
+      tbody.innerHTML += `<tr><td>${item.id}</td><td>${item.kelas}</td><td>${item.bab}</td><td>${item.pertanyaan}</td>
+        <td>
+          <div style="display:flex; gap:4px;">
+            <button class="btn-warning" style="padding:4px 6px; font-size:10px;" onclick="editSoal('${item.id}', '${item.kelas}', '${item.bab}', \`${escapedPertanyaan}\`, \`${escapedRubrik}\`)">Edit</button>
+            <button class="btn-danger" style="padding:4px 6px; font-size:10px;" onclick="deleteSoal('${item.id}')">Hapus</button>
+          </div>
+        </td></tr>`;
+    });
+  }
+  function editSoal(id, kelas, bab, pertanyaan, rubrik) {
+    document.getElementById('soalIdInput').value = id; document.getElementById('soalKelasInput').value = kelas; document.getElementById('soalBabInput').value = bab; document.getElementById('soalPertanyaanInput').value = pertanyaan; document.getElementById('soalRubrikInput').value = rubrik; document.getElementById('soalGambarInput').value = "";
+    document.getElementById('btnSaveSoal').innerText = "🔄 Perbarui Soal (" + id + ")"; document.getElementById('tabSoal').scrollIntoView({ behavior: 'smooth' });
+  }
+  function resetSoalForm() {
+    document.getElementById('soalIdInput').value = ""; document.getElementById('soalKelasInput').value = ""; document.getElementById('soalBabInput').value = ""; document.getElementById('soalPertanyaanInput').value = ""; document.getElementById('soalRubrikInput').value = ""; document.getElementById('soalGambarInput').value = "";
+    document.getElementById('btnSaveSoal').innerText = "💾 Simpan Soal Baru";
+  }
+  function submitSaveSoal() { 
+    if (!adminSessionPassword) return showAdminView();
+    const file = document.getElementById('soalGambarInput').files[0];
+    const doSave = (b64, name, mime) => {
+      showLoader();
+      fetchAPI({ action: "saveQuestion", password: adminSessionPassword, questionId: document.getElementById('soalIdInput').value, kelas: document.getElementById('soalKelasInput').value, bab: document.getElementById('soalBabInput').value, pertanyaan: document.getElementById('soalPertanyaanInput').value, rubrik: document.getElementById('soalRubrikInput').value, imageBase64: b64, imageFileName: name, imageMimeType: mime }, res => { 
+        hideLoader(); if(res.success) { showNotif(true, "BERHASIL ✅", res.message); resetSoalForm(); loadSoalList(); } else showNotif(false, "GAGAL", res.error); 
+      });
+    };
+    if(file){ const r = new FileReader(); r.onload = e => doSave(e.target.result, file.name, file.type); r.readAsDataURL(file); } 
+    else { doSave("", "", ""); }
+  }
+  function deleteSoal(id) { 
+    if(confirm("Hapus soal "+id+"?")) {
+      showLoader();
+      fetchAPI({ action: "deleteQuestion", password: adminSessionPassword, questionId: id }, res => { hideLoader(); if(res.success) { showNotif(true, "TERHAPUS", "Soal dihapus."); loadSoalList(); } else showNotif(false, "GAGAL", res.error); });
+    }
+  }
+
+  function onCetakRombelChange() {
+    const rombel = document.getElementById('cetakRombelSelect').value;
+    const bSelect = document.getElementById('cetakBabSelect');
+    bSelect.innerHTML = '<option value="">-- Semua Bab --</option>';
+    if (rombel) {
+      showLoader();
+      fetchAPI({ action: "getBabList", rombel: rombel }, res => {
+        hideLoader();
+        if (res && res.babList) {
+          res.babList.forEach(bab => bSelect.innerHTML += `<option value="${bab}">${bab}</option>`);
+        }
+      });
+    }
+  }
+
+  function generatePrintPreview() {
+    const rombel = document.getElementById('cetakRombelSelect').value;
+    const bab = document.getElementById('cetakBabSelect').value;
+    if (!rombel) return alert("Pilih Rombel terlebih dahulu!");
+
+    showLoader();
+    fetchAPI({ action: "getTeacherSubmissions", password: adminSessionPassword, rombel: rombel, bab: bab }, res => {
+      hideLoader();
+      if (res && res.success && res.list && res.list.length > 0) {
+        let tableRows = "";
+        res.list.forEach((item, idx) => {
+          let aL = 0, aA = 0, c = item.questions.length;
+          item.questions.forEach(q => { aL += cleanScoreValue(q.scoreLocal); aA += cleanScoreValue(q.scoreAI); });
+          tableRows += `<tr>
+            <td style="text-align:center;">${idx+1}</td>
+            <td><b>${item.nama}</b></td>
+            <td style="text-align:center;">${item.jk}</td>
+            <td style="text-align:center;">${c>0 ? Math.round(aL/c) : 0}</td>
+            <td style="text-align:center; font-weight:bold;">${c>0 && aA>0 ? Math.round(aA/c) : '-'}</td>
+          </tr>`;
+        });
+
+        const printHTML = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Rekap Nilai - ${rombel}</title>
+            <style>
+              body { font-family: sans-serif; padding: 15px; color: #000; }
+              table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+              th, td { border: 1px solid #000; padding: 6px 8px; font-size: 11px; text-align: left; }
+              th { background: #f0f0f0; text-align: center; }
+            </style>
+          </head>
+          <body>
+            <div style="text-align:center; border-bottom:2px solid #000; padding-bottom:10px; margin-bottom:15px;">
+              <h2 style="margin:0; font-size:16px;">REKAPITULASI ASESMEN</h2>
+              <h3 style="margin:4px 0; font-size:14px;">${document.getElementById('displayNamaSekolah').innerText}</h3>
+              <p style="margin:0; font-size:11px;">Mapel: ${document.getElementById('displayMataPelajaran').innerText} | Rombel: ${rombel} | Bab: ${bab || 'Semua Bab'}</p>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:30px;">No</th>
+                  <th>Nama Siswa</th>
+                  <th style="width:40px;">JK</th>
+                  <th style="width:80px;">Nilai Robot</th>
+                  <th style="width:80px;">Nilai Guru</th>
+                </tr>
+              </thead>
+              <tbody>${tableRows}</tbody>
+            </table>
+            <div style="margin-top:30px; float:right; text-align:center; font-size:12px;">
+              <p style="margin:0;">Guru Pengampu,</p><br><br><br>
+              <b><u>${document.getElementById('inputNamaGuru').value}</u></b>
+            </div>
+          </body>
+          </html>
+        `;
+
+        const win = window.open('', '_blank');
+        win.document.write(printHTML);
+        win.document.close();
+        win.focus();
+        setTimeout(() => { win.print(); }, 500);
+      } else {
+        alert("Data pengerjaan tidak ditemukan untuk Rombel/Bab tersebut.");
+      }
+    });
+  }
+</script>
 </body>
 </html>
