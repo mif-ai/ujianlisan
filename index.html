@@ -230,6 +230,7 @@
   <div class="modal-content" style="text-align:center;">
     <h2 style="font-size:40px; margin:0;">🏁</h2>
     <h3 style="margin:0 0 8px 0; color:var(--primary);">Akhiri Sesi Ini?</h3>
+    <p style="font-size:12px; color:#64748b; margin-top:-4px; margin-bottom:15px;">Jawaban Anda yang ada di layar saat ini akan otomatis disimpan.</p>
     <div style="display:flex; gap:10px;">
       <button class="btn-secondary" style="flex:1;" onclick="closeFinishExamModal()">Batal</button>
       <button class="btn-primary" style="flex:1.5; background:#10b981;" onclick="finishExamDirectly()">Ya, Akhiri</button>
@@ -460,7 +461,6 @@
   };
 
   function setupSecurityEnforcements() {
-    // Hanya mengaktifkan Anti-Klik Kanan, Anti-Copy, Anti-Cut, dan Pintasan Keyboard Salin
     document.addEventListener('contextmenu', e => e.preventDefault());
     document.addEventListener('copy', e => e.preventDefault());
     document.addEventListener('cut', e => e.preventDefault());
@@ -471,7 +471,6 @@
       }
       if (e.key === 'F12') { e.preventDefault(); return false; }
     });
-    // Pendeteksi blur dan triggerSecurityWarning() SUDAH DIHAPUS TOTAL
   }
 
   function setupInactivityTracker() {
@@ -721,7 +720,7 @@
               }
             });
             renderPaletteUIOnly(); startTimerCountdown(extraTime, activeBabTimer); doSelectQuestion(0);
-            showNotif(true, "Mode Ujian Aktif! 🔴", "Jawaban direkam ke server.");
+            showNotif(true, "Mode Ujian Aktif! 🔴", "Seluruh soal telah disiapkan dan draf tersimpan.");
           });
         }
       } else { alert("Belum ada soal."); finishExamDirectly(); }
@@ -1019,16 +1018,20 @@
 
   function calculateAccumulatedScores() {
     if (!currentQuestionsList || currentQuestionsList.length === 0) return { avgLocal: 0, avgAI: "⏳ Menunggu" };
-    let sumLocal = 0, countLocal = 0, sumAI = 0, countAI = 0;
+    let sumLocal = 0, sumAI = 0, countAI = 0;
     currentQuestionsList.forEach(q => {
       const data = questionState[q.id];
       if (data) {
-        if (data.oldScoreLocal > 0) { sumLocal += data.oldScoreLocal; countLocal++; }
-        if (data.oldScoreAI !== null && data.oldScoreAI !== "") { sumAI += data.oldScoreAI; countAI++; }
+        sumLocal += cleanScoreValue(data.oldScoreLocal);
+        if (data.oldScoreAI !== null && data.oldScoreAI !== "") {
+          sumAI += cleanScoreValue(data.oldScoreAI);
+          countAI++;
+        }
       }
     });
-    const avgLocal = countLocal > 0 ? Math.round(sumLocal / currentQuestionsList.length) : 0;
-    const avgAI = countAI > 0 ? Math.round(sumAI / currentQuestionsList.length) : "⏳ Menunggu";
+    const totalQ = currentQuestionsList.length;
+    const avgLocal = Math.round(sumLocal / totalQ);
+    const avgAI = countAI > 0 ? Math.round(sumAI / totalQ) : "⏳ Menunggu";
     return { avgLocal: avgLocal, avgAI: avgAI };
   }
 
@@ -1040,8 +1043,48 @@
 
   function openFinishExamModal() { document.getElementById('finishExamModal').style.display = 'flex'; }
   function closeFinishExamModal() { document.getElementById('finishExamModal').style.display = 'none'; }
+  
   function finishExamDirectly(customMsg) {
-    closeFinishExamModal(); clearInterval(examTimerInterval); currentAppMode = ""; updateModeBannerUI("");
+    closeFinishExamModal();
+    
+    if (currentAppMode === "SUBMISSION" && selectedQuestionObject) {
+      const qId = selectedQuestionObject.id;
+      const currentText = document.getElementById('transcriptTextarea').value.trim();
+      const oldData = questionState[qId] || {};
+      
+      if (currentText !== "" && currentText !== oldData.oldTranscript) {
+        showLoader();
+        fetchAPI({
+          action: "processLocalGrade",
+          questionId: qId,
+          studentName: document.getElementById('studentSelect').value,
+          rombel: document.getElementById('rombelSelect').value,
+          jenisKelamin: document.getElementById('jkDisplay').value,
+          bab: document.getElementById('babSelect').value,
+          questionText: selectedQuestionObject.pertanyaan,
+          studentTranscriptText: currentText,
+          mode: currentAppMode
+        }, res => {
+          if (res && res.success) {
+            const newScore = cleanScoreValue(res.scoreLocal);
+            saveAnswerAndState(qId, currentText, newScore, res.feedback, oldData.oldScoreAI, oldData.aiPercentage, () => {
+              hideLoader();
+              executeFinishCleanup(customMsg);
+            });
+          } else {
+            hideLoader();
+            executeFinishCleanup(customMsg);
+          }
+        });
+        return;
+      }
+    }
+    
+    executeFinishCleanup(customMsg);
+  }
+
+  function executeFinishCleanup(customMsg) {
+    clearInterval(examTimerInterval); currentAppMode = ""; updateModeBannerUI("");
     const scores = calculateAccumulatedScores();
     const finalMsg = customMsg || `Nilai Robot: ${scores.avgLocal} | Nilai Guru: ${scores.avgAI}`;
     showNotif(true, "Sesi Selesai! 🎉", finalMsg);
@@ -1260,7 +1303,6 @@
   }
 
   function submitAddExtraTime(nama, rombel, bab) { showLoader(); fetchAPI({ action: "addExtraTime", password: adminSessionPassword, studentName: nama, rombel: rombel, bab: bab }, res => { hideLoader(); if (res && res.success) submitLoadReview(); }); }
-  function escapeQuotes(str) { return (str || '').replace(/'/g, "\\'").replace(/"/g, '\\"'); }
 
   function loadSiswaList() {
     showLoader();
@@ -1412,7 +1454,7 @@
       if (res && res.success && res.list && res.list.length > 0) {
         let tableRows = "";
         res.list.forEach((item, idx) => {
-          let aL = 0, aA = 0, c = item.questions.length;
+          let aL = 0, aA = 0, c = item.totalSoal || item.questions.length;
           item.questions.forEach(q => { aL += cleanScoreValue(q.scoreLocal); aA += cleanScoreValue(q.scoreAI); });
           tableRows += `<tr>
             <td style="text-align:center;">${idx+1}</td>
